@@ -99,11 +99,44 @@ def install(autostart, desktop):
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY) as k:
         for name, value in (("DisplayName", APP), ("DisplayVersion", VERSION), ("Publisher", PUBLISHER),
                             ("DisplayIcon", EXE), ("InstallLocation", INSTALL_DIR),
-                            ("UninstallString", f'"{EXE}" --uninstall'), ("URLInfoAbout", URL)):
+                            ("UninstallString", f'"{EXE}" --uninstall'),
+                            ("QuietUninstallString", f'"{EXE}" --uninstall /silent'), ("URLInfoAbout", URL)):
             winreg.SetValueEx(k, name, 0, winreg.REG_SZ, value)
         winreg.SetValueEx(k, "NoModify", 0, winreg.REG_DWORD, 1)
         winreg.SetValueEx(k, "NoRepair", 0, winreg.REG_DWORD, 1)
-        winreg.SetValueEx(k, "EstimatedSize", 0, winreg.REG_DWORD, os.path.getsize(EXE) // 1024)
+        size = sum(os.path.getsize(os.path.join(d, f)) for d, _, files in os.walk(INSTALL_DIR) for f in files)
+        winreg.SetValueEx(k, "EstimatedSize", 0, winreg.REG_DWORD, size // 1024)
+
+
+def parse_args(argv):
+    """Opciones de línea de órdenes (sin distinguir mayúsculas; acepta / o -):
+    /silent      instala sin ventanas (para winget y despliegues)
+    /noautostart sin inicio con Windows (por defecto se activa)
+    /desktop     crea el acceso directo en el escritorio
+    /launch      abre ClipQR al terminar"""
+    flags = {a.lower().lstrip("/-") for a in argv}
+    unknown = flags - {"silent", "noautostart", "desktop", "launch"}
+    if unknown:
+        raise ValueError(f"Opción desconocida: {', '.join(sorted(unknown))}")
+    return {"silent": "silent" in flags, "autostart": "noautostart" not in flags,
+            "desktop": "desktop" in flags, "launch": "launch" in flags}
+
+
+def silent_install(opts):
+    """Instalación sin interfaz. Devuelve el código de salida y deja un registro en %TEMP%."""
+    import tempfile
+    log = os.path.join(tempfile.gettempdir(), "ClipQR-Setup.log")
+    with open(log, "a", encoding="utf-8") as f:
+        f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} ClipQR {VERSION} instalación silenciosa {opts}\n")
+        try:
+            install(opts["autostart"], opts["desktop"])
+            f.write(f"  instalado en {INSTALL_DIR}\n")
+        except Exception as e:
+            f.write(f"  ERROR: {e!r}\n")
+            return 1
+    if opts["launch"]:
+        subprocess.Popen([EXE], cwd=INSTALL_DIR, creationflags=0x00000008)  # DETACHED_PROCESS
+    return 0
 
 
 class Wizard:
@@ -264,4 +297,10 @@ class Wizard:
 
 
 if __name__ == "__main__":
+    try:
+        options = parse_args(sys.argv[1:])
+    except ValueError as err:
+        sys.exit(f"{err}\n{parse_args.__doc__}")
+    if options["silent"]:
+        sys.exit(silent_install(options))
     Wizard().run()

@@ -277,18 +277,21 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
         self.root.mainloop()
 
 
-def uninstall():
+def uninstall(silent=False):
     """Desinstalación (instalado con ClipQR-Setup.exe): cierra ClipQR, quita accesos directos,
-    inicio con Windows, la entrada de «Aplicaciones instaladas», los ajustes y el propio programa."""
+    inicio con Windows, la entrada de «Aplicaciones instaladas», los ajustes y el propio programa.
+    Con silent no pregunta ni muestra nada (QuietUninstallString, winget)."""
     import shutil
     import subprocess
     import winreg
     from tkinter import messagebox
 
-    root = tk.Tk()
-    root.withdraw()
-    if not messagebox.askyesno("Desinstalar ClipQR", "¿Quieres desinstalar ClipQR de este equipo?"):
-        return
+    root = None
+    if not silent:
+        root = tk.Tk()
+        root.withdraw()
+        if not messagebox.askyesno("Desinstalar ClipQR", "¿Quieres desinstalar ClipQR de este equipo?"):
+            return
     no_window = 0x08000000
     subprocess.run(["taskkill", "/F", "/IM", "ClipQR.exe", "/FI", f"PID ne {os.getpid()}",
                     "/FI", f"PID ne {os.getppid()}"], capture_output=True, creationflags=no_window)
@@ -307,8 +310,9 @@ def uninstall():
         except OSError:
             pass
     shutil.rmtree(CONFIG_DIR, ignore_errors=True)
-    messagebox.showinfo("ClipQR", "ClipQR se ha desinstalado.")
-    root.destroy()
+    if root is not None:
+        messagebox.showinfo("ClipQR", "ClipQR se ha desinstalado.")
+        root.destroy()
     if FROZEN:  # el programa no puede borrarse a sí mismo mientras se ejecuta: cmd lo reintenta al salir
         exe, folder = sys.executable, os.path.dirname(sys.executable)
         setup_dir = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", APP_NAME)
@@ -324,8 +328,8 @@ def main():
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
         pass
-    if sys.argv[1:] == ["--uninstall"]:  # lo lanza Windows desde «Aplicaciones instaladas»
-        uninstall()
+    if sys.argv[1:2] == ["--uninstall"]:  # lo lanza Windows desde «Aplicaciones instaladas»
+        uninstall(silent=any(a.lower() in ("/silent", "--silent") for a in sys.argv[2:]))
         return
     if len(sys.argv) > 1:  # modo prueba: py main.py imagen.png
         sys.stdout.reconfigure(encoding="utf-8")
