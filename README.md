@@ -17,6 +17,7 @@
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows" alt="Windows 10 | 11">
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/licencia-MIT-22a06b" alt="Licencia MIT">
+  <a href="https://cafecito.app/mojezcg"><img src="https://img.shields.io/badge/Cafecito-invitame%20un%20caf%C3%A9-6f4e37?logo=buymeacoffee&logoColor=white" alt="Invitame un café en cafecito.app"></a>
 </p>
 
 ![ClipQR](docs/screenshots/hero.png)
@@ -141,6 +142,14 @@ Genera `dist\ClipQR-<versión>.msix`. Al instalarse desde la Store, el inicio co
 
 - [Hoja de ruta](docs/ROADMAP.md): qué viene hasta la 1.4, PR por PR.
 - [Distribución](docs/DISTRIBUCION.md): releases automáticas, firma de código, winget y Microsoft Store.
+
+## Apoyar el proyecto
+
+ClipQR es gratis y de código abierto. Si te ahorra tiempo, puedes invitarme un cafecito ☕:
+
+<a href="https://cafecito.app/mojezcg"><img src="https://cdn.cafecito.app/imgs/buttons/button_1.png" alt="Invitame un café en cafecito.app" height="40"></a>
+
+También está en el menú de la bandeja (**Invitar un cafecito ☕**) y en **Configuración › Apoyar ClipQR**.
 
 ## Licencia
 

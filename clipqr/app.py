@@ -11,7 +11,7 @@ import tkinter.font as tkfont
 import pystray
 from PIL import Image
 
-from clipqr import APP_NAME
+from clipqr import APP_NAME, DONATE_URL
 from clipqr.actions import connect_wifi, find_saved_capture, open_with_default_app
 from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
@@ -130,6 +130,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             pystray.MenuItem(lambda item: f"Actualizar a ClipQR {self.update_info['version']}…" if self.update_info
                              else "", ui(self.show_update_notice), visible=lambda item: bool(self.update_info)),
             pystray.MenuItem("Configuración…", ui(self.show_settings)),
+            pystray.MenuItem("Invitar un cafecito ☕", lambda: os.startfile(DONATE_URL)),
             pystray.MenuItem("Pausar", ui(self.toggle_pause), checked=lambda item: self.paused),
             pystray.MenuItem("Iniciar con Windows", ui(self.toggle_autostart), checked=lambda item: self.autostart_enabled()),
             pystray.Menu.SEPARATOR,

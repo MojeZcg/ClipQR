@@ -6,3 +6,4 @@ Probar una imagen:     py main.py imagen.png
 """
 APP_NAME = "ClipQR"
 VERSION = "1.2.0"
+DONATE_URL = "https://cafecito.app/mojezcg"  # para apoyar el proyecto con un cafecito

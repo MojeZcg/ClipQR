@@ -1,4 +1,5 @@
 """Ventana de configuración."""
+import os
 import time
 import tkinter as tk
 
@@ -7,7 +8,7 @@ from clipqr.settings import (HOTKEY_CREATE_CHOICES, HOTKEY_FOCUS_CHOICES, HOTKEY
 
 from PIL import Image, ImageTk
 
-from clipqr import APP_NAME, VERSION
+from clipqr import APP_NAME, DONATE_URL, VERSION
 from clipqr.icons import make_icon
 from clipqr.ui.theme import THEMES
 from clipqr.winplatform import PACKAGED, style_window
@@ -189,6 +190,11 @@ class SettingsWindowMixin:
                 lambda p: self._switch(p, st["check_updates"], lambda v: save(check_updates=v)))
             row(card, "Buscar ahora", f"Versión instalada: {VERSION}",
                 lambda p: self._button(p, "Buscar actualizaciones", cmd=lambda: self.check_updates(manual=True)))
+
+        card = section("APOYAR CLIPQR")
+        row(card, "Invitar un cafecito ☕", "ClipQR es gratis y de código abierto. Si te sirve, puedes apoyarlo "
+            "con un cafecito en cafecito.app.",
+            lambda p: self._button(p, "Invitar un cafecito ↗", cmd=lambda: os.startfile(DONATE_URL)))
 
         tk.Label(body, text="Los cambios se guardan al momento.", bg=c["bg"], fg=c["muted"],
                  font=self.font(8)).pack(pady=self.px(14))
