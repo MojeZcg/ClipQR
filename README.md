@@ -123,6 +123,11 @@ Necesita el [Windows SDK](https://developer.microsoft.com/windows/downloads/wind
 
 Genera `dist\ClipQR-<versión>.msix`. Al instalarse desde la Store, el inicio con Windows usa una *StartupTask* del paquete: viene desactivado y se activa desde la Configuración de ClipQR. Los pasos para publicar están en [docs/store-listing.md](docs/store-listing.md).
 
+## Próximas versiones
+
+- [Hoja de ruta](docs/ROADMAP.md): qué viene en las versiones 1.1, 1.2 y 1.3, PR por PR.
+- [Distribución](docs/DISTRIBUCION.md): releases automáticas, firma de código, winget y Microsoft Store.
+
 ## Licencia
 
 [MIT](LICENSE)
