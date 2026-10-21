@@ -65,3 +65,18 @@ def cnpj_valid(cnpj):
         if (0 if check >= 10 else check) != int(d[n]):
             return False
     return True
+
+
+# ---------------------------------------------------------------- IBAN
+
+def iban_valid(iban):
+    """IBAN: 2 letras de país, 2 dígitos de control y la cuenta; módulo 97 == 1 (ISO 13616)."""
+    s = re.sub(r"\s", "", str(iban)).upper()
+    if not re.fullmatch(r"[A-Z]{2}\d{2}[A-Z0-9]{10,30}", s):
+        return False
+    return int("".join(str(int(ch, 36)) for ch in s[4:] + s[:4])) % 97 == 1
+
+
+def format_iban(iban):
+    s = re.sub(r"\s", "", str(iban)).upper()
+    return " ".join(s[i:i + 4] for i in range(0, len(s), 4))

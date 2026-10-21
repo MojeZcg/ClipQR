@@ -1,7 +1,7 @@
 """QR de pago EMVCo: Pix, Transferencias 3.0 y validadores."""
 import pytest
 
-from clipqr.fiscal.ids import cbu_valid, cnpj_valid, cpf_valid
+from clipqr.fiscal.ids import cbu_valid, cnpj_valid, cpf_valid, iban_valid
 from clipqr.payloads import analyze
 from clipqr.payments import crc16, parse_tlv
 
@@ -106,3 +106,46 @@ def test_cpf(cpf, ok):
                                       ("00.000.000/0000-00", False)])
 def test_cnpj(cnpj, ok):
     assert cnpj_valid(cnpj) is ok
+
+
+# ---------------------------------------------------------------- SEPA y QR-factura suiza
+
+# Ejemplo de las directrices del EPC (EPC069-12)
+EPC = "BCD\n002\n1\nSCT\nBPOTBEB1\nRed Cross of Belgium\nBE72000000001616\nEUR1\nCHAR\n\nUrgency fund\nSample"
+
+
+def test_iban():
+    assert iban_valid("BE72000000001616") and iban_valid("DE89 3704 0044 0532 0130 00")
+    assert not iban_valid("DE89370400440532013001") and not iban_valid("hola")
+
+
+def test_sepa():
+    r = analyze(EPC)
+    items = dict(r.items)
+    assert r.kind == "payment" and r.title == "Transferencia SEPA"
+    assert r.headline == ("Importe", "1,00 €")
+    assert items["IBAN"] == "BE72 0000 0000 1616" and items["BIC"] == "BPOTBEB1"
+    assert items["Motivo"] == "Donación" and items["Concepto"] == "Urgency fund"
+    assert r.actions[0] == ("Copiar IBAN", "copy", "BE72000000001616")
+    assert not r.warnings
+
+
+def test_sepa_iban_alterado_y_sin_importe():
+    r = analyze(EPC.replace("BE72000000001616", "BE72000000001617").replace("EUR1\n", "\n"))
+    assert any("IBAN" in w for w in r.warnings)
+    assert r.headline == ("Beneficiario", "Red Cross of Belgium")
+
+
+def test_qr_factura_suiza():
+    lines = ["SPC", "0200", "1", "CH4431999123000889012", "S", "Robert Schneider AG", "Rue du Lac", "1268",
+             "2501", "Biel", "CH", "", "", "", "", "", "", "", "1949.75", "CHF", "S", "Pia-Maria Rutschmann",
+             "Grosse Marktgasse", "28", "9400", "Rorschach", "CH", "QRR", "210000000003139471430009017",
+             "Pedido del 15.10.2026", "EPD"]
+    r = analyze("\n".join(lines))
+    items = dict(r.items)
+    assert r.title == "QR-factura suiza"
+    assert r.headline == ("Importe", "CHF 1'949.75")
+    assert items["Beneficiario"] == "Robert Schneider AG" and items["Localidad"] == "2501 Biel"
+    assert items["Tipo de referencia"] == "Referencia QR"
+    assert ("Copiar referencia", "copy", "210000000003139471430009017") in r.actions
+    assert not r.warnings
