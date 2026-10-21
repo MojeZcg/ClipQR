@@ -15,6 +15,7 @@ class Result:
     headline: tuple = None         # (etiqueta, valor) del dato en grande; si falta, se elige uno de items
     subtitle: str = None           # línea pequeña bajo el dato principal
     private: bool = False          # datos personales (DNI, embarque): no se guardan en el historial
+    warning_level: str = "warn"    # «bad» = franja roja (p. ej. producto vencido)
 
 
 PARSERS = []
