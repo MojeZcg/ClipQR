@@ -94,6 +94,23 @@ py tools\screenshots.py             # regenerar las capturas de docs/screenshots
 | `tools/screenshots.py` | Monta escenas con datos de ejemplo y genera las capturas del README |
 | `assets/` | Logo (`logo.png`) e icono del ejecutable |
 | `build.bat` | Compila el `.exe` en un solo archivo |
+| `build_msix.ps1`, `msix/` | Paquete MSIX para la Microsoft Store (manifiesto e iconos) |
+| `PRIVACY.md` | Política de privacidad |
+| `docs/store-listing.md` | Textos y pasos para publicar en la Microsoft Store |
+
+### Paquete para la Microsoft Store
+
+Necesita el [Windows SDK](https://developer.microsoft.com/windows/downloads/windows-sdk/) (incluye `makeappx` y `makepri`).
+
+```powershell
+# con los valores de Partner Center › Identidad del producto
+.\build_msix.ps1 -IdentityName "<Name>" -Publisher "<Publisher>" -PublisherDisplayName "<PublisherDisplayName>"
+
+# probarlo en este equipo sin certificado (requiere el Modo de desarrollador)
+.\build_msix.ps1 -Register
+```
+
+Genera `dist\ClipQR-<versión>.msix`. Al instalarse desde la Store, el inicio con Windows usa una *StartupTask* del paquete: viene desactivado y se activa desde la Configuración de ClipQR. Los pasos para publicar están en [docs/store-listing.md](docs/store-listing.md).
 
 ## Licencia
 

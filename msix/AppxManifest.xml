@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Plantilla del manifiesto MSIX. build_msix.ps1 sustituye los valores {{...}}.
+  Para la Microsoft Store, IDENTITY_NAME, PUBLISHER y PUBLISHER_DISPLAY_NAME deben ser
+  exactamente los de Partner Center › tu app › Identidad del producto.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity Name="{{IDENTITY_NAME}}" Publisher="{{PUBLISHER}}" Version="{{VERSION}}" ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>ClipQR</DisplayName>
+    <PublisherDisplayName>{{PUBLISHER_DISPLAY_NAME}}</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Detecta códigos QR y de barras en capturas de pantalla y en el portapapeles.</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="es-ES" />
+  </Resources>
+
+  <Applications>
+    <Application Id="ClipQR" Executable="ClipQR\ClipQR.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="ClipQR"
+        Description="Detecta códigos QR y de barras en capturas de pantalla y en el portapapeles."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png"
+                         Square310x310Logo="Assets\LargeTile.png" ShortName="ClipQR" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- Inicio con Windows: desactivado por defecto; lo activa el usuario desde la configuración de ClipQR.
+             El TaskId debe coincidir con STARTUP_TASK_ID de clipqr.py. -->
+        <desktop:Extension Category="windows.startupTask" Executable="ClipQR\ClipQR.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="ClipQRStartup" Enabled="false" DisplayName="ClipQR" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Aplicación de escritorio Win32: necesaria para leer el portapapeles, la bandeja y netsh (Wi-Fi). -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

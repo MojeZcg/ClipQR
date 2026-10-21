@@ -497,6 +497,53 @@ def make_icon(paused=False, size=64):
 
 
 FROZEN = getattr(sys, "frozen", False)  # empaquetado con PyInstaller
+
+
+def _is_packaged():
+    """True si se ejecuta instalado como paquete MSIX (Microsoft Store)."""
+    n = ctypes.c_uint32(0)
+    return kernel32.GetCurrentPackageFullName(ctypes.byref(n), None) != 15700  # APPMODEL_ERROR_NO_PACKAGE
+
+
+PACKAGED = _is_packaged()
+STARTUP_TASK_ID = "ClipQRStartup"  # debe coincidir con el TaskId de msix/AppxManifest.xml
+
+
+def _startup_task_call(fn):
+    """Ejecuta fn(task) sobre el StartupTask del paquete (API WinRT asíncrona) y devuelve su resultado."""
+    import asyncio
+    from winrt.windows.applicationmodel import StartupTask
+
+    async def run():
+        task = await StartupTask.get_async(STARTUP_TASK_ID)
+        res = fn(task)
+        return await res if hasattr(res, "__await__") else res
+
+    return asyncio.run(run())
+
+
+def msix_startup_state():
+    try:
+        return _startup_task_call(lambda t: t.state.name.lower())
+    except Exception:
+        return None
+
+
+def msix_set_startup(enable):
+    """En MSIX el inicio con Windows es una StartupTask declarada en el manifiesto. Devuelve (ok, mensaje)."""
+    try:
+        if not enable:
+            _startup_task_call(lambda t: t.disable())
+            return True, ""
+        state = _startup_task_call(lambda t: t.request_enable_async()).name.lower()
+    except Exception as e:
+        return False, f"No se pudo cambiar el inicio con Windows.\n{e}"
+    if state.startswith("enabled"):
+        return True, ""
+    if state == "disabled_by_user":
+        return False, ("Lo desactivaste desde Windows. Actívalo en\n"
+                       "Configuración de Windows › Aplicaciones › Inicio.")
+    return False, "Windows no permite el inicio automático (directiva del equipo)."
 CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), APP_NAME)
 FIRST_RUN_MARK = os.path.join(CONFIG_DIR, "first_run_done")
 ERROR_LOG = os.path.join(CONFIG_DIR, "error.log")
@@ -640,6 +687,8 @@ class ClipQR:
             return None
 
     def autostart_enabled(self):
+        if PACKAGED:
+            return msix_startup_state() in ("enabled", "enabled_by_policy")
         return self._autostart_value() is not None
 
     def _set_autostart(self):
@@ -654,15 +703,26 @@ class ClipQR:
             os.makedirs(CONFIG_DIR, exist_ok=True)
             with open(FIRST_RUN_MARK, "w") as f:
                 f.write("1")
+            if PACKAGED:  # en la Store el inicio con Windows lo activa el usuario
+                self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
+                           "Haz una captura de un QR y aparecerá aquí.\n"
+                           "Puedes hacer que se inicie con Windows en Configuración (⚙).", seconds=10)
+                return
             self._set_autostart()
             self.tray.update_menu()
             self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
                        "Haz una captura de un QR y aparecerá aquí.\n"
                        "Se iniciará solo con Windows.", seconds=8)
-        elif self.autostart_enabled() and self._autostart_value() != self._autostart_cmd():
+        elif not PACKAGED and self.autostart_enabled() and self._autostart_value() != self._autostart_cmd():
             self._set_autostart()
 
     def toggle_autostart(self):
+        if PACKAGED:
+            ok, msg = msix_set_startup(not self.autostart_enabled())
+            if not ok:
+                self.toast(msg, seconds=8)
+            self.tray.update_menu()
+            return
         import winreg
         with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
             if self.autostart_enabled():

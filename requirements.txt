@@ -1,4 +1,8 @@
 pillow
 pystray
 zxing-cpp
+# inicio con Windows cuando se instala desde la Microsoft Store (MSIX)
+winrt-runtime
+winrt-Windows.ApplicationModel
+winrt-Windows.Foundation
 numpy  # solo para tools/screenshots.py
