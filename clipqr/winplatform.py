@@ -100,6 +100,22 @@ def work_area(point=None):
     return _work_of(hmon)
 
 
+def monitor_area(point):
+    """Rectángulo completo (con la barra de tareas) del monitor donde está `point`."""
+    user32.MonitorFromPoint.restype = wintypes.HMONITOR
+    hmon = user32.MonitorFromPoint(wintypes.POINT(int(point[0]), int(point[1])), 2)
+    info = _MONITORINFO(cbSize=ctypes.sizeof(_MONITORINFO))
+    user32.GetMonitorInfoW(hmon, ctypes.byref(info))
+    r = info.rcMonitor
+    return Area(r.left, r.top, r.right, r.bottom)
+
+
+def virtual_screen():
+    """Rectángulo que abarca todos los monitores (puede empezar en coordenadas negativas)."""
+    x, y = user32.GetSystemMetrics(76), user32.GetSystemMetrics(77)  # SM_X/YVIRTUALSCREEN
+    return Area(x, y, x + user32.GetSystemMetrics(78), y + user32.GetSystemMetrics(79))
+
+
 def work_areas():
     """Áreas de trabajo de todos los monitores conectados."""
     areas = []

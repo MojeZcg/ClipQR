@@ -19,14 +19,17 @@ DEFAULT_SETTINGS = {
     # "" = desactivado. Nada de Ctrl+Alt+letra: en teclados español/latinoamericano Ctrl+Alt es AltGr
     # (Ctrl+Alt+Q escribe @) y el atajo impediría escribir esos caracteres.
     "hotkey_focus": "Ctrl+Shift+Space",
+    "hotkey_region": "Win+Shift+Q",  # junto a Win+Shift+S, el de las capturas de Windows
 }
 
 HOTKEY_FOCUS_CHOICES = ("Ctrl+Shift+Space", "Win+Alt+Space", "")
+HOTKEY_REGION_CHOICES = ("Win+Shift+Q", "Win+Alt+Q", "Alt+Shift+Q", "")
 
 
 def hotkey_label(hotkey):
     """«Ctrl+Alt+Space» -> «Ctrl+Alt+Espacio» para mostrarlo."""
     return hotkey.replace("Space", "Espacio") if hotkey else "Desactivado"
+
 
 POSITIONS = (("top-right", "Arriba a la derecha"), ("bottom-right", "Abajo a la derecha"),
              ("center", "En el centro"), ("custom", "Donde lo dejé al arrastrarlo"))

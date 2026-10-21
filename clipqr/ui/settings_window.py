@@ -2,7 +2,7 @@
 import time
 import tkinter as tk
 
-from clipqr.settings import HOTKEY_FOCUS_CHOICES, hotkey_label
+from clipqr.settings import HOTKEY_FOCUS_CHOICES, HOTKEY_REGION_CHOICES, hotkey_label
 
 from PIL import Image, ImageTk
 
@@ -155,6 +155,10 @@ class SettingsWindowMixin:
             save(**kw)
             self.apply_hotkeys(retries=0)  # elegido a mano: avisar al momento si está ocupado
 
+        row(card, "Escanear una zona de la pantalla",
+            "Congela la pantalla y lees el código que rodees, sin capturas ni portapapeles.",
+            lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_REGION_CHOICES],
+                                      st["hotkey_region"], lambda v: set_hotkey(hotkey_region=v)), stacked=True)
         row(card, "Usar el aviso con el teclado",
             "Pasa el foco al aviso abierto. Luego: Enter = acción, 1–9 = copiar ese dato, Tab = moverse, Esc = cerrar.",
             lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_FOCUS_CHOICES],
