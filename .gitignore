@@ -4,3 +4,4 @@ build/
 dist/
 *.spec
 clipqr.ico
+installer/_version.py

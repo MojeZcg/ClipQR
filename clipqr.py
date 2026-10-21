@@ -28,6 +28,7 @@ POLL_MS = 400
 MAX_CARDS = 4
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".tif", ".tiff"}
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ClipQR"  # lo crea ClipQR-Setup.exe
 
 user32 = ctypes.windll.user32
 kernel32 = ctypes.windll.kernel32
@@ -440,60 +441,27 @@ def open_with_default_app(content, ext):
 
 # --------------------------------------------------------------------------- app
 
+_LOGO = None
+
+
+def _resource(*parts):
+    """Ruta a un archivo del proyecto, también dentro del .exe de PyInstaller."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, *parts)
+
+
 def make_icon(paused=False, size=64):
-    """Logo: baldosa con degradado azul→violeta, tres "ojos" de QR y una línea de escaneo.
-    Se dibuja a 4x y se reduce (antialias). En tamaños pequeños se simplifica para que se lea."""
-    S = max(size, 64) * 4
-    u = S / 100  # rejilla de 100 unidades
-    small = size <= 24
-
-    top, bottom = ((150, 150, 158), (95, 95, 105)) if paused else ((72, 132, 255), (139, 92, 246))
-    # degradado diagonal: gradiente lineal girado 45° y recortado al cuadrado inscrito (sin esquinas negras)
-    lin = Image.linear_gradient("L").rotate(45, resample=Image.BICUBIC, expand=True)
-    k = lin.width // 4
-    lin = lin.crop((k, k, lin.width - k, lin.height - k)).resize((S, S), Image.BICUBIC)
-    grad = Image.composite(Image.new("RGB", (S, S), bottom), Image.new("RGB", (S, S), top), lin)
-    mask = Image.new("L", (S, S), 0)
-    m = 2 * u if small else 4 * u
-    ImageDraw.Draw(mask).rounded_rectangle((m, m, S - m, S - m), radius=22 * u, fill=255)
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    img.paste(grad, (0, 0), mask)
-
-    # todo lo blanco se dibuja en una máscara, así los huecos dejan ver el degradado
-    marks = Image.new("L", (S, S), 0)
-    d = ImageDraw.Draw(marks)
-    a, e = (17, 28) if not small else (13, 33)  # margen y tamaño de cada ojo
-    ring = 6 if not small else 8.5
-    for ox, oy in ((a, a), (100 - a - e, a), (a, 100 - a - e)):
-        x0, y0, x1, y1 = ox * u, oy * u, (ox + e) * u, (oy + e) * u
-        d.rounded_rectangle((x0, y0, x1, y1), radius=7 * u, fill=255)
-        d.rounded_rectangle((x0 + ring * u, y0 + ring * u, x1 - ring * u, y1 - ring * u), radius=3 * u, fill=0)
-        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-        r = (e / 2 - ring - (3.5 if not small else 2.5)) * u
-        d.rounded_rectangle((cx - r, cy - r, cx + r, cy + r), radius=2.5 * u, fill=255)
-    if not small:  # módulos sueltos en la esquina inferior derecha
-        for mx, my in ((56, 56), (72, 56), (56, 72), (75, 75), (64, 64)):
-            d.rounded_rectangle((mx * u, my * u, (mx + 8) * u, (my + 8) * u), radius=2 * u, fill=255)
-    else:
-        d.rounded_rectangle((58 * u, 58 * u, 86 * u, 86 * u), radius=5 * u, fill=255)
-    img.paste((255, 255, 255, 255), (0, 0), marks)
-
-    if not small:
-
-        # línea de escaneo con brillo
-        glow = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-        gd = ImageDraw.Draw(glow)
-        y = 52 * u
-        gd.rounded_rectangle((12 * u, y - 3 * u, 88 * u, y + 3 * u), radius=3 * u, fill=(125, 249, 255, 170))
-        glow = glow.filter(ImageFilter.GaussianBlur(3 * u))
-        img = Image.alpha_composite(img, glow)
-        ImageDraw.Draw(img).rounded_rectangle((12 * u, y - 1.3 * u, 88 * u, y + 1.3 * u), radius=1.3 * u,
-                                              fill=(210, 253, 255, 255))
-        # recortar el brillo a la baldosa
-        alpha = Image.composite(img.getchannel("A"), Image.new("L", (S, S), 0), mask)
-        img.putalpha(alpha)
-
-    return img.resize((size, size), Image.LANCZOS)
+    """Logo de ClipQR (assets/logo.png, generado con tools/make_logo.py) al tamaño pedido.
+    En pausa se muestra apagado (gris)."""
+    global _LOGO
+    if _LOGO is None:
+        _LOGO = Image.open(_resource("assets", "logo.png")).convert("RGBA")
+    img = _LOGO.resize((size, size), Image.LANCZOS)
+    if paused:
+        r, g, b, a = img.split()
+        gray = ImageOps.grayscale(img.convert("RGB")).point(lambda v: 110 + v * 145 // 255)
+        img = Image.merge("RGBA", (gray, gray, gray, a.point(lambda v: v * 3 // 4)))
+    return img
 
 
 FROZEN = getattr(sys, "frozen", False)  # empaquetado con PyInstaller
@@ -707,6 +675,10 @@ class ClipQR:
                 self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
                            "Haz una captura de un QR y aparecerá aquí.\n"
                            "Puedes hacer que se inicie con Windows en Configuración (⚙).", seconds=10)
+                return
+            if installed_by_setup():  # el asistente ya preguntó por el inicio con Windows
+                self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
+                           "Haz una captura de un QR y aparecerá aquí.", seconds=8)
                 return
             self._set_autostart()
             self.tray.update_menu()
@@ -1450,11 +1422,72 @@ def single_instance():
     return kernel32.GetLastError() != 183  # ERROR_ALREADY_EXISTS
 
 
+def installed_by_setup():
+    import winreg
+    try:
+        winreg.CloseKey(winreg.OpenKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY))
+        return True
+    except OSError:
+        return False
+
+
+def uninstall():
+    """Desinstalación (instalado con ClipQR-Setup.exe): cierra ClipQR, quita accesos directos,
+    inicio con Windows, la entrada de «Aplicaciones instaladas», los ajustes y el propio programa."""
+    import shutil
+    import subprocess
+    import winreg
+    from tkinter import messagebox
+
+    root = tk.Tk()
+    root.withdraw()
+    if not messagebox.askyesno("Desinstalar ClipQR", "¿Quieres desinstalar ClipQR de este equipo?"):
+        return
+    no_window = 0x08000000
+    subprocess.run(["taskkill", "/F", "/IM", "ClipQR.exe", "/FI", f"PID ne {os.getpid()}",
+                    "/FI", f"PID ne {os.getppid()}"], capture_output=True, creationflags=no_window)
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
+            winreg.DeleteValue(k, APP_NAME)
+    except OSError:
+        pass
+    try:
+        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY)
+    except OSError:
+        pass
+    for lnk in shortcut_paths():
+        try:
+            os.remove(lnk)
+        except OSError:
+            pass
+    shutil.rmtree(CONFIG_DIR, ignore_errors=True)
+    messagebox.showinfo("ClipQR", "ClipQR se ha desinstalado.")
+    root.destroy()
+    if FROZEN:  # el .exe no puede borrarse a sí mismo mientras se ejecuta: cmd lo reintenta al salir
+        exe, folder = sys.executable, os.path.dirname(sys.executable)
+        subprocess.Popen(f'cmd /c for /l %i in (1,1,30) do (ping -n 2 127.0.0.1 >nul & del /f /q "{exe}" 2>nul '
+                         f'& if not exist "{exe}" (rmdir "{folder}" 2>nul & exit))', creationflags=no_window)
+
+
+def shortcut_paths():
+    """Accesos directos que puede crear el asistente: menú Inicio y escritorio."""
+    def folder(csidl):  # rutas reales (el escritorio puede estar en OneDrive)
+        buf = ctypes.create_unicode_buffer(260)
+        ctypes.windll.shell32.SHGetFolderPathW(None, csidl, None, 0, buf)
+        return buf.value
+
+    return [os.path.join(folder(0x02), f"{APP_NAME}.lnk"),   # CSIDL_PROGRAMS (menú Inicio)
+            os.path.join(folder(0x10), f"{APP_NAME}.lnk")]   # CSIDL_DESKTOPDIRECTORY
+
+
 def main():
     try:
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
         pass
+    if sys.argv[1:] == ["--uninstall"]:  # lo lanza Windows desde «Aplicaciones instaladas»
+        uninstall()
+        return
     if len(sys.argv) > 1:  # modo prueba: python clipqr.py imagen.png
         sys.stdout.reconfigure(encoding="utf-8")
         for path in sys.argv[1:]:

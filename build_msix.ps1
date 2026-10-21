@@ -39,6 +39,7 @@ Write-Host "ClipQR $version  ($IdentityName / $Publisher)"
 py -m pip install --user -q -r requirements.txt pyinstaller
 py -c "import clipqr; clipqr.make_icon(size=256).save('assets/clipqr.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
 py -m PyInstaller --noconfirm --windowed --name ClipQR --icon "$PSScriptRoot\assets\clipqr.ico" `
+  --add-data "$PSScriptRoot\assets\logo.png;assets" `
   --distpath build\msix-dist --workpath build\msix-work --specpath build clipqr.py
 if ($LASTEXITCODE) { throw "PyInstaller falló" }
 

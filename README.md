@@ -55,12 +55,14 @@ También lee DataMatrix, Aztec, PDF417, Code 128, Code 39 y otros formatos, grac
 
 ## Instalación
 
-1. Descarga `ClipQR.exe` desde [Releases](../../releases).
-2. Guárdalo en una carpeta fija, por ejemplo `%LOCALAPPDATA%\Programs\ClipQR\`, y haz doble clic.
+1. Descarga **`ClipQR-Setup.exe`** desde [Releases](../../releases) y ábrelo.
+2. Elige si quieres que se inicie con Windows (y si quieres un acceso directo en el escritorio) y pulsa **Instalar**.
 
-No necesita Python ni permisos de administrador. La primera vez aparece un aviso de bienvenida y se activa el inicio con Windows (se puede desactivar en Configuración). ClipQR queda en la bandeja del sistema, junto al reloj.
+Eso es todo: se instala para tu usuario en `%LOCALAPPDATA%\Programs\ClipQR`, sin permisos de administrador, con acceso directo en el menú Inicio. ClipQR queda en la bandeja del sistema, junto al reloj. Para desinstalarlo: **Configuración de Windows › Aplicaciones › ClipQR**.
 
-> Si aparece Windows SmartScreen («Windows protegió su PC»), pulsa **Más información → Ejecutar de todas formas**. Aparece porque el `.exe` no está firmado digitalmente.
+¿Prefieres no instalar nada? Descarga **`ClipQR.exe`** (versión portátil) y ábrelo directamente.
+
+> Si aparece Windows SmartScreen («Windows protegió su PC»), pulsa **Más información → Ejecutar de todas formas**. Aparece porque los `.exe` no están firmados digitalmente.
 
 ## Configuración
 
@@ -85,6 +87,8 @@ py -m pip install -r requirements.txt
 pythonw clipqr.py                   # ejecutar sin consola
 py clipqr.py imagen.png             # decodificar una imagen y mostrar el resultado
 build.bat                           # generar dist\ClipQR.exe con PyInstaller
+build_setup.bat                     # generar dist\ClipQR-Setup.exe (asistente de instalación)
+py tools\make_logo.py               # regenerar assets\logo.png (QR real al repositorio)
 py tools\screenshots.py             # regenerar las capturas de docs/screenshots
 ```
 
@@ -92,8 +96,11 @@ py tools\screenshots.py             # regenerar las capturas de docs/screenshots
 |---|---|
 | `clipqr.py` | Toda la aplicación: vigilancia del portapapeles, decodificación, interpretación de cada tipo, interfaz y bandeja del sistema |
 | `tools/screenshots.py` | Monta escenas con datos de ejemplo y genera las capturas del README |
-| `assets/` | Logo (`logo.png`) e icono del ejecutable |
+| `assets/` | Logo (`logo.png`, generado desde `logo-source.jpg`). Su QR lleva a este repositorio |
+| `tools/make_logo.py` | Limpia la imagen original y pone en el logo un QR real verificado |
+| `installer/setup.py` | Asistente de instalación (instala, accesos directos, inicio con Windows, desinstalador) |
 | `build.bat` | Compila el `.exe` en un solo archivo |
+| `build_setup.bat` | Compila `ClipQR-Setup.exe` con `ClipQR.exe` dentro |
 | `build_msix.ps1`, `msix/` | Paquete MSIX para la Microsoft Store (manifiesto e iconos) |
 | `PRIVACY.md` | Política de privacidad |
 | `docs/store-listing.md` | Textos y pasos para publicar en la Microsoft Store |
