@@ -102,7 +102,7 @@ def test_long_text_has_no_search_button():
 
 @pytest.mark.parametrize("text, expected", [
     ("WIFI:S:MiCasa;T:WPA;P:clave;;", "MiCasa"),
-    ("https://github.com/MojeZcg/ClipQR", "github.com"),
+    ("https://docs.example.com/guia", "example.com"),
     ("tel:+34600111222", "+34600111222"),
     ("Hola\nmundo", "Hola"),
 ])
