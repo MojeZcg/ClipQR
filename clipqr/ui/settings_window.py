@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 from clipqr import APP_NAME, VERSION
 from clipqr.icons import make_icon
 from clipqr.ui.theme import THEMES
-from clipqr.winplatform import style_window
+from clipqr.winplatform import PACKAGED, style_window
 
 
 class SettingsWindowMixin:
@@ -168,6 +168,13 @@ class SettingsWindowMixin:
         row(card, "Iniciar con Windows", None,
             lambda p: self._switch(p, self.autostart_enabled(),
                                    lambda v: self.autostart_enabled() != v and self.toggle_autostart()))
+        if not PACKAGED:  # la versión de la Store la actualiza la Store
+            row(card, "Buscar actualizaciones",
+                "Una vez al día consulta las versiones publicadas en GitHub. Solo se instalan si las aceptas, "
+                "y antes se comprueba que el instalador no está alterado.",
+                lambda p: self._switch(p, st["check_updates"], lambda v: save(check_updates=v)))
+            row(card, "Buscar ahora", f"Versión instalada: {VERSION}",
+                lambda p: self._button(p, "Buscar actualizaciones", cmd=lambda: self.check_updates(manual=True)))
 
         tk.Label(body, text="Los cambios se guardan al momento.", bg=c["bg"], fg=c["muted"],
                  font=self.font(8)).pack(pady=self.px(14))

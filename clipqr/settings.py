@@ -20,6 +20,7 @@ DEFAULT_SETTINGS = {
     # (Ctrl+Alt+Q escribe @) y el atajo impediría escribir esos caracteres.
     "hotkey_focus": "Ctrl+Shift+Space",
     "hotkey_region": "Win+Shift+Q",  # junto a Win+Shift+S, el de las capturas de Windows
+    "check_updates": True,  # una vez al día consulta las releases de GitHub
 }
 
 HOTKEY_FOCUS_CHOICES = ("Ctrl+Shift+Space", "Win+Alt+Space", "")

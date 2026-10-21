@@ -22,6 +22,7 @@ from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_l
 from clipqr.ui.history import HistoryMixin
 from clipqr.ui.popup import PopupMixin
 from clipqr.ui.region import RegionMixin
+from clipqr.ui.update_flow import UpdateMixin
 from clipqr.ui.settings_window import SettingsWindowMixin
 from clipqr.ui.theme import THEMES
 from clipqr.ui.widgets import WidgetsMixin
@@ -32,7 +33,7 @@ from clipqr.winplatform import (FROZEN, PACKAGED, RUN_KEY, UNINSTALL_KEY, instal
 POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a menudo
 
 
-class ClipQR(PopupMixin, RegionMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
+class ClipQR(PopupMixin, RegionMixin, UpdateMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
     def __init__(self, autostart=False):
         self.autostart_launch = autostart  # abierto por el inicio de Windows (no a mano)
         self.root = tk.Tk()
@@ -63,6 +64,11 @@ class ClipQR(PopupMixin, RegionMixin, HistoryMixin, SettingsWindowMixin, Widgets
         self.root.after(400, self.apply_hotkeys)
         self.root.after(500, self.first_run)
         self.root.after(700, self._scan_at_start)
+        self.root.after(15000, self._periodic_update_check)
+
+    def _periodic_update_check(self):
+        self.check_updates()
+        self.root.after(6 * 3600 * 1000, self._periodic_update_check)  # por si queda abierta días
 
     def hotkey_actions(self):
         """Atajo configurado -> qué hace. Las funciones se llaman desde el hilo de los atajos: pasan a Tk."""
@@ -115,6 +121,8 @@ class ClipQR(PopupMixin, RegionMixin, HistoryMixin, SettingsWindowMixin, Widgets
                 f"  ({hotkey_label(self.settings['hotkey_region'])})" if self.settings["hotkey_region"] else ""),
                 ui(self.scan_region)),
             pystray.Menu.SEPARATOR,
+            pystray.MenuItem(lambda item: f"Actualizar a ClipQR {self.update_info['version']}…" if self.update_info
+                             else "", ui(self.show_update_notice), visible=lambda item: bool(self.update_info)),
             pystray.MenuItem("Configuración…", ui(self.show_settings)),
             pystray.MenuItem("Pausar", ui(self.toggle_pause), checked=lambda item: self.paused),
             pystray.MenuItem("Iniciar con Windows", ui(self.toggle_autostart), checked=lambda item: self.autostart_enabled()),
