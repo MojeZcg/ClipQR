@@ -68,7 +68,7 @@ def parse_mx_cfdi(text):
     extra = [("Sello (últimos 8)", params["fe"])] if params.get("fe") else []
 
     return invoice_result(Comprobante(
-        "MX", "SAT (CFDI)", "CFDI", emisor=emisor, emisor_label="RFC emisor", receptor=receptor,
+        "MX", "SAT (CFDI)", "Factura (CFDI)", emisor=emisor, emisor_label="RFC emisor", receptor=receptor,
         receptor_label="RFC receptor", importe=total, moneda="MXN", autorizacion=uuid,
         autorizacion_label="Folio fiscal (UUID)", url_verificacion=url, organismo="el SAT",
         extra=extra, avisos=avisos))
