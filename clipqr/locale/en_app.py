@@ -373,7 +373,7 @@ EN = {
     'Donde lo dejé':
         'Where I left it',
     'Como Windows':
-        'Like Windows',
+        'System',
     'Claro':
         'Light',
     'Oscuro':
