@@ -82,7 +82,7 @@ Los ajustes se guardan en `%APPDATA%\ClipQR\settings.json`.
 
 ## Privacidad
 
-Todo se procesa en tu equipo. ClipQR no envía imágenes ni datos a ningún servidor. Solo se usa la red cuando pulsas un botón que la necesita, como abrir un enlace o buscar un producto. El historial se guarda solo en memoria y se borra al cerrar la aplicación.
+Todo se procesa en tu equipo. ClipQR no envía imágenes ni datos a ningún servidor. Por su cuenta solo consulta una vez al día si hay una versión nueva en GitHub (se puede desactivar). Por lo demás, solo usa la red cuando pulsas un botón que la necesita, como abrir un enlace o buscar un producto. El historial se guarda solo en memoria y se borra al cerrar la aplicación.
 
 ## Desde el código
 

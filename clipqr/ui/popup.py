@@ -419,6 +419,31 @@ class PopupMixin:
         force_foreground(user32.GetParent(win.winfo_id()))
         win.focus_force()
 
+    def notice(self, title, text, buttons, seconds=60):
+        """Aviso con título, texto y botones [(texto, función, principal)]. Para avisos de la propia app
+        (actualizaciones…), no de códigos."""
+        win = self._new_popup()
+        c = self.c
+        head = tk.Frame(win, bg=c["bg"])
+        head.pack(fill="x", padx=self.px(14), pady=(self.px(12), self.px(4)))
+        tk.Label(head, image=self._logo(22), bg=c["bg"], bd=0).pack(side="left", padx=(0, self.px(10)))
+        tk.Label(head, text=title, bg=c["bg"], fg=c["fg"], font=self.font(12, "bold")).pack(side="left")
+        tk.Label(win, text=text, bg=c["bg"], fg=c["muted"], font=self.font(9), justify="left", anchor="w",
+                 wraplength=self.px(360)).pack(fill="x", padx=self.px(14))
+        bar = tk.Frame(win, bg=c["bg"])
+        bar.pack(fill="x", padx=self.px(14), pady=(self.px(10), self.px(12)))
+        for label, fn, primary in buttons:
+            b = self._button(bar, label, color=KINDS["link"][2] if primary else None)
+            b.config(command=lambda fn=fn, b=b: fn(b))
+            b.pack(side="left", padx=(0, self.px(6)))
+        cd = tk.Canvas(win, height=self.px(3), bg=c["bg"], highlightthickness=0, bd=0)
+        cd.pack(fill="x", side="bottom")
+        cd.create_rectangle(0, 0, 9999, self.px(3), fill=KINDS["link"][2], width=0, tags="fill")
+        win._countdown = cd
+        win.bind("<Escape>", lambda e: self._close_popup())
+        self._show_animated(win, seconds)
+        return win
+
     def toast(self, msg, seconds=3):
         win = self._new_popup()
         c = self.c
