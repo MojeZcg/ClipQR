@@ -16,7 +16,8 @@ from clipqr.actions import connect_wifi, find_saved_capture, open_with_default_a
 from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
 from clipqr.payloads import parse_payload
-from clipqr.settings import CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, load_settings, log_exception
+from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, load_settings, load_state,
+                             log_exception, save_state)
 from clipqr.ui.history import HistoryMixin
 from clipqr.ui.popup import PopupMixin
 from clipqr.ui.settings_window import SettingsWindowMixin
@@ -30,7 +31,8 @@ POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a men
 
 
 class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
-    def __init__(self):
+    def __init__(self, autostart=False):
+        self.autostart_launch = autostart  # abierto por el inicio de Windows (no a mano)
         self.root = tk.Tk()
         self.root.withdraw()
         self.root.title(APP_NAME)
@@ -56,6 +58,16 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
         self.root.after(POLL_MS, self._poll)
         self.root.after(300, self._warm_up)
         self.root.after(500, self.first_run)
+        self.root.after(700, self._scan_at_start)
+
+    def _scan_at_start(self):
+        """Si se abre a mano y el portapapeles cambió mientras ClipQR no estaba abierto (por ejemplo, se
+        copió un QR y luego se abrió la app), se escanea. Al iniciarse con Windows no: lo que haya en el
+        portapapeles es de la sesión anterior."""
+        changed = load_state().get("clip_seq") != self.last_seq
+        save_state(clip_seq=self.last_seq)
+        if changed and not self.autostart_launch and not self.paused:
+            self.scan()
 
     def _icon_image(self, paused=False):
         return make_icon(paused, dark_bg=taskbar_is_dark())
@@ -110,13 +122,13 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
 
     def _autostart_cmd(self):
         if FROZEN:
-            return f'"{sys.executable}"'
+            return f'"{sys.executable}" --autostart'
         exe = sys.executable
         pyw = os.path.join(os.path.dirname(exe), "pythonw.exe")
         if os.path.exists(pyw):
             exe = pyw
         launcher = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
-        return f'"{exe}" "{launcher}"'
+        return f'"{exe}" "{launcher}" --autostart'
 
     def _autostart_value(self):
         import winreg
@@ -185,6 +197,7 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
             if seq != self.last_seq:
                 self.last_seq = seq
                 self.clip_time = time.time()
+                save_state(clip_seq=seq)
                 if not self.paused:
                     self.scan()
                     # reintento: algunas herramientas de captura escriben la imagen con retraso
@@ -323,20 +336,34 @@ def uninstall(silent=False):
         subprocess.Popen(f'cmd /c for /l %i in (1,1,30) do (ping -n 2 127.0.0.1 >nul & {remove})',
                          creationflags=no_window)
 
+def parse_cli(argv):
+    """Qué hacer según la línea de órdenes:
+    ("uninstall", silent)  ClipQR.exe --uninstall [/silent]   (desde «Aplicaciones instaladas»)
+    ("decode", rutas)      ClipQR.exe imagen.png …            (muestra lo que hay en cada imagen)
+    ("run", autostart)     ClipQR.exe [--autostart]           (--autostart: abierto por el inicio de Windows)"""
+    if argv[:1] == ["--uninstall"]:
+        return "uninstall", any(a.lower() in ("/silent", "--silent") for a in argv[1:])
+    files = [a for a in argv if not a.startswith("--")]
+    if files:
+        return "decode", files
+    return "run", "--autostart" in argv
+
+
 def main():
     try:
         ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
         pass
-    if sys.argv[1:2] == ["--uninstall"]:  # lo lanza Windows desde «Aplicaciones instaladas»
-        uninstall(silent=any(a.lower() in ("/silent", "--silent") for a in sys.argv[2:]))
+    mode, arg = parse_cli(sys.argv[1:])
+    if mode == "uninstall":
+        uninstall(silent=arg)
         return
-    if len(sys.argv) > 1:  # modo prueba: py main.py imagen.png
+    if mode == "decode":
         sys.stdout.reconfigure(encoding="utf-8")
-        for path in sys.argv[1:]:
+        for path in arg:
             for c in decode_image(Image.open(path)):
                 print(c["format"], "|", c["text"], "|", parse_payload(c["text"]))
         return
     if not single_instance():
         return
-    ClipQR().run()
+    ClipQR(autostart=arg).run()

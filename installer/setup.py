@@ -89,7 +89,7 @@ def install(autostart, desktop):
 
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
         if autostart:
-            winreg.SetValueEx(k, APP, 0, winreg.REG_SZ, f'"{EXE}"')
+            winreg.SetValueEx(k, APP, 0, winreg.REG_SZ, f'"{EXE}" --autostart')
         else:
             try:
                 winreg.DeleteValue(k, APP)
