@@ -6,8 +6,8 @@ import tkinter as tk
 from clipqr.icons import make_icon
 from clipqr.payloads import format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.winplatform import (area_containing, clamp_to_area, send_to_recycle_bin, style_window, work_area,
-                                work_areas)
+from clipqr.winplatform import (area_containing, clamp_to_area, force_foreground, send_to_recycle_bin,
+                                style_window, user32, work_area, work_areas)
 
 MAX_CARDS = 4
 
@@ -37,6 +37,7 @@ class PopupMixin:
         b_head = self._button(top, "Copiar")
         b_head.config(command=lambda: self.copy(head_value, b_head))
         b_head.pack(side="right", anchor="n")
+        copy_buttons = [b_head]  # para los atajos 1–9: el dato principal y luego el resto, en orden
         head = tk.Frame(top, bg=c["card"])
         head.pack(side="left", fill="x", expand=True)
         meta = tk.Frame(head, bg=c["card"])
@@ -62,13 +63,17 @@ class PopupMixin:
                     b.config(font=self.font(10, "bold"), padx=self.px(16), pady=self.px(6))
                 b.config(command=lambda k=kind_a, a=arg, b=b: self.run_action(k, a, b))
                 b.pack(side="left", padx=(0, self.px(6)), pady=(0, self.px(2)))
+                if i == 0 and getattr(self, "_kbd_primary", None) is not None:
+                    self._kbd_primary.append(b)
 
         # resto de datos, compactos
         if rows:
             box = tk.Frame(inner, bg=c["card"])
             box.pack(fill="x", pady=(self.px(10), 0))
             for label, value in rows:
-                self._row(box, label, value)
+                copy_buttons.append(self._row(box, label, value))
+        if getattr(self, "_kbd_copy", None) is not None:
+            self._kbd_copy.extend(copy_buttons)
 
         # texto completo plegado (en «Texto» se ve desde el principio si es largo)
         foot = tk.Frame(inner, bg=c["card"])
@@ -228,6 +233,8 @@ class PopupMixin:
             inside = win.winfo_rootx() <= px_ < win.winfo_rootx() + w and win.winfo_rooty() <= py_ < win.winfo_rooty() + h
             if win._pinned:  # fijado: no se cierra solo
                 state["left"] = total
+            elif self._popup_has_focus(win):  # usándolo con el teclado
+                pass
             elif not (inside and self.settings["pause_on_hover"]):  # se pausa con el ratón encima
                 state["left"] -= 50
             if state["left"] <= 0:
@@ -313,15 +320,17 @@ class PopupMixin:
             wdg.bind("<ButtonRelease-1>", release)
 
         win._codes = codes
+        self._kbd_copy, self._kbd_primary = [], []  # _card los rellena (atajos 1–9 y Enter)
         for code in codes[:MAX_CARDS]:
             self._card(win, code)
+        win._kbd_copy, win._kbd_primary = self._kbd_copy, self._kbd_primary
+        self._kbd_copy = self._kbd_primary = None
         win._capture_slot = tk.Frame(win, bg=c["bg"])
         if n > MAX_CARDS:
             tk.Label(win, text=f"+{n - MAX_CARDS} más en el historial", bg=c["bg"], fg=c["muted"],
                      font=self.font(8)).pack()
 
-        win._hint = tk.Label(win, text="Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar", bg=c["bg"],
-                             fg=c["muted"], font=self.font(8))
+        win._hint = tk.Label(win, text=self.HINT_MOUSE, bg=c["bg"], fg=c["muted"], font=self.font(8))
         win._hint.pack(pady=(0, self.px(6)))
         cd = tk.Canvas(win, height=self.px(3), bg=c["bg"], highlightthickness=0, bd=0)
         cd.pack(fill="x", side="bottom")
@@ -329,8 +338,65 @@ class PopupMixin:
         win._countdown = cd
 
         win.bind("<Escape>", lambda e: self._close_popup())
+        self._bind_keyboard(win)
         self._show_animated(win, self.settings["seconds"], can_stay_open=True)
         self._paint_capture_slot(codes)  # al reabrir desde el historial
+
+    # ---- teclado
+    HINT_MOUSE = "Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar"
+    HINT_KEYS = "Enter: acción · 1–9: copiar · Tab: moverse · Esc: cerrar"
+
+    def _bind_keyboard(self, win):
+        """El aviso no roba el foco al aparecer. Al tomarlo (atajo global o clic) se maneja con el teclado:
+        Enter = acción principal del primer código, 1–9 = copiar ese dato, Ctrl+C = copiar el dato
+        principal, Tab = recorrer los botones (Espacio o Enter los pulsa), Esc = cerrar."""
+        def in_button_or_text():
+            f = win.focus_get()
+            return isinstance(f, (tk.Button, tk.Text))
+
+        def primary(e):
+            if not in_button_or_text() and win._kbd_primary:
+                win._kbd_primary[0].invoke()
+
+        def copy_main(e):
+            if not in_button_or_text() and win._kbd_copy:
+                win._kbd_copy[0].invoke()
+
+        def copy_n(n):
+            if n <= len(win._kbd_copy):
+                win._kbd_copy[n - 1].invoke()
+
+        for n in range(1, 10):
+            win.bind(f"<Key-{n}>", lambda e, n=n: copy_n(n))
+        win.bind("<Return>", primary)
+        win.bind("<Control-c>", copy_main)
+        win.bind("<FocusIn>", lambda e: self._kbd_mode(win, True))
+        win.bind("<FocusOut>", lambda e: win.after(30, lambda: win.winfo_exists() and self._kbd_mode(
+            win, self._popup_has_focus(win))))
+        win.bind("<ButtonPress-1>", lambda e: win.focus_force(), add="+")
+
+    def _popup_has_focus(self, win):
+        f = win.focus_get()
+        return f is not None and str(f).startswith(str(win))
+
+    def _kbd_mode(self, win, on):
+        """Con el foco en el aviso, los botones «Copiar» muestran su número y la pista cambia."""
+        if getattr(win, "_kbd_on", False) == on:
+            return
+        win._kbd_on = on
+        for n, b in enumerate(win._kbd_copy[:9], start=1):
+            if b.winfo_exists():
+                b.config(text=f"Copiar  {n}" if on else "Copiar")
+        win._hint.config(text=self.HINT_KEYS if on else self.HINT_MOUSE)
+
+    def focus_popup(self):
+        """Atajo global: pasa el foco al aviso abierto para usarlo con el teclado."""
+        win = self.popup
+        if win is None or not win.winfo_exists() or not hasattr(win, "_kbd_copy"):
+            return
+        win._pinned = True  # mientras se usa con el teclado no se cierra solo
+        force_foreground(user32.GetParent(win.winfo_id()))
+        win.focus_force()
 
     def toast(self, msg, seconds=3):
         win = self._new_popup()

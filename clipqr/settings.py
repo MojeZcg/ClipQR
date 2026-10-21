@@ -16,7 +16,17 @@ DEFAULT_SETTINGS = {
     "autoclose": True, "seconds": 25, "pause_on_hover": True,
     "theme": "auto", "animation": True, "sound": False,
     "qr_only": False, "explorer_files": True, "history_max": 50, "delete_capture": False,
+    # "" = desactivado. Nada de Ctrl+Alt+letra: en teclados español/latinoamericano Ctrl+Alt es AltGr
+    # (Ctrl+Alt+Q escribe @) y el atajo impediría escribir esos caracteres.
+    "hotkey_focus": "Ctrl+Shift+Space",
 }
+
+HOTKEY_FOCUS_CHOICES = ("Ctrl+Shift+Space", "Win+Alt+Space", "")
+
+
+def hotkey_label(hotkey):
+    """«Ctrl+Alt+Space» -> «Ctrl+Alt+Espacio» para mostrarlo."""
+    return hotkey.replace("Space", "Espacio") if hotkey else "Desactivado"
 
 POSITIONS = (("top-right", "Arriba a la derecha"), ("bottom-right", "Abajo a la derecha"),
              ("center", "En el centro"), ("custom", "Donde lo dejé al arrastrarlo"))
