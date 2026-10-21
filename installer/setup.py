@@ -9,6 +9,7 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import tkinter as tk
 import winreg
@@ -65,10 +66,13 @@ def make_shortcut(lnk, target):
 def install(autostart, desktop):
     # cerrar ClipQR si está abierto (actualización)
     subprocess.run(["taskkill", "/F", "/IM", f"{APP}.exe"], capture_output=True, creationflags=NO_WINDOW)
-    os.makedirs(INSTALL_DIR, exist_ok=True)
-    for attempt in range(10):  # el proceso cerrado puede tardar un momento en soltar el archivo
+    # se instala la versión en carpeta (ClipQR.exe + _internal): arranca al momento, porque no tiene
+    # que descomprimirse en cada inicio como el .exe portátil de un solo archivo
+    for attempt in range(10):  # el proceso cerrado puede tardar un momento en soltar los archivos
         try:
-            shutil.copyfile(resource(f"{APP}.exe"), EXE)
+            if os.path.isdir(INSTALL_DIR):
+                shutil.rmtree(INSTALL_DIR)  # quitar la versión anterior (incluida una de un solo archivo)
+            shutil.copytree(resource("app"), INSTALL_DIR)
             break
         except PermissionError:
             if attempt == 9:
@@ -212,15 +216,27 @@ class Wizard:
         if str(self.install_btn.cget("state")) == "disabled":
             return
         self.install_btn.config(state="disabled", text="Instalando…")
-        self.status.config(text="")
-        self.root.update()
-        try:
-            install(self.autostart.get(), self.desktop.get())
-        except Exception as e:
-            self.install_btn.config(state="normal", text="Reintentar")
-            self.status.config(text=f"No se pudo instalar: {e}", fg="#e5484d")
-            return
-        self.page_done()
+        self.status.config(text="Copiando archivos…", fg=self.c["muted"])
+        result = {}
+
+        def work():  # en segundo plano: la ventana sigue respondiendo mientras se copia
+            try:
+                install(self.autostart.get(), self.desktop.get())
+            except Exception as e:
+                result["error"] = e
+            result["done"] = True
+
+        def check():
+            if not result.get("done"):
+                self.root.after(100, check)
+            elif "error" in result:
+                self.install_btn.config(state="normal", text="Reintentar")
+                self.status.config(text=f"No se pudo instalar: {result['error']}", fg="#e5484d")
+            else:
+                self.page_done()
+
+        threading.Thread(target=work, daemon=True).start()
+        check()
 
     def page_done(self):
         c = self.c

@@ -38,10 +38,12 @@ Write-Host "ClipQR $version  ($IdentityName / $Publisher)"
 # 1) programa
 py -m pip install --user -q -r requirements.txt pyinstaller
 py -c "import clipqr; clipqr.make_icon(size=256, outline=True).save('assets/clipqr.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
-py -m PyInstaller --noconfirm --windowed --name ClipQR --icon "$PSScriptRoot\assets\clipqr.ico" `
+py -m PyInstaller --noconfirm --windowed --name ClipQR --exclude-module numpy --icon "$PSScriptRoot\assets\clipqr.ico" `
   --add-data "$PSScriptRoot\assets\logo.png;assets" --add-data "$PSScriptRoot\assets\logo-white.png;assets" `
   --distpath build\msix-dist --workpath build\msix-work --specpath build clipqr.py
 if ($LASTEXITCODE) { throw "PyInstaller falló" }
+# zonas horarias de Tcl: Tk no las usa y son ~600 archivos
+Remove-Item build\msix-dist\ClipQR\_internal\_tcl_data\tzdata -Recurse -Force -ErrorAction SilentlyContinue
 
 # 2) estructura del paquete
 $layout = "build\msix-layout"

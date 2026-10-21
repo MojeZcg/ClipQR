@@ -74,6 +74,7 @@ Desde el icono ⚙ del aviso o desde **Configuración…** en el menú de la ban
 - **Aviso:** tiempo visible (de 5 s a 5 min), cerrar solo o no, pausa con el ratón encima, animación y posición. El aviso también se puede arrastrar y fijar con 📌.
 - **Apariencia:** tema claro, oscuro o el mismo que Windows.
 - **Detección:** solo QR o también códigos de barras, leer archivos copiados desde el Explorador, sonido al detectar y pausar la detección.
+- **Borrar las capturas con QR:** Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR, el aviso ofrece **Borrar captura**, o lo hace solo si activas esta opción. Va a la Papelera (se puede recuperar) y solo se borra el archivo idéntico a la captura.
 - **Historial:** cuántos escaneos se guardan y borrar el historial.
 - **General:** iniciar con Windows.
 

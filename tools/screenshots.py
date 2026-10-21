@@ -88,7 +88,7 @@ def backdrop(w, h, hero=False):
         feats = ["Detecta QR y códigos de barras en el portapapeles",
                  "Conecta al Wi-Fi, guarda contactos, abre enlaces",
                  "Copia cualquier dato con un clic · nada se ejecuta solo",
-                 "Un solo .exe para Windows, sin instalar nada"]
+                 "Se instala en segundos, sin permisos de administrador"]
         fy = y + int(370 * s)
         for f in feats:
             d.ellipse((x + int(6 * s), fy + int(15 * s), x + int(16 * s), fy + int(25 * s)), fill=(125, 249, 255))

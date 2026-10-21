@@ -24,7 +24,7 @@ import pystray
 
 APP_NAME = "ClipQR"
 VERSION = "1.0.0"
-POLL_MS = 400
+POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a menudo
 MAX_CARDS = 4
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp", ".tif", ".tiff"}
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
@@ -200,6 +200,29 @@ FORMAT_NAMES = {"QRCode": "Código QR", "MicroQRCode": "Micro QR", "RMQRCode": "
                 "Aztec": "Aztec", "PDF417": "PDF417", "EAN13": "EAN-13", "EAN8": "EAN-8", "UPCA": "UPC-A",
                 "UPCE": "UPC-E", "Code128": "Code 128", "Code39": "Code 39", "Code93": "Code 93",
                 "ITF": "ITF", "Codabar": "Codabar"}
+
+
+def headline(kind, items, text):
+    """(etiqueta, valor) del dato que se muestra en grande en el aviso."""
+    want = {"wifi": ("Red (SSID)",), "contact": ("Nombre", "Empresa", "Teléfono", "Email"),
+            "email": ("Email",), "phone": ("Número",), "sms": ("Número",), "geo": ("Coordenadas",),
+            "event": ("Evento",), "product": ("Código",), "otp": ("Emisor", "Cuenta"), "link": ("Dominio",)}
+    for label in want.get(kind, ()):
+        for l, v in items:
+            if l == label and v:
+                return l, v
+    first = text.strip().splitlines()[0] if text.strip() else text
+    return None, first
+
+
+def shorten(s, n, middle=False):
+    s = " ".join(s.split())
+    if len(s) <= n:
+        return s
+    if middle:
+        k = (n - 1) // 2
+        return s[:k] + "…" + s[-k:]
+    return s[:n - 1] + "…"
 
 
 def format_name(fmt):
@@ -430,6 +453,66 @@ def connect_wifi(ssid, password, auth, hidden=False):
                    "Comprueba que la red está al alcance y que la contraseña es correcta.")
 
 
+def screenshots_folder():
+    """Carpeta donde Windows guarda las capturas (Recortes, Win+Impr Pant): Imágenes › Capturas de pantalla."""
+    import uuid
+
+    class GUID(ctypes.Structure):
+        _fields_ = [("data", ctypes.c_byte * 16)]
+
+    guid = GUID()
+    ctypes.memmove(ctypes.byref(guid), uuid.UUID("b7bede81-df94-4682-a7d8-57a52620b86f").bytes_le, 16)
+    path = ctypes.c_wchar_p()
+    if ctypes.windll.shell32.SHGetKnownFolderPath(ctypes.byref(guid), 0, None, ctypes.byref(path)) != 0:
+        return None
+    return path.value
+
+
+def find_saved_capture(img, since, timeout=5.0):
+    """Busca en la carpeta de capturas el archivo de esta captura: creado desde `since` y con
+    exactamente los mismos píxeles (así nunca se confunde con otra imagen). Recortes guarda el
+    archivo un momento después de copiarla, por eso se reintenta durante `timeout` segundos."""
+    folder = screenshots_folder()
+    if not folder or not os.path.isdir(folder):
+        return None
+    want = hashlib.md5(img.convert("RGB").tobytes()).digest()
+    checked = set()
+    end = time.time() + timeout
+    while time.time() < end:
+        try:
+            entries = [e for e in os.scandir(folder) if e.is_file()
+                       and os.path.splitext(e.name)[1].lower() in (".png", ".jpg", ".jpeg")
+                       and max(e.stat().st_mtime, e.stat().st_ctime) >= since - 2]  # ctime = creación en Windows
+        except OSError:
+            entries = []
+        for e in entries:
+            key = (e.path, e.stat().st_size)
+            if key in checked:
+                continue
+            checked.add(key)
+            try:
+                with Image.open(e.path) as f:
+                    if f.size == img.size and hashlib.md5(f.convert("RGB").tobytes()).digest() == want:
+                        return e.path
+            except OSError:
+                pass  # aún se está escribiendo
+        time.sleep(0.4)
+    return None
+
+
+def send_to_recycle_bin(path):
+    """Envía un archivo a la Papelera de reciclaje (recuperable). Devuelve True si se pudo."""
+    class SHFILEOPSTRUCTW(ctypes.Structure):
+        _fields_ = [("hwnd", wintypes.HWND), ("wFunc", wintypes.UINT), ("pFrom", wintypes.LPCWSTR),
+                    ("pTo", wintypes.LPCWSTR), ("fFlags", ctypes.c_ushort), ("fAnyOperationsAborted", wintypes.BOOL),
+                    ("hNameMappings", ctypes.c_void_p), ("lpszProgressTitle", wintypes.LPCWSTR)]
+
+    FO_DELETE, FOF_SILENT, FOF_NOCONFIRMATION, FOF_ALLOWUNDO, FOF_NOERRORUI = 3, 0x4, 0x10, 0x40, 0x400
+    op = SHFILEOPSTRUCTW(wFunc=FO_DELETE, pFrom=os.path.abspath(path) + "\0",
+                         fFlags=FOF_SILENT | FOF_NOCONFIRMATION | FOF_ALLOWUNDO | FOF_NOERRORUI)
+    return ctypes.windll.shell32.SHFileOperationW(ctypes.byref(op)) == 0 and not os.path.exists(path)
+
+
 def open_with_default_app(content, ext):
     """Guarda el contenido en un archivo temporal y lo abre con la app predeterminada."""
     import tempfile
@@ -537,7 +620,7 @@ DEFAULT_SETTINGS = {
     "position": "top-right", "x": None, "y": None,
     "autoclose": True, "seconds": 25, "pause_on_hover": True,
     "theme": "auto", "animation": True, "sound": False,
-    "qr_only": False, "explorer_files": True, "history_max": 50,
+    "qr_only": False, "explorer_files": True, "history_max": 50, "delete_capture": False,
 }
 POSITIONS = (("top-right", "Arriba a la derecha"), ("bottom-right", "Abajo a la derecha"),
              ("center", "En el centro"), ("custom", "Donde lo dejé al arrastrarlo"))
@@ -578,6 +661,7 @@ class ClipQR:
         self.c = THEMES[self.theme_name()]
         self.last_seq = user32.GetClipboardSequenceNumber()
         self.last_hash = None
+        self.clip_time = time.time()
         self.history = []  # lista de escaneos; cada uno es una lista de dicts {format, text, thumb, time}
         self.popup = None
         self.popup_job = None
@@ -587,6 +671,7 @@ class ClipQR:
         self.tray = self._build_tray()
         self.tray.run_detached()
         self.root.after(POLL_MS, self._poll)
+        self.root.after(300, self._warm_up)
         self.root.after(500, self.first_run)
 
     def px(self, n):
@@ -730,6 +815,7 @@ class ClipQR:
             seq = user32.GetClipboardSequenceNumber()
             if seq != self.last_seq:
                 self.last_seq = seq
+                self.clip_time = time.time()
                 if not self.paused:
                     self.scan()
                     # reintento: algunas herramientas de captura escriben la imagen con retraso
@@ -757,8 +843,62 @@ class ClipQR:
                         codes.append({"format": c["format"], "text": c["text"],
                                       "thumb": make_thumb(img, c["box"]), "time": time.time()})
             self.root.after(0, lambda: self._on_result(codes, force))
+            # captura de pantalla (no un archivo copiado): buscar el archivo que guarda Windows
+            if codes and len(imgs) == 1 and not getattr(imgs[0], "filename", None):
+                path = find_saved_capture(imgs[0], since)
+                if path:
+                    self.root.after(0, lambda: self._on_capture(codes, path))
 
+        since = self.clip_time
         threading.Thread(target=work, daemon=True).start()
+
+    def _on_capture(self, codes, path):
+        for c in codes:
+            c["capture"] = path
+        if self.settings["delete_capture"]:
+            deleted = send_to_recycle_bin(path)
+            for c in codes:
+                c["capture_deleted"] = deleted
+        self._paint_capture_slot(codes)
+
+    def _paint_capture_slot(self, codes):
+        """Línea del aviso sobre el archivo de la captura: ya borrado, o botón para borrarlo."""
+        win = self.popup
+        if win is None or not win.winfo_exists() or getattr(win, "_codes", None) is not codes:
+            return
+        path = codes[0].get("capture")
+        slot = win._capture_slot
+        for w in slot.winfo_children():
+            w.destroy()
+        if not path:
+            return
+        c = self.c
+        g = "\ue74d" if self.icon_font else "🗑"
+        gf = (self.icon_font, 9) if self.icon_font else self.font(9)
+        tk.Label(slot, text=g, font=gf, bg=c["bg"], fg=c["muted"]).pack(side="left", padx=(0, self.px(6)))
+        msg = tk.Label(slot, bg=c["bg"], fg=c["muted"], font=self.font(9), anchor="w")
+        msg.pack(side="left", fill="x", expand=True)
+        if codes[0].get("capture_deleted"):
+            msg.config(text="Captura enviada a la Papelera")
+        elif os.path.exists(path):
+            msg.config(text=f"Captura guardada: {shorten(os.path.basename(path), 34, middle=True)}")
+            b = self._button(slot, "Borrar captura")
+
+            def delete():
+                ok = send_to_recycle_bin(path)
+                for code in codes:
+                    code["capture_deleted"] = ok
+                if ok:
+                    self._paint_capture_slot(codes)
+                else:
+                    self._flash(b, "No se pudo borrar", ok=False)
+
+            b.config(command=delete)
+            b.pack(side="right")
+        else:
+            msg.config(text="La captura ya no está en la carpeta")
+        slot.pack(fill="x", padx=self.px(14), pady=(0, self.px(8)), before=win._hint)
+        self._refit_popup()
 
     def _on_result(self, codes, force):
         if not codes:
@@ -866,61 +1006,144 @@ class ClipQR:
         return p
 
     def _card(self, parent, code):
+        """Tarjeta de un código, pensada para leerse de un vistazo: el dato principal en grande,
+        la acción principal justo debajo, el resto de datos compactos y el texto crudo plegado."""
         c = self.c
         kind, title, items, actions = parse_payload(code["text"])
         accent = KINDS[kind][2]
+        text = code["text"]
+        head_label, head_value = headline(kind, items, text)
+        rows = [(l, v) for l, v in items if (l, v) != (head_label, head_value)]
+
         card = tk.Frame(parent, bg=c["card"], highlightthickness=1, highlightbackground=c["border"])
         card.pack(fill="x", padx=self.px(12), pady=(0, self.px(8)))
         inner = tk.Frame(card, bg=c["card"])
-        inner.pack(fill="both", padx=self.px(10), pady=self.px(10))
+        inner.pack(fill="both", padx=self.px(12), pady=self.px(10))
 
-        # cabecera de la tarjeta: miniatura + icono + tipo
+        # tipo (pequeño, en color) + dato principal (grande)
         top = tk.Frame(inner, bg=c["card"])
         top.pack(fill="x")
         if code.get("thumb") is not None:
-            tk.Label(top, image=self._photo(code["thumb"], self.px(52)), bg=c["card"], bd=0).pack(side="left", padx=(0, self.px(10)))
+            tk.Label(top, image=self._photo(code["thumb"], self.px(46)), bg=c["card"], bd=0).pack(
+                side="left", anchor="n", padx=(0, self.px(12)))
+        b_head = self._button(top, "Copiar")
+        b_head.config(command=lambda: self.copy(head_value, b_head))
+        b_head.pack(side="right", anchor="n")
         head = tk.Frame(top, bg=c["card"])
         head.pack(side="left", fill="x", expand=True)
-        line = tk.Frame(head, bg=c["card"])
-        line.pack(anchor="w")
+        meta = tk.Frame(head, bg=c["card"])
+        meta.pack(anchor="w")
         g, gf = self.glyph(kind)
-        tk.Label(line, text=g, font=gf, bg=c["card"], fg=accent).pack(side="left", padx=(0, self.px(6)))
-        tk.Label(line, text=title, bg=c["card"], fg=c["fg"], font=self.font(11, "bold")).pack(side="left")
-        tk.Label(head, text=format_name(code["format"]), bg=c["card"], fg=c["muted"], font=self.font(8)).pack(anchor="w")
+        tk.Label(meta, text=g, font=(gf[0], 10), bg=c["card"], fg=accent).pack(side="left", padx=(0, self.px(5)))
+        tk.Label(meta, text=title.upper(), bg=c["card"], fg=accent, font=self.font(8, "bold")).pack(side="left")
+        tk.Label(meta, text=f"  ·  {format_name(code['format'])}", bg=c["card"], fg=c["muted"],
+                 font=self.font(8)).pack(side="left")
+        tk.Label(head, text=shorten(head_value, 70), bg=c["card"], fg=c["fg"], font=self.font(15, "bold"),
+                 anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
+        if kind == "link":  # el dominio no basta: la URL completa, en pequeño
+            tk.Label(head, text=shorten(text, 90, middle=True), bg=c["card"], fg=c["muted"], font=self.font(9),
+                     anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
 
-        # contenido completo, seleccionable
-        text = code["text"]
-        lines = min(max(text.count("\n") + 1, len(text) // 50 + 1), 5)
-        txt = tk.Text(inner, height=lines, width=50, wrap="word", bg=c["textbg"], fg=c["fg"], relief="flat",
-                      font=("Consolas", 9), padx=self.px(6), pady=self.px(4), selectbackground=accent,
-                      selectforeground="white", highlightthickness=0, bd=0, cursor="xterm")
-        txt.insert("1.0", text)
-        txt.config(state="disabled")
-        txt.pack(fill="x", pady=(self.px(8), self.px(6)))
+        # acción principal en grande, las demás al lado
+        if actions:
+            bar = tk.Frame(inner, bg=c["card"])
+            bar.pack(fill="x", pady=(self.px(10), 0))
+            for i, (label, kind_a, arg) in enumerate(actions):
+                b = self._button(bar, label, color=accent)
+                if i == 0:
+                    b.config(font=self.font(10, "bold"), padx=self.px(16), pady=self.px(6))
+                b.config(command=lambda k=kind_a, a=arg, b=b: self.run_action(k, a, b))
+                b.pack(side="left", padx=(0, self.px(6)), pady=(0, self.px(2)))
 
-        for label, value in items:
-            self._row(inner, label, value)
+        # resto de datos, compactos
+        if rows:
+            box = tk.Frame(inner, bg=c["card"])
+            box.pack(fill="x", pady=(self.px(10), 0))
+            for label, value in rows:
+                self._row(box, label, value)
 
-        # acciones: primero las del tipo (colores), luego copiar
-        bar = tk.Frame(inner, bg=c["card"])
-        bar.pack(fill="x", pady=(self.px(8), 0))
-        for label, kind_a, arg in actions:
-            b = self._button(bar, label, color=accent)
-            b.config(command=lambda k=kind_a, a=arg, b=b: self.run_action(k, a, b))
-            b.pack(side="left", padx=(0, self.px(6)), pady=(0, self.px(4)))
-        b_all = self._button(bar, "Copiar todo")
+        # texto completo plegado (en «Texto» se ve desde el principio si es largo)
+        foot = tk.Frame(inner, bg=c["card"])
+        foot.pack(fill="x", pady=(self.px(8), 0))
+        raw = tk.Frame(inner, bg=c["card"])
+        toggle = tk.Label(foot, bg=c["card"], fg=c["muted"], font=self.font(9), cursor="hand2")
+        toggle.pack(side="left")
+        b_all = self._button(foot, "Copiar todo")
         b_all.config(command=lambda: self.copy(text, b_all))
-        b_all.pack(side="left", padx=(0, self.px(6)), pady=(0, self.px(4)))
-        b_sel = self._button(bar, "Copiar selección")
+        b_all.pack(side="right")
+        state = {"open": False, "built": False}
 
-        def copy_sel():
-            try:
-                self.copy(txt.get("sel.first", "sel.last"), b_sel)
-            except tk.TclError:
-                self._flash(b_sel, "Selecciona texto arriba", ok=False)
+        def build_raw():
+            lines = min(max(text.count("\n") + 1, len(text) // 50 + 1), 6)
+            txt = tk.Text(raw, height=lines, width=50, wrap="word", bg=c["textbg"], fg=c["fg"], relief="flat",
+                          font=("Consolas", 9), padx=self.px(6), pady=self.px(4), selectbackground=accent,
+                          selectforeground="white", highlightthickness=0, bd=0, cursor="xterm")
+            txt.insert("1.0", text)
+            txt.config(state="disabled")
+            txt.pack(fill="x", pady=(self.px(6), self.px(4)))
+            b_sel = self._button(raw, "Copiar selección")
 
-        b_sel.config(command=copy_sel)
-        b_sel.pack(side="left", pady=(0, self.px(4)))
+            def copy_sel():
+                try:
+                    self.copy(txt.get("sel.first", "sel.last"), b_sel)
+                except tk.TclError:
+                    self._flash(b_sel, "Selecciona texto arriba", ok=False)
+
+            b_sel.config(command=copy_sel)
+            b_sel.pack(anchor="e")
+
+        def flip(e=None):
+            state["open"] = not state["open"]
+            if state["open"]:
+                if not state["built"]:
+                    build_raw()
+                    state["built"] = True
+                raw.pack(fill="x", after=foot)
+            else:
+                raw.pack_forget()
+            toggle.config(text=("▾ Ocultar texto completo" if state["open"] else "▸ Ver texto completo"))
+            if e is not None and self.popup is not None:
+                self._refit_popup()
+
+        toggle.config(text="▸ Ver texto completo")
+        toggle.bind("<Button-1>", flip)
+        toggle.bind("<Enter>", lambda e: toggle.config(fg=c["fg"]))
+        toggle.bind("<Leave>", lambda e: toggle.config(fg=c["muted"]))
+        if kind == "text" and (len(text) > 70 or "\n" in text):
+            flip()
+
+    def _warm_up(self):
+        """Muestra un aviso de ejemplo fuera de la pantalla y transparente para que Tk cargue fuentes y
+        recursos al arrancar; si no, el primer aviso real tarda casi un segundo en aparecer."""
+        win = tk.Toplevel(self.root, bg=self.c["bg"])
+        win.overrideredirect(True)
+        win.attributes("-alpha", 0.0)
+        win.attributes("-topmost", True)
+        win.geometry("+-4000+-4000")
+        sample = {"format": "QRCode", "text": "WIFI:T:WPA;S:ClipQR;P:clipqr;;\nhttps://example.com",
+                  "thumb": make_icon(size=64).convert("RGB")}
+        self._card(win, sample)
+        tk.Label(win, image=self._logo(18)).pack()
+        tk.Canvas(win, height=3).pack()
+        tk.Entry(win, font=self.font(10)).pack()
+        style_window(win, border=self.c["border"])
+        win.update()
+        win.destroy()
+
+    def _refit_popup(self):
+        """Reajusta el alto del aviso al desplegar/plegar contenido, sin moverlo de sitio."""
+        win = self.popup
+        if win is None or not win.winfo_exists():
+            return
+        win.update_idletasks()
+        rect = self._work_area()
+        h = min(win.winfo_reqheight(), rect.bottom - rect.top - self.px(24))
+        x, y = win.winfo_x(), win.winfo_y()
+        if y + h > rect.bottom:
+            y = max(rect.top, rect.bottom - h - self.px(16))
+        win.geometry(f"{win.winfo_width()}x{h}+{x}+{y}")
+        if getattr(win, "_countdown", None) is not None:
+            win._countdown.coords("fill", 0, 0, win.winfo_width(), self.px(3))
 
     # ---- popup
     def _close_popup(self):
@@ -969,7 +1192,7 @@ class ClipQR:
         h = min(win.winfo_reqheight(), rect.bottom - rect.top - self.px(24))
         x, y, dy = self._popup_xy(w, h)
         style_window(win, border=self.c["border"])
-        steps = 12 if self.settings["animation"] else 0
+        steps = 8 if self.settings["animation"] else 0
         win._pinned = can_stay_open and not self.settings["autoclose"]
 
         def frame(i=0):
@@ -1078,14 +1301,17 @@ class ClipQR:
             wdg.bind("<B1-Motion>", motion)
             wdg.bind("<ButtonRelease-1>", release)
 
+        win._codes = codes
         for code in codes[:MAX_CARDS]:
             self._card(win, code)
+        win._capture_slot = tk.Frame(win, bg=c["bg"])
         if n > MAX_CARDS:
             tk.Label(win, text=f"+{n - MAX_CARDS} más en el historial", bg=c["bg"], fg=c["muted"],
                      font=self.font(8)).pack()
 
-        tk.Label(win, text="Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar", bg=c["bg"],
-                 fg=c["muted"], font=self.font(8)).pack(pady=(0, self.px(6)))
+        win._hint = tk.Label(win, text="Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar", bg=c["bg"],
+                             fg=c["muted"], font=self.font(8))
+        win._hint.pack(pady=(0, self.px(6)))
         cd = tk.Canvas(win, height=self.px(3), bg=c["bg"], highlightthickness=0, bd=0)
         cd.pack(fill="x", side="bottom")
         cd.create_rectangle(0, 0, 9999, self.px(3), fill=accent, width=0, tags="fill")
@@ -1093,6 +1319,7 @@ class ClipQR:
 
         win.bind("<Escape>", lambda e: self._close_popup())
         self._show_animated(win, self.settings["seconds"], can_stay_open=True)
+        self._paint_capture_slot(codes)  # al reabrir desde el historial
 
     def toast(self, msg, seconds=3):
         win = self._new_popup()
@@ -1294,6 +1521,10 @@ class ClipQR:
             lambda p: self._switch(p, st["qr_only"], lambda v: save(qr_only=v)))
         row(card, "Leer archivos copiados", "Imágenes copiadas desde el Explorador de archivos.",
             lambda p: self._switch(p, st["explorer_files"], lambda v: save(explorer_files=v)))
+        row(card, "Borrar las capturas con QR",
+            "Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. "
+            "Si está desactivado, el aviso muestra un botón para hacerlo.",
+            lambda p: self._switch(p, st["delete_capture"], lambda v: save(delete_capture=v)))
         row(card, "Sonido al detectar", None,
             lambda p: self._switch(p, st["sound"], lambda v: save(sound=v)))
         row(card, "Pausar la detección", "No se escanea el portapapeles hasta que lo reactives.",
@@ -1481,10 +1712,15 @@ def uninstall():
     shutil.rmtree(CONFIG_DIR, ignore_errors=True)
     messagebox.showinfo("ClipQR", "ClipQR se ha desinstalado.")
     root.destroy()
-    if FROZEN:  # el .exe no puede borrarse a sí mismo mientras se ejecuta: cmd lo reintenta al salir
+    if FROZEN:  # el programa no puede borrarse a sí mismo mientras se ejecuta: cmd lo reintenta al salir
         exe, folder = sys.executable, os.path.dirname(sys.executable)
-        subprocess.Popen(f'cmd /c for /l %i in (1,1,30) do (ping -n 2 127.0.0.1 >nul & del /f /q "{exe}" 2>nul '
-                         f'& if not exist "{exe}" (rmdir "{folder}" 2>nul & exit))', creationflags=no_window)
+        setup_dir = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", APP_NAME)
+        if os.path.normcase(folder) == os.path.normcase(setup_dir):  # carpeta del asistente: entera
+            remove = f'rmdir /s /q "{folder}" 2>nul & if not exist "{folder}" exit'
+        else:  # en cualquier otro sitio solo el propio .exe (y la carpeta si queda vacía)
+            remove = f'del /f /q "{exe}" 2>nul & if not exist "{exe}" (rmdir "{folder}" 2>nul & exit)'
+        subprocess.Popen(f'cmd /c for /l %i in (1,1,30) do (ping -n 2 127.0.0.1 >nul & {remove})',
+                         creationflags=no_window)
 
 
 def shortcut_paths():
