@@ -45,7 +45,7 @@ No cambia nada visible para el usuario, pero todo lo demás depende de esto.
   | `ui/popup.py`, `ui/history.py`, `ui/settings_window.py` | Ventanas |
   | `app.py` | Bandeja, sondeo del portapapeles, orquestación |
 
-- `clipqr.py` queda como punto de entrada de una línea, para que los scripts de compilación no cambien.
+- `main.py` es el punto de entrada (para PyInstaller y para ejecutar desde el código).
 - `tests/` con pytest:
   - `test_payloads.py`: cada tipo con varios textos reales, incluidos casos raros (`\;` escapado, MeCard sin nombre, URL sin esquema).
   - `test_decode.py`: imágenes generadas con zxing para todos los tipos y formatos; la foto borrosa real en `tests/fixtures/`; una imagen con dos QR; una captura sin QR (debe devolver `[]`).

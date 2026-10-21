@@ -1,0 +1,22 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Dependencias
+        run: py -m pip install -r requirements-dev.txt
+      - name: Pyflakes
+        run: py -m pyflakes clipqr main.py installer tools tests
+      - name: Tests
+        run: py -m pytest -q
