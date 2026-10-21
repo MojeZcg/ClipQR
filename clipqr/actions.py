@@ -82,6 +82,47 @@ def connect_wifi(ssid, password, auth, hidden=False):
     return False, (f"Windows no confirmó la conexión a «{ssid}».\n"
                    "Comprueba que la red está al alcance y que la contraseña es correcta.")
 
+def _netsh(*args):
+    import subprocess
+    r = subprocess.run(["netsh", "wlan", *args], capture_output=True, creationflags=0x08000000)
+    raw = r.stdout or r.stderr
+    try:  # netsh escribe en UTF-8 o en la página OEM según el equipo
+        return r.returncode, raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return r.returncode, raw.decode("oem", errors="replace")
+
+
+def parse_wifi_profile(text):
+    """Salida de «netsh wlan show profile name=… key=clear» (en español o en inglés) ->
+    (contraseña, seguridad para el QR: WPA / WEP / nopass)."""
+    password, auth = "", ""
+    for line in text.splitlines():
+        m = re.match(r"^\s*([^:]+?)\s*:\s*(.*)$", line)
+        if not m:
+            continue
+        key, value = m.group(1).lower(), m.group(2).strip()
+        if key in ("contenido de la clave", "key content"):
+            password = value
+        elif key in ("autenticación", "authentication") and not auth:
+            auth = value
+    if not password:
+        return "", "nopass"
+    return password, "WEP" if "wep" in auth.lower() else "WPA"
+
+
+def current_wifi():
+    """(red, contraseña, seguridad) de la Wi‑Fi a la que está conectado el equipo, o None.
+    Windows solo da la contraseña de redes cuyo perfil está guardado en este equipo."""
+    _, out = _netsh("show", "interfaces")
+    ssid = next((l.split(":", 1)[1].strip() for l in out.splitlines()
+                 if re.match(r"^\s*SSID\s*:", l)), None)
+    if not ssid:
+        return None
+    _, profile = _netsh("show", "profile", f"name={ssid}", "key=clear")
+    password, security = parse_wifi_profile(profile)
+    return ssid, password, security
+
+
 def find_saved_capture(img, since, timeout=5.0):
     """Busca en la carpeta de capturas el archivo de esta captura: creado desde `since` y con
     exactamente los mismos píxeles (así nunca se confunde con otra imagen). Recortes guarda el

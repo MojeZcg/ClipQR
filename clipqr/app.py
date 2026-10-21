@@ -19,6 +19,7 @@ from clipqr.payloads import parse_payload
 from clipqr.hotkeys import HotkeyManager
 from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_label, load_settings, load_state,
                              log_exception, save_state)
+from clipqr.ui.create_qr import CreateQRMixin
 from clipqr.ui.history import HistoryMixin
 from clipqr.ui.popup import PopupMixin
 from clipqr.ui.region import RegionMixin
@@ -33,7 +34,7 @@ from clipqr.winplatform import (FROZEN, PACKAGED, RUN_KEY, UNINSTALL_KEY, instal
 POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a menudo
 
 
-class ClipQR(PopupMixin, RegionMixin, UpdateMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
+class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
     def __init__(self, autostart=False):
         self.autostart_launch = autostart  # abierto por el inicio de Windows (no a mano)
         self.root = tk.Tk()
@@ -78,6 +79,8 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, HistoryMixin, SettingsWindowM
             actions[self.settings["hotkey_focus"]] = on_tk(self.focus_popup)
         if self.settings["hotkey_region"]:
             actions[self.settings["hotkey_region"]] = on_tk(self.scan_region)
+        if self.settings["hotkey_create"]:
+            actions[self.settings["hotkey_create"]] = on_tk(self.show_create_qr)
         return actions
 
     def apply_hotkeys(self, retries=4):
@@ -120,6 +123,9 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, HistoryMixin, SettingsWindowM
             pystray.MenuItem(lambda item: "Escanear zona de la pantalla" + (
                 f"  ({hotkey_label(self.settings['hotkey_region'])})" if self.settings["hotkey_region"] else ""),
                 ui(self.scan_region)),
+            pystray.MenuItem(lambda item: "Crear QR…" + (
+                f"  ({hotkey_label(self.settings['hotkey_create'])})" if self.settings["hotkey_create"] else ""),
+                ui(self.show_create_qr)),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(lambda item: f"Actualizar a ClipQR {self.update_info['version']}…" if self.update_info
                              else "", ui(self.show_update_notice), visible=lambda item: bool(self.update_info)),
