@@ -213,8 +213,8 @@ def parse_gs1(text):
     if re.fullmatch(r"\d{8}|\d{12,14}", t):  # EAN/UPC suelto: solo si el dígito verificador cuadra
         return product_result([("01", t.zfill(14))], t) if gtin_valid(t) else None
     if t.startswith(("http://", "https://")):
-        pairs = parse_digital_link(t)
-        return product_result(pairs, t) if pairs else None
+        pairs = parse_digital_link(t)  # el dígito verificador evita confundir fechas de una URL con un GTIN
+        return product_result(pairs, t) if pairs and gtin_valid(pairs[0][1]) else None
     if not (t.startswith("(") or re.match(r"^(\][A-Za-z]\d)?(01\d{14}|00\d{18})", t)):
         return None
     pairs = parse_element_string(t)
