@@ -248,7 +248,7 @@ EN = {
     "Tramos": "Legs",
 
     # ---------------------------------------------------------------- comprobantes (fiscal/__init__.py)
-    "Comprobante": "Receipt",
+    "Comprobante": "Tax document",
     "Copiar resumen": "Copy summary",
     "Verificar en {organismo} ↗": "Verify with {organismo} ↗",
     "Cotización": "Exchange rate",

@@ -15,7 +15,7 @@ EN = {
     "Copiar clave": "Copy access key",
     "Clave de acceso": "Access key",
     "Copiar datos": "Copy details",
-    "Emisión": "Issuance",
+    "Emisión": "Issue date",
     "Serie": "Series",
     "RUC emisor": "Issuer RUC",
     "Factura electrónica": "Electronic invoice",

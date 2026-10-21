@@ -93,4 +93,4 @@ def test_factura():
 
 def test_factura_sin_tipo_ni_importe():
     r = invoice_result(Comprobante("BR", "SEFAZ", numero="123", clase="NFC-e"))
-    assert r.title == "NFC-e · SEFAZ" and r.headline == ("Receipt", "123")
+    assert r.title == "NFC-e · SEFAZ" and r.headline == ("Tax document", "123")

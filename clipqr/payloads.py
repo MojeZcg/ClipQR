@@ -56,7 +56,7 @@ def format_name(fmt):
 def _vcard_from(items):
     """vCard mínima a partir de [(etiqueta, valor)] (para MeCard)."""
     keys = {_(label): key for label, key in ((N_("Nombre"), "FN"), (N_("Teléfono"), "TEL"), ("Email", "EMAIL"),
-                                              ("Web", "URL"), (N_("Dirección"), "ADR"), (N_("Nota"), "NOTE"),
+                                              (N_("Web"), "URL"), (N_("Dirección"), "ADR"), (N_("Nota"), "NOTE"),
                                               (N_("Empresa"), "ORG"))}
     lines = ["BEGIN:VCARD", "VERSION:3.0"] + [f"{keys[l]}:{v}" for l, v in items if l in keys]
     return "\r\n".join(lines + ["END:VCARD"]) + "\r\n"
@@ -64,7 +64,7 @@ def _vcard_from(items):
 def _contact_actions(items, card_text):
     actions = [(_("Guardar contacto"), "file", (card_text, ".vcf"))]
     first = lambda label: next((v for l, v in items if l == label), None)
-    phone, email, web = first(_("Teléfono")), first("Email"), first("Web")
+    phone, email, web = first(_("Teléfono")), first("Email"), first(_("Web"))
     if phone:
         actions.append((_("Llamar"), "open", "tel:" + re.sub(r"[^\d+]", "", phone)))
     if email:
@@ -92,8 +92,8 @@ def parse_payload(text):
 
 
 VCARD_LABELS = {"FN": N_("Nombre"), "TEL": N_("Teléfono"), "EMAIL": "Email", "ORG": N_("Empresa"),
-                "TITLE": N_("Cargo"), "URL": "Web", "ADR": N_("Dirección"), "NOTE": N_("Nota")}
-MECARD_LABELS = {"N": N_("Nombre"), "TEL": N_("Teléfono"), "EMAIL": "Email", "URL": "Web",
+                "TITLE": N_("Cargo"), "URL": N_("Web"), "ADR": N_("Dirección"), "NOTE": N_("Nota")}
+MECARD_LABELS = {"N": N_("Nombre"), "TEL": N_("Teléfono"), "EMAIL": "Email", "URL": N_("Web"),
                  "ADR": N_("Dirección"), "NOTE": N_("Nota"), "ORG": N_("Empresa")}
 EVENT_LABELS = {"SUMMARY": N_("Evento"), "DTSTART": N_("Inicio"), "DTEND": N_("Fin"),
                 "LOCATION": N_("Lugar"), "DESCRIPTION": N_("Descripción")}

@@ -71,6 +71,15 @@ class Comprobante:
         return [(label, value) for _key, label, value in self._rows()]
 
 
+def _clase(tipo):
+    """«Nota de crédito A» -> «Nota de crédito», «Credit note B» -> «Credit note»: el tipo sin la letra
+    de clase, para el título pequeño (antes era solo la 1.ª palabra, que en inglés daba «Credit»)."""
+    words = tipo.split()
+    while len(words) > 1 and len(words[-1]) <= 2:
+        words.pop()
+    return " ".join(words[:3]) or _("Factura")
+
+
 def invoice_result(c):
     """Comprobante -> Result: importe en grande, «Factura B · 0003-00001234 · 21/10/2026» debajo."""
     actions = []
@@ -82,7 +91,7 @@ def invoice_result(c):
     tipo = c.tipo_texto()
     subtitle = " · ".join(x for x in (tipo, c.numero, c.fecha) if x)
     headline = (_("Importe"), c.importe_texto()) if c.importe is not None else (tipo, c.numero or tipo)
-    clase = c.clase or (tipo.split()[0] if tipo.split() else _("Factura"))
+    clase = c.clase or _clase(tipo)
     return Result("invoice", f"{clase} · {c.sistema}",
                   [(label, value) for key, label, value in c._rows() if key != "importe"], actions,
                   list(c.avisos), headline, subtitle)
