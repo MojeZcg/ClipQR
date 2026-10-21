@@ -21,6 +21,10 @@ KINDS = {
     "event": ("", "📅", "#e54666"),
     "text": ("", "📄", "#8b8d98"),
     "product": ("", "🛒", "#0ea5e9"),
+    "invoice": ("\ue8a5", "🧾", "#0d9488"),
+    "payment": ("\ue8c7", "💳", "#16a34a"),
+    "boarding": ("\ue709", "✈", "#2563eb"),
+    "identity": ("\ue779", "🪪", "#9333ea"),
 }
 
 def _shade(hex_color, f):

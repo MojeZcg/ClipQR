@@ -15,7 +15,7 @@ from clipqr import APP_NAME
 from clipqr.actions import connect_wifi, find_saved_capture, open_with_default_app
 from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
-from clipqr.payloads import parse_payload
+from clipqr.payloads import analyze, parse_payload
 from clipqr.hotkeys import HotkeyManager
 from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_label, load_settings, load_state,
                              log_exception, save_state)
@@ -306,8 +306,11 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             if force:
                 self.toast("No se encontró ningún QR en la imagen.")
             return
-        self.history.insert(0, codes)
-        del self.history[self.settings["history_max"]:]
+        # los datos personales (documentos de identidad, tarjetas de embarque) no se guardan en el historial
+        keep = [c for c in codes if not analyze(c["text"]).private]
+        if keep:
+            self.history.insert(0, keep)
+            del self.history[self.settings["history_max"]:]
         if self.settings["sound"]:
             import winsound
             winsound.MessageBeep(winsound.MB_ICONASTERISK)
@@ -327,7 +330,9 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
     def run_action(self, kind, arg, btn):
         """Solo se llama al pulsar un botón."""
         try:
-            if kind == "open":
+            if kind == "copy":
+                self.copy(arg, btn)
+            elif kind == "open":
                 os.startfile(arg)
                 self._close_popup()
             elif kind == "file":

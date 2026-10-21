@@ -4,8 +4,7 @@ import tkinter as tk
 
 
 from clipqr.icons import make_icon
-from clipqr.linksafety import link_warnings
-from clipqr.payloads import format_name, headline, parse_payload, shorten
+from clipqr.payloads import analyze, format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
 from clipqr.winplatform import (area_containing, clamp_to_area, force_foreground, send_to_recycle_bin,
                                 style_window, user32, work_area, work_areas)
@@ -18,10 +17,11 @@ class PopupMixin:
         """Tarjeta de un código, pensada para leerse de un vistazo: el dato principal en grande,
         la acción principal justo debajo, el resto de datos compactos y el texto crudo plegado."""
         c = self.c
-        kind, title, items, actions = parse_payload(code["text"])
+        r = analyze(code["text"])
+        kind, title, items, actions = r.kind, r.title, r.items, r.actions
         accent = KINDS[kind][2]
         text = code["text"]
-        head_label, head_value = headline(kind, items, text)
+        head_label, head_value = r.headline or headline(kind, items, text)
         rows = [(l, v) for l, v in items if (l, v) != (head_label, head_value)]
 
         card = tk.Frame(parent, bg=c["card"], highlightthickness=1, highlightbackground=c["border"])
@@ -50,13 +50,13 @@ class PopupMixin:
                  font=self.font(8)).pack(side="left")
         tk.Label(head, text=shorten(head_value, 70), bg=c["card"], fg=c["fg"], font=self.font(15, "bold"),
                  anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
-        if kind == "link":  # el dominio no basta: la URL completa, en pequeño
-            tk.Label(head, text=shorten(text, 90, middle=True), bg=c["card"], fg=c["muted"], font=self.font(9),
+        subtitle = r.subtitle or (shorten(text, 90, middle=True) if kind == "link" else None)
+        if subtitle:  # p. ej. la URL completa de un enlace o «Factura B · 0003-00001234 · fecha»
+            tk.Label(head, text=subtitle, bg=c["card"], fg=c["muted"], font=self.font(9),
                      anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
 
         # avisos (enlaces sospechosos, datos que no cuadran…) justo antes de los botones
-        warnings = link_warnings(actions[0][2]) if kind == "link" and actions else []
-        warnings += code.get("warnings", [])
+        warnings = r.warnings + code.get("warnings", [])
         if warnings:
             self._warning_strip(inner, warnings)
 
