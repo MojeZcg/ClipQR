@@ -151,7 +151,7 @@ def find_saved_capture(img, since, timeout=5.0):
                         return e.path
             except OSError:
                 pass  # aún se está escribiendo
-        time.sleep(0.4)
+        time.sleep(0.15)
     return None
 
 def open_with_default_app(content, ext):

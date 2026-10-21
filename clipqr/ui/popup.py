@@ -175,6 +175,7 @@ class PopupMixin:
         x, y = win.winfo_x(), win.winfo_y()
         if y + h > rect.bottom:
             y = max(rect.top, rect.bottom - h - self.px(16))
+        win._h = h
         win.geometry(f"{win.winfo_width()}x{h}+{x}+{y}")
         if getattr(win, "_countdown", None) is not None:
             win._countdown.coords("fill", 0, 0, win.winfo_width(), self.px(3))
@@ -236,7 +237,8 @@ class PopupMixin:
             if not win.winfo_exists():
                 return
             t = 1 - (1 - i / steps) ** 3 if steps else 1  # ease-out
-            win.geometry(f"{w}x{h}+{x}+{int(y + dy * (1 - t))}")
+            # alto actual (puede crecer mientras entra, p. ej. al aparecer «Borrar captura»)
+            win.geometry(f"{w}x{getattr(win, '_h', h)}+{x}+{int(y + dy * (1 - t))}")
             win.attributes("-alpha", 0.98 * t)
             if i < steps:
                 win.after(15, frame, i + 1)
@@ -367,7 +369,7 @@ class PopupMixin:
 
     # ---- teclado
     HINT_MOUSE = "Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar"
-    HINT_KEYS = "Enter: acción · 1–9: copiar · Tab: moverse · Esc: cerrar"
+    HINT_KEYS = "Enter: acción · 1–9: copiar · Supr: borrar captura · Esc: cerrar"
 
     def _bind_keyboard(self, win):
         """El aviso no roba el foco al aparecer. Al tomarlo (atajo global o clic) se maneja con el teclado:
@@ -391,6 +393,7 @@ class PopupMixin:
 
         for n in range(1, 10):
             win.bind(f"<Key-{n}>", lambda e, n=n: copy_n(n))
+        win.bind("<Delete>", lambda e: getattr(win, "_delete_capture", None) and win._delete_capture())
         win.bind("<Return>", primary)
         win.bind("<Control-c>", copy_main)
         win.bind("<FocusIn>", lambda e: self._kbd_mode(win, True))
@@ -464,24 +467,34 @@ class PopupMixin:
         if win is None or not win.winfo_exists() or getattr(win, "_codes", None) is not codes:
             return
         path = codes[0].get("capture")
+        pending = codes[0].get("capture_pending")
         slot = win._capture_slot
         for w in slot.winfo_children():
             w.destroy()
-        if not path:
+        win._delete_capture = None
+        if not path and not pending:
+            if slot.winfo_ismapped():
+                slot.pack_forget()
+                self._refit_popup()
             return
         c = self.c
-        g = "\ue74d" if self.icon_font else "🗑"
-        gf = (self.icon_font, 9) if self.icon_font else self.font(9)
-        tk.Label(slot, text=g, font=gf, bg=c["bg"], fg=c["muted"]).pack(side="left", padx=(0, self.px(6)))
-        msg = tk.Label(slot, bg=c["bg"], fg=c["muted"], font=self.font(9), anchor="w")
+        g = "" if self.icon_font else "🗑"
+        gf = (self.icon_font, 10) if self.icon_font else self.font(10)
+        icon = tk.Label(slot, text=g, font=gf, bg=c["bg"], fg=c["muted"])
+        icon.pack(side="left", padx=(0, self.px(6)))
+        msg = tk.Label(slot, bg=c["bg"], fg=c["muted"], font=self.font(9), anchor="w", justify="left")
         msg.pack(side="left", fill="x", expand=True)
-        if codes[0].get("capture_deleted"):
-            msg.config(text="Captura enviada a la Papelera")
+        if pending:
+            msg.config(text="Buscando la captura guardada…")
+        elif codes[0].get("capture_deleted"):
+            msg.config(text="Captura enviada a la Papelera", fg=c["fg"])
+            icon.config(fg=c["ok"])
         elif os.path.exists(path):
-            msg.config(text=f"Captura guardada: {shorten(os.path.basename(path), 34, middle=True)}")
-            b = self._button(slot, "Borrar captura")
+            msg.config(text=f"Captura: {shorten(os.path.basename(path), 22, middle=True)}")
 
-            def delete():
+            def delete(always=False):
+                if always:  # a partir de ahora, solas
+                    self.set_setting(delete_capture=True)
                 ok = send_to_recycle_bin(path)
                 for code in codes:
                     code["capture_deleted"] = ok
@@ -490,8 +503,11 @@ class PopupMixin:
                 else:
                     self._flash(b, "No se pudo borrar", ok=False)
 
-            b.config(command=delete)
+            always = self._button(slot, "Borrar siempre", cmd=lambda: delete(always=True))
+            always.pack(side="right", padx=(self.px(6), 0))
+            b = self._button(slot, "🗑 Borrar captura", color="#d64545", cmd=delete)
             b.pack(side="right")
+            win._delete_capture = delete  # tecla Supr
         else:
             msg.config(text="La captura ya no está en la carpeta")
         slot.pack(fill="x", padx=self.px(14), pady=(0, self.px(8)), before=win._hint)
