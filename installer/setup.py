@@ -117,7 +117,7 @@ class Wizard:
         r.configure(bg=c["bg"])
         r.resizable(False, False)
         try:
-            self.logo = tk.PhotoImage(file=resource("logo.png"))
+            self.logo = tk.PhotoImage(file=resource("logo-white.png" if windows_theme() == "dark" else "logo.png"))
             r.iconphoto(True, self.logo)
             f = max(1, self.logo.width() // self.px(72))
             self.logo_small = self.logo.subsample(f, f)

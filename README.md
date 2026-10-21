@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="assets/logo.png" width="112" alt="Logo de ClipQR">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-white.png">
+    <img src="assets/logo.png" width="140" alt="Logo de ClipQR (su QR lleva a este repositorio)">
+  </picture>
 </p>
 
 <h1 align="center">ClipQR</h1>

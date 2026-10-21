@@ -441,7 +441,7 @@ def open_with_default_app(content, ext):
 
 # --------------------------------------------------------------------------- app
 
-_LOGO = None
+_LOGOS = {}
 
 
 def _resource(*parts):
@@ -450,18 +450,35 @@ def _resource(*parts):
     return os.path.join(base, *parts)
 
 
-def make_icon(paused=False, size=64):
-    """Logo de ClipQR (assets/logo.png, generado con tools/make_logo.py) al tamaño pedido.
-    En pausa se muestra apagado (gris)."""
-    global _LOGO
-    if _LOGO is None:
-        _LOGO = Image.open(_resource("assets", "logo.png")).convert("RGBA")
-    img = _LOGO.resize((size, size), Image.LANCZOS)
+def make_icon(paused=False, size=64, dark_bg=False, outline=False):
+    """Logo de ClipQR (assets/logo*.png, generados con tools/make_logo.py) al tamaño pedido.
+
+    Es transparente: trazos negros para fondos claros, blancos si dark_bg. Con outline, trazos
+    negros con un fino contorno blanco, para iconos que se ven sobre cualquier fondo (.ico).
+    En pausa se muestra gris y atenuado."""
+    name = "logo-white.png" if dark_bg else "logo.png"
+    if name not in _LOGOS:
+        _LOGOS[name] = Image.open(_resource("assets", name)).convert("RGBA")
+    img = _LOGOS[name].resize((size, size), Image.LANCZOS)
+    if outline:
+        a = img.getchannel("A")
+        halo = a.filter(ImageFilter.MaxFilter(3 if size <= 48 else 5))
+        img = Image.alpha_composite(Image.merge("RGBA", (*Image.new("RGB", img.size, "white").split(), halo)), img)
     if paused:
         r, g, b, a = img.split()
         gray = ImageOps.grayscale(img.convert("RGB")).point(lambda v: 110 + v * 145 // 255)
         img = Image.merge("RGBA", (gray, gray, gray, a.point(lambda v: v * 3 // 4)))
     return img
+
+
+def taskbar_is_dark():
+    import winreg
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize") as k:
+            return not winreg.QueryValueEx(k, "SystemUsesLightTheme")[0]
+    except OSError:
+        return True
 
 
 FROZEN = getattr(sys, "frozen", False)  # empaquetado con PyInstaller
@@ -587,7 +604,7 @@ class ClipQR:
 
     # ---- tray
     def _icon_image(self, paused=False):
-        return make_icon(paused)
+        return make_icon(paused, dark_bg=taskbar_is_dark())
 
     def _build_tray(self):
         def ui(fn):
@@ -1090,7 +1107,7 @@ class ClipQR:
         self._show_animated(win, seconds)
 
     def _logo(self, size):
-        return self._photo(make_icon(size=self.px(size)), self.px(size))
+        return self._photo(make_icon(size=self.px(size), dark_bg=self.theme_name() == "dark"), self.px(size))
 
     def _window_header(self, win, title, subtitle):
         c = self.c
@@ -1189,7 +1206,7 @@ class ClipQR:
         win.geometry(f"{self.px(500)}x{self.px(680)}")
         win.minsize(self.px(420), self.px(360))
         try:
-            ico = ImageTk.PhotoImage(make_icon(size=32))
+            ico = ImageTk.PhotoImage(make_icon(size=32, dark_bg=self.theme_name() == "dark"))
             self._photos.append(ico)
             win.iconphoto(False, ico)
         except Exception:
@@ -1258,7 +1275,8 @@ class ClipQR:
         row(card, "Probar", "Muestra un aviso de ejemplo con estos ajustes.",
             lambda p: self._button(p, "Ver aviso de prueba", cmd=lambda: self.show_popup([{
                 "format": "QRCode", "text": "https://github.com/zxing-cpp/zxing-cpp",
-                "thumb": make_icon(size=96).convert("RGB"), "time": time.time()}])))
+                "thumb": Image.alpha_composite(Image.new("RGBA", (96, 96), "white"), make_icon(size=96)).convert("RGB"),
+                "time": time.time()}])))
 
         card = section("APARIENCIA")
 
@@ -1329,7 +1347,7 @@ class ClipQR:
         win.geometry(f"{self.px(520)}x{self.px(600)}")
         win.minsize(self.px(380), self.px(300))
         try:
-            ico = ImageTk.PhotoImage(make_icon(size=32))
+            ico = ImageTk.PhotoImage(make_icon(size=32, dark_bg=self.theme_name() == "dark"))
             self._photos.append(ico)
             win.iconphoto(False, ico)
         except Exception:

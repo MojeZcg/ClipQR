@@ -80,7 +80,7 @@ def backdrop(w, h, hero=False):
         d = ImageDraw.Draw(base)
         s = h / 1080
         x, y = int(130 * s), int(300 * s)
-        logo = clipqr.make_icon(size=int(132 * s))
+        logo = clipqr.make_icon(size=int(150 * s), dark_bg=True)
         base.paste(logo, (x, y), logo)
         d.text((x, y + int(165 * s)), "ClipQR", font=font("segoeuib.ttf", int(96 * s)), fill="white")
         d.text((x + int(4 * s), y + int(290 * s)), "Haz una captura de un QR y úsalo al instante.",

@@ -15,10 +15,11 @@ SCALES = (100, 125, 150, 200, 400)
 
 
 def tile(w, h, logo_ratio):
-    """Lienzo transparente w×h con el logo centrado ocupando logo_ratio del lado menor."""
+    """Lienzo transparente w×h con el logo centrado ocupando logo_ratio del lado menor.
+    Lleva contorno blanco: el menú Inicio puede ser claro u oscuro."""
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     s = round(min(w, h) * logo_ratio)
-    logo = clipqr.make_icon(size=s)
+    logo = clipqr.make_icon(size=s, outline=True)
     img.alpha_composite(logo, ((w - s) // 2, (h - s) // 2))
     return img
 
@@ -28,18 +29,17 @@ def main(out):
     save = lambda img, name: img.save(os.path.join(out, name))
     for sc in SCALES:
         f = sc / 100
-        save(clipqr.make_icon(size=round(44 * f)), f"Square44x44Logo.scale-{sc}.png")
+        save(clipqr.make_icon(size=round(44 * f), outline=True), f"Square44x44Logo.scale-{sc}.png")
         save(tile(round(150 * f), round(150 * f), 0.62), f"Square150x150Logo.scale-{sc}.png")
         save(tile(round(310 * f), round(150 * f), 0.62), f"Wide310x150Logo.scale-{sc}.png")
         save(tile(round(71 * f), round(71 * f), 0.7), f"SmallTile.scale-{sc}.png")
         save(tile(round(310 * f), round(310 * f), 0.5), f"LargeTile.scale-{sc}.png")
-        save(clipqr.make_icon(size=round(50 * f)), f"StoreLogo.scale-{sc}.png")
-    # iconos de barra de tareas / menú Inicio a tamaño exacto (con y sin placa de color)
+        save(clipqr.make_icon(size=round(50 * f), outline=True), f"StoreLogo.scale-{sc}.png")
+    # barra de tareas / menú Inicio a tamaño exacto: unplated = tema oscuro, lightunplated = tema claro
     for ts in (16, 24, 32, 48, 256):
-        icon = clipqr.make_icon(size=ts)
-        save(icon, f"Square44x44Logo.targetsize-{ts}.png")
-        save(icon, f"Square44x44Logo.targetsize-{ts}_altform-unplated.png")
-        save(icon, f"Square44x44Logo.targetsize-{ts}_altform-lightunplated.png")
+        save(clipqr.make_icon(size=ts, outline=True), f"Square44x44Logo.targetsize-{ts}.png")
+        save(clipqr.make_icon(size=ts, dark_bg=True), f"Square44x44Logo.targetsize-{ts}_altform-unplated.png")
+        save(clipqr.make_icon(size=ts), f"Square44x44Logo.targetsize-{ts}_altform-lightunplated.png")
     print("Iconos MSIX en", out)
 
 
