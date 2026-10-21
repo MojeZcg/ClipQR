@@ -20,3 +20,26 @@ def test_silent_options_any_prefix_or_case():
 def test_unknown_option_is_an_error():
     with pytest.raises(ValueError):
         setup.parse_args(["/quiet"])
+
+
+def test_language_from_windows_langid():
+    assert setup.language_for(0x0C0A) == "es"  # es-ES
+    assert setup.language_for(0x2C0A) == "es"  # es-AR
+    assert setup.language_for(0x080A) == "es"  # es-MX
+    assert setup.language_for(0x0409) == "en"  # en-US
+    assert setup.language_for(0x0416) == "en"  # pt-BR: sin traducción, en inglés
+
+
+def test_texts_follow_the_language(monkeypatch):
+    monkeypatch.setattr(setup, "LANG", "es")
+    assert setup.T("Instalar", "Install") == "Instalar"
+    assert "/silent" in setup.usage() and "instala" in setup.usage()
+    monkeypatch.setattr(setup, "LANG", "en")
+    assert setup.T("Instalar", "Install") == "Install"
+    assert "/silent" in setup.usage() and "install" in setup.usage()
+
+
+def test_unknown_option_message_is_translated(monkeypatch):
+    monkeypatch.setattr(setup, "LANG", "en")
+    with pytest.raises(ValueError, match="Unknown option: quiet"):
+        setup.parse_args(["/quiet"])

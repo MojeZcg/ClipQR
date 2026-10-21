@@ -1,3 +1,5 @@
+<p align="center"><b>Español</b> · <a href="README.en.md">English</a></p>
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/logo-white.png">
@@ -73,6 +75,8 @@ También lee DataMatrix, Aztec, PDF417, Code 128, Code 39 y otros formatos, grac
 
 Eso es todo: se instala para tu usuario en `%LOCALAPPDATA%\Programs\ClipQR`, sin permisos de administrador, con acceso directo en el menú Inicio. ClipQR queda en la bandeja del sistema, junto al reloj. Para desinstalarlo: **Configuración de Windows › Aplicaciones › ClipQR**.
 
+La interfaz de ClipQR está en español y en inglés: sigue el idioma de Windows y se puede cambiar en **Configuración › Idioma**.
+
 ¿Prefieres no instalar nada? Descarga **`ClipQR.exe`** (versión portátil) y ábrelo directamente.
 
 > Si aparece Windows SmartScreen («Windows protegió su PC»), pulsa **Más información → Ejecutar de todas formas**. Aparece porque los `.exe` no están firmados digitalmente.
@@ -83,6 +87,7 @@ Desde el icono ⚙ del aviso o desde **Configuración…** en el menú de la ban
 
 - **Aviso:** tiempo visible (de 5 s a 5 min), cerrar solo o no, pausa con el ratón encima, animación y posición. El aviso también se puede arrastrar y fijar con 📌.
 - **Apariencia:** tema claro, oscuro o el mismo que Windows.
+- **Idioma:** español o inglés; por defecto, el de Windows.
 - **Detección:** solo QR o también códigos de barras, leer archivos copiados desde el Explorador, sonido al detectar y pausar la detección.
 - **Borrar las capturas con QR:** Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR, el aviso ofrece **Borrar captura**, o lo hace solo si activas esta opción. Va a la Papelera (se puede recuperar) y solo se borra el archivo idéntico a la captura.
 - **Historial:** cuántos escaneos se guardan y borrar el historial.
@@ -93,7 +98,7 @@ Los ajustes se guardan en `%APPDATA%\ClipQR\settings.json`.
 
 ## Privacidad
 
-Todo se procesa en tu equipo. ClipQR no envía imágenes ni datos a ningún servidor. Por su cuenta solo consulta una vez al día si hay una versión nueva en GitHub (se puede desactivar). Por lo demás, solo usa la red cuando pulsas un botón que la necesita, como abrir un enlace o buscar un producto. El historial se guarda solo en memoria y se borra al cerrar la aplicación.
+Todo se procesa en tu equipo. ClipQR no envía imágenes ni datos a ningún servidor. Por su cuenta solo consulta una vez al día si hay una versión nueva en GitHub (se puede desactivar). Por lo demás, solo usa la red cuando pulsas un botón que la necesita, como abrir un enlace o buscar un producto. El historial se guarda solo en memoria y se borra al cerrar la aplicación. Todos los detalles, en la [política de privacidad](PRIVACY.md).
 
 ## Desde el código
 
@@ -121,8 +126,8 @@ py tools\screenshots.py             # regenerar las capturas de docs/screenshots
 | `build.bat` | Compila el `.exe` en un solo archivo |
 | `build_setup.bat` | Compila `ClipQR-Setup.exe` con `ClipQR.exe` dentro |
 | `build_msix.ps1`, `msix/` | Paquete MSIX para la Microsoft Store (manifiesto e iconos) |
-| `PRIVACY.md` | Política de privacidad |
-| `docs/store-listing.md` | Textos y pasos para publicar en la Microsoft Store |
+| `PRIVACY.md`, `PRIVACY.en.md` | Política de privacidad (español e inglés) |
+| `docs/store-listing.md` | Textos (español e inglés) y pasos para publicar en la Microsoft Store |
 
 ### Paquete para la Microsoft Store
 

@@ -1,3 +1,5 @@
+<p align="center"><b>Español</b> · <a href="PRIVACY.en.md">English</a></p>
+
 # Política de privacidad de ClipQR
 
 *Última actualización: 21 de octubre de 2026*
@@ -47,6 +49,4 @@ Para cualquier duda sobre privacidad, abre una incidencia en https://github.com/
 
 ---
 
-# ClipQR privacy policy (English)
-
-ClipQR does not collect, transmit or sell any data. Clipboard images are analyzed locally and never stored or uploaded. Detected codes are kept in an in-memory history that is cleared when the app closes. Settings and an error log are stored only in local files. The only connection the app makes on its own is an optional daily update check against the public GitHub releases API (it sends no personal data and can be turned off in Settings; the Microsoft Store version doesn't do it). Otherwise the network is used only when you press a button that requires it (open a link, search, connect to Wi‑Fi), which hands the action to your browser, another app, or Windows. There is no advertising, analytics or telemetry. Questions: https://github.com/MojeZcg/ClipQR/issues
+*English version: [PRIVACY.en.md](PRIVACY.en.md).*
