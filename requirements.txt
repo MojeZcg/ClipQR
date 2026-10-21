@@ -1,0 +1,4 @@
+pillow
+pystray
+zxing-cpp
+numpy  # solo para tools/screenshots.py
