@@ -12,6 +12,7 @@ from decimal import Decimal, InvalidOperation
 
 from clipqr.fiscal import Comprobante, invoice_result
 from clipqr.fiscal.ids_europe import format_nif_es, nif_es_valid
+from clipqr.i18n import N_, _
 from clipqr.structured import register
 
 # host -> (territorio, prefijo de la ruta en minúsculas, entorno de pruebas)
@@ -24,8 +25,8 @@ HOSTS = {
     "tbai.prep.gipuzkoa.eus": ("Gipuzkoa", "/qr", True),
 }
 ID_RE = re.compile(r"TBAI-([0-9A-Z]{9})-(\d{6})-(.{13})-(\d{3})")
-INCOMPLETO = "QR de factura incompleto o modificado"
-ALTERADO = "QR de TicketBAI alterado: el código de control no coincide"
+INCOMPLETO = N_("QR de factura incompleto o modificado")
+ALTERADO = N_("QR de TicketBAI alterado: el código de control no coincide")
 
 
 def crc8(texto):
@@ -33,7 +34,7 @@ def crc8(texto):
     crc = 0
     for byte in texto.encode("utf-8"):
         crc ^= byte
-        for _ in range(8):
+        for _bit in range(8):
             crc = ((crc << 1) ^ 0x07) & 0xFF if crc & 0x80 else (crc << 1) & 0xFF
     return f"{crc:03d}"
 
@@ -63,9 +64,10 @@ def parse_ticketbai(text):
     territorio = HOSTS[host][0] if conocido else ""
     if not conocido:
         # Forma de QR de TicketBAI en un dominio ajeno: posible suplantación, no se ofrece abrirlo.
-        avisos.append(f"El enlace no es de ninguna Hacienda Foral: apunta a {host or 'un dominio desconocido'}")
+        avisos.append(_("El enlace no es de ninguna Hacienda Foral: apunta a {host}", host=host) if host
+                      else _("El enlace no es de ninguna Hacienda Foral: apunta a un dominio desconocido"))
     elif HOSTS[host][2]:
-        avisos.append("QR del entorno de pruebas de TicketBAI")
+        avisos.append(_("QR del entorno de pruebas de TicketBAI"))
 
     serie, nf, importe_txt, cr = get("s"), get("nf"), get("i"), get("cr")
     m = ID_RE.fullmatch(ident)
@@ -83,24 +85,24 @@ def parse_ticketbai(text):
         alterado = alterado or crc8(s[:corte]) != cr
 
     if not (m and nf and importe is not None and cr) or fecha is None or corte < 0:
-        avisos.append(INCOMPLETO)
+        avisos.append(_(INCOMPLETO))
     if alterado:
-        avisos.append(ALTERADO)
+        avisos.append(_(ALTERADO))
     if nif and not nif_es_valid(nif):
-        avisos.append("El NIF del emisor no es válido (letra o dígito de control incorrecto)")
+        avisos.append(_("El NIF del emisor no es válido (letra o dígito de control incorrecto)"))
     if fecha and fecha > datetime.date.today():
-        avisos.append("La fecha de la factura es posterior a hoy")
+        avisos.append(_("La fecha de la factura es posterior a hoy"))
 
     c = Comprobante(
-        "ES", "TicketBAI", "Factura",
+        "ES", "TicketBAI", _("Factura"),
         numero=f"{serie}-{nf}" if serie and nf else nf,
         fecha=fecha.strftime("%d/%m/%Y") if fecha else "",
-        emisor=format_nif_es(nif) if nif else "", emisor_label="NIF emisor",
+        emisor=format_nif_es(nif) if nif else "", emisor_label=_("NIF emisor"),
         importe=importe, moneda="EUR",
-        autorizacion=ident, autorizacion_label="Identificador TicketBAI",
-        organismo=f"Hacienda Foral de {territorio}" if territorio else "Hacienda Foral",
-        extra=[("Territorio", territorio)] if territorio else [],
+        autorizacion=ident, autorizacion_label=_("Identificador TicketBAI"),
+        organismo=_("Hacienda Foral de {territorio}", territorio=territorio) if territorio else _("Hacienda Foral"),
+        extra=[(_("Territorio"), territorio)] if territorio else [],
         avisos=avisos,
-        acciones=[("Comprobar en Hacienda Foral ↗", "open", s)] if conocido else [],
+        acciones=[(_("Comprobar en Hacienda Foral ↗"), "open", s)] if conocido else [],
     )
     return invoice_result(c)

@@ -3,7 +3,9 @@ import re
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
-AVISO_INCOMPLETO = "QR de factura incompleto o modificado"
+from clipqr.i18n import N_
+
+AVISO_INCOMPLETO = N_("QR de factura incompleto o modificado")  # se traduce con _() al usarlo
 
 
 def fecha_dmy(texto):

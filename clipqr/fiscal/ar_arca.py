@@ -12,27 +12,31 @@ from urllib.parse import parse_qs, urlsplit
 
 from clipqr.fiscal import Comprobante, invoice_result
 from clipqr.fiscal.ids import cuit_valid, digits, format_cuit
+from clipqr.i18n import N_, _
 from clipqr.structured import format_money, register, to_decimal
 
 HOSTS = ("afip.gob.ar", "www.afip.gob.ar", "arca.gob.ar", "www.arca.gob.ar")
 CONSTATAR = "https://serviciosweb.afip.gob.ar/genericos/comprobantes/cae.aspx"
 
 TIPOS = {
-    1: "Factura A", 2: "Nota de débito A", 3: "Nota de crédito A", 4: "Recibo A",
-    6: "Factura B", 7: "Nota de débito B", 8: "Nota de crédito B", 9: "Recibo B",
-    11: "Factura C", 12: "Nota de débito C", 13: "Nota de crédito C", 15: "Recibo C",
-    19: "Factura E", 20: "Nota de débito E", 21: "Nota de crédito E",
-    51: "Factura M", 52: "Nota de débito M", 53: "Nota de crédito M", 54: "Recibo M",
-    201: "Factura de crédito MiPyME A", 202: "Nota de débito MiPyME A", 203: "Nota de crédito MiPyME A",
-    206: "Factura de crédito MiPyME B", 207: "Nota de débito MiPyME B", 208: "Nota de crédito MiPyME B",
-    211: "Factura de crédito MiPyME C", 212: "Nota de débito MiPyME C", 213: "Nota de crédito MiPyME C",
+    1: N_("Factura A"), 2: N_("Nota de débito A"), 3: N_("Nota de crédito A"), 4: N_("Recibo A"),
+    6: N_("Factura B"), 7: N_("Nota de débito B"), 8: N_("Nota de crédito B"), 9: N_("Recibo B"),
+    11: N_("Factura C"), 12: N_("Nota de débito C"), 13: N_("Nota de crédito C"), 15: N_("Recibo C"),
+    19: N_("Factura E"), 20: N_("Nota de débito E"), 21: N_("Nota de crédito E"),
+    51: N_("Factura M"), 52: N_("Nota de débito M"), 53: N_("Nota de crédito M"), 54: N_("Recibo M"),
+    201: N_("Factura de crédito MiPyME A"), 202: N_("Nota de débito MiPyME A"),
+    203: N_("Nota de crédito MiPyME A"),
+    206: N_("Factura de crédito MiPyME B"), 207: N_("Nota de débito MiPyME B"),
+    208: N_("Nota de crédito MiPyME B"),
+    211: N_("Factura de crédito MiPyME C"), 212: N_("Nota de débito MiPyME C"),
+    213: N_("Nota de crédito MiPyME C"),
 }
 # código de moneda de ARCA -> ISO 4217
 MONEDAS = {"PES": "ARS", "DOL": "USD", "060": "EUR", "012": "BRL", "011": "UYU", "033": "CLP"}
-DOCUMENTOS = {80: "CUIT", 86: "CUIL", 87: "CDI", 89: "LE", 90: "LC", 91: "CI extranjera",
-              94: "Pasaporte", 96: "DNI", 99: "Consumidor final"}
+DOCUMENTOS = {80: "CUIT", 86: "CUIL", 87: "CDI", 89: "LE", 90: "LC", 91: N_("CI extranjera"),
+              94: N_("Pasaporte"), 96: "DNI", 99: N_("Consumidor final")}
 
-DAMAGED = "QR de factura incompleto o modificado"
+DAMAGED = N_("QR de factura incompleto o modificado")
 
 
 def _decode(p):
@@ -65,14 +69,17 @@ def parse_arca(text):
         return None
     p = (parse_qs(url.query).get("p") or [""])[0]
     data = _decode(p) if p else None
-    c = Comprobante("AR", "ARCA", "Comprobante", organismo="ARCA", url_verificacion=text.strip(),
-                    emisor_label="CUIT emisor")
+    c = Comprobante("AR", "ARCA", _("Comprobante"), organismo="ARCA", url_verificacion=text.strip(),
+                    emisor_label=_("CUIT emisor"))
     if data is None:
-        c.avisos.append(DAMAGED)
+        c.avisos.append(_(DAMAGED))
         return invoice_result(c)
 
     tipo = _int(data.get("tipoCmp"))
-    c.tipo = TIPOS.get(tipo, f"Comprobante tipo {tipo}" if tipo is not None else "Comprobante")
+    if tipo in TIPOS:
+        c.tipo = _(TIPOS[tipo])
+    elif tipo is not None:
+        c.tipo = _("Comprobante tipo {tipo}", tipo=tipo)
     pto, nro = _int(data.get("ptoVta")), _int(data.get("nroCmp"))
     if pto is not None and nro is not None:
         c.numero = f"{pto:05d}-{nro:08d}"
@@ -92,11 +99,11 @@ def parse_arca(text):
 
     tipo_doc, nro_doc = _int(data.get("tipoDocRec")), digits(data.get("nroDocRec", ""))
     if tipo_doc is not None and nro_doc and nro_doc.strip("0"):
-        doc = DOCUMENTOS.get(tipo_doc, "Documento")
-        c.receptor_label = f"{doc} receptor"
+        doc = _(DOCUMENTOS.get(tipo_doc, N_("Documento")))
+        c.receptor_label = _("{doc} receptor", doc=doc)
         c.receptor = format_cuit(nro_doc) if tipo_doc in (80, 86) else nro_doc
     elif tipo_doc == 99:
-        c.receptor_label, c.receptor = "Receptor", "Consumidor final"
+        c.receptor_label, c.receptor = _("Receptor"), _("Consumidor final")
 
     codigo = str(data.get("moneda", "PES")).strip().upper()
     c.moneda = MONEDAS.get(codigo, codigo)
@@ -111,17 +118,18 @@ def parse_arca(text):
 
     # Lo que no cuadra
     if not (tipo and pto is not None and nro is not None and fecha and cuit and c.importe is not None):
-        c.avisos.append(DAMAGED)
+        c.avisos.append(_(DAMAGED))
     if cuit and not cuit_valid(cuit):
-        c.avisos.append("El CUIT del emisor no es válido (dígito verificador)")
+        c.avisos.append(_("El CUIT del emisor no es válido (dígito verificador)"))
     if not aut or len(aut) != 14:
-        c.avisos.append(f"Falta el {c.autorizacion_label} o no tiene 14 dígitos")
+        c.avisos.append(_("Falta el {codigo} o no tiene 14 dígitos", codigo=c.autorizacion_label))
     if fecha and fecha > date.today():
-        c.avisos.append("La fecha del comprobante es futura")
+        c.avisos.append(_("La fecha del comprobante es futura"))
 
-    c.acciones.append(("Constatar comprobante ↗", "open", CONSTATAR))
-    datos = [f"CUIT emisor: {digits(cuit)}", f"Tipo: {tipo}", f"Punto de venta: {pto}",
-             f"Número: {nro}", f"Fecha: {c.fecha}", f"Importe: {data.get('importe')}",
+    c.acciones.append((_("Constatar comprobante ↗"), "open", CONSTATAR))
+    datos = [_("CUIT emisor: {cuit}", cuit=digits(cuit)), _("Tipo: {tipo}", tipo=tipo),
+             _("Punto de venta: {pto}", pto=pto), _("Número: {nro}", nro=nro),
+             _("Fecha: {fecha}", fecha=c.fecha), _("Importe: {importe}", importe=data.get("importe")),
              f"{c.autorizacion_label}: {aut}"]
-    c.acciones.append(("Copiar datos para constatar", "copy", "\n".join(datos)))
+    c.acciones.append((_("Copiar datos para constatar"), "copy", "\n".join(datos)))
     return invoice_result(c)
