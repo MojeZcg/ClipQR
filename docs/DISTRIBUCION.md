@@ -123,24 +123,26 @@ winget install MojeZcg.ClipQR
 
 y actualizar con `winget upgrade`.
 
-**Requisito previo:** winget instala sin preguntar nada, así que el instalador tiene que aceptar una instalación silenciosa. Lo añade el PR 1.0.3 de la [hoja de ruta](ROADMAP.md) (`ClipQR-Setup.exe /silent`).
+**Ya está hecho:**
+- El instalador acepta `/silent` (PR 1.0.3).
+- Cada release genera los tres manifiestos con `tools/winget_manifest.py`, validados con `winget validate`. Están en el artefacto del workflow, carpeta `winget/`.
+- El workflow ya tiene el paso **«Enviar a winget»**, que abre el PR en [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) con `wingetcreate submit`.
 
-**Pasos (una vez por versión, o automatizado en el workflow):**
-1. Instala la herramienta oficial:
-   ```bash
-   winget install Microsoft.WingetCreate
-   ```
-2. Primera vez, crea el manifiesto a partir de la URL de la release:
-   ```bash
-   wingetcreate new https://github.com/MojeZcg/ClipQR/releases/download/v1.1.0/ClipQR-Setup.exe
-   ```
-   Datos que pide: `PackageIdentifier` = `MojeZcg.ClipQR`, `InstallerType` = `exe`, interruptores silenciosos `Silent: /silent` y `SilentWithProgress: /silent`, `Scope` = `user`. El resto (nombre, editor, licencia MIT, descripción) sale del README.
-3. `wingetcreate` abre un PR en [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs). Lo revisan automáticamente y luego una persona; suele tardar de unas horas a pocos días.
-4. Versiones siguientes:
-   ```bash
-   wingetcreate update MojeZcg.ClipQR --version 1.2.0 --urls https://github.com/MojeZcg/ClipQR/releases/download/v1.2.0/ClipQR-Setup.exe --submit
-   ```
-   Se puede añadir al workflow de release con un token personal (`WINGET_TOKEN`) guardado como *secret*.
+**Lo que tienes que hacer tú (una vez):**
+1. En GitHub › *Settings (de tu cuenta) › Developer settings › Personal access tokens › Tokens (classic)*, crea un token con el permiso `public_repo`.
+2. En el repo de ClipQR › *Settings › Secrets and variables › Actions › Secrets*, guárdalo como `WINGET_TOKEN`.
+
+Desde la siguiente release, cada versión se envía sola. Microsoft revisa el PR automáticamente y luego lo revisa una persona; suele tardar de unas horas a pocos días.
+
+**Envío manual** (si prefieres no guardar el token), con los manifiestos del artefacto:
+
+```bash
+winget install Microsoft.WingetCreate
+```
+
+```bash
+wingetcreate submit --token <tu token> winget\manifests\m\MojeZcg\ClipQR\<versión>
+```
 
 Con firma de código (paso 3), las validaciones automáticas de winget dan menos problemas.
 

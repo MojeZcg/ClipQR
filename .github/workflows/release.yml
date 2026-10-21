@@ -45,12 +45,22 @@ jobs:
         if: ${{ vars.MSIX_IDENTITY_NAME != '' && vars.MSIX_PUBLISHER != '' }}
         shell: pwsh
         run: ./build_msix.ps1 -IdentityName "${{ vars.MSIX_IDENTITY_NAME }}" -Publisher "${{ vars.MSIX_PUBLISHER }}" -PublisherDisplayName "MojeZcg"
+      # Firma de código (docs/DISTRIBUCION.md §3). Se activa al crear el secret SIGNPATH_API_TOKEN y las
+      # variables SIGNPATH_ORGANIZATION_ID y SIGNPATH_PROJECT_SLUG; hasta entonces los .exe salen sin firmar.
+      - name: Firma (pendiente de configurar)
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        shell: pwsh
+        run: |
+          Write-Host "SignPath configurado: añadir aquí signpath/github-action-submit-signing-request"
+          Write-Host "para firmar dist/ClipQR.exe, build/app-dist/ClipQR/ClipQR.exe (antes de empaquetar) y dist/ClipQR-Setup.exe."
       - name: Sumas SHA-256
         shell: pwsh
         run: |
           $files = Get-ChildItem dist -File | Where-Object { $_.Extension -in ".exe", ".msix" }
           $files | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
           Get-Content dist/SHA256SUMS.txt
+      - name: Manifiestos de winget
+        run: python tools/winget_manifest.py ${{ steps.version.outputs.version }} dist/ClipQR-Setup.exe dist/winget
       - name: Guardar como artefacto
         uses: actions/upload-artifact@v4
         with:
@@ -59,6 +69,7 @@ jobs:
             dist/*.exe
             dist/*.msix
             dist/SHA256SUMS.txt
+            dist/winget/**
       - name: Publicar release
         if: ${{ github.ref_type == 'tag' }}
         env:
@@ -72,3 +83,14 @@ jobs:
           } else {
             gh release create "${{ github.ref_name }}" @assets --title "ClipQR ${{ steps.version.outputs.version }}" --generate-notes
           }
+      # Envío a winget (docs/DISTRIBUCION.md §4): abre un PR en microsoft/winget-pkgs con los manifiestos.
+      # Se activa al crear el secret WINGET_TOKEN (token clásico de GitHub con permiso public_repo).
+      - name: Enviar a winget
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        shell: pwsh
+        run: |
+          if (-not $env:WINGET_TOKEN) { Write-Host "WINGET_TOKEN no configurado: no se envía a winget"; exit 0 }
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          ./wingetcreate.exe submit --token $env:WINGET_TOKEN "dist/winget/manifests/m/MojeZcg/ClipQR/${{ steps.version.outputs.version }}"
