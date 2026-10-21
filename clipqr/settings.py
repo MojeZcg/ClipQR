@@ -23,6 +23,7 @@ DEFAULT_SETTINGS = {
     "hotkey_create": "Win+Shift+G",  # G de «generar»
     "check_updates": True,  # una vez al día consulta las releases de GitHub
     "show_passwords": False,  # contraseñas Wi-Fi y secretos 2FA visibles sin pulsar el ojo
+    "language": "auto",  # «auto» = el de Windows (español si Windows está en español; si no, inglés)
 }
 
 

@@ -17,6 +17,7 @@ from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze, parse_payload
 from clipqr.hotkeys import HotkeyManager
+from clipqr.i18n import set_language
 from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_label, load_settings, load_state,
                              log_exception, save_state)
 from clipqr.ui.create_qr import CreateQRMixin
@@ -47,6 +48,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.ui_font = "Segoe UI Variable Text" if "Segoe UI Variable Text" in families else "Segoe UI"
         self.paused = False
         self.settings = load_settings()
+        set_language(self.settings["language"])
         self.c = THEMES[self.theme_name()]
         self.last_seq = user32.GetClipboardSequenceNumber()
         self.last_hash = None
