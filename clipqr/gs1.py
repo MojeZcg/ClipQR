@@ -9,45 +9,48 @@ import re
 from datetime import date
 from urllib.parse import parse_qsl, quote, urlsplit
 
+from clipqr.i18n import N_, _
 from clipqr.structured import Result, register
 
 GS = "\x1d"  # separador FNC1 dentro de los datos
 
 # AI -> (nombre, largo fijo o None si es variable, largo máximo)
 AIS = {
-    "00": ("SSCC (envío)", 18, 18), "01": ("GTIN", 14, 14), "02": ("GTIN contenido", 14, 14),
-    "10": ("Lote", None, 20), "11": ("Fabricado", 6, 6), "12": ("Vence el pago", 6, 6),
-    "13": ("Envasado", 6, 6), "15": ("Consumir preferentemente antes de", 6, 6),
-    "16": ("Vender antes de", 6, 6), "17": ("Vencimiento", 6, 6), "20": ("Variante", 2, 2),
-    "21": ("Número de serie", None, 20), "22": ("Variante de consumo", None, 20),
-    "30": ("Cantidad", None, 8), "37": ("Unidades", None, 8), "240": ("Referencia", None, 30),
-    "241": ("Pieza del cliente", None, 30), "250": ("Serie secundaria", None, 30),
-    "400": ("Pedido", None, 30), "410": ("Enviar a (GLN)", 13, 13), "414": ("Ubicación (GLN)", 13, 13),
-    "422": ("País de origen", 3, 3), "7003": ("Vence (fecha y hora)", 10, 10),
+    "00": (N_("SSCC (envío)"), 18, 18), "01": ("GTIN", 14, 14), "02": (N_("GTIN contenido"), 14, 14),
+    "10": (N_("Lote"), None, 20), "11": (N_("Fabricado"), 6, 6), "12": (N_("Vence el pago"), 6, 6),
+    "13": (N_("Envasado"), 6, 6), "15": (N_("Consumir preferentemente antes de"), 6, 6),
+    "16": (N_("Vender antes de"), 6, 6), "17": (N_("Vencimiento"), 6, 6), "20": (N_("Variante"), 2, 2),
+    "21": (N_("Número de serie"), None, 20), "22": (N_("Variante de consumo"), None, 20),
+    "30": (N_("Cantidad"), None, 8), "37": (N_("Unidades"), None, 8), "240": (N_("Referencia"), None, 30),
+    "241": (N_("Pieza del cliente"), None, 30), "250": (N_("Serie secundaria"), None, 30),
+    "400": (N_("Pedido"), None, 30), "410": (N_("Enviar a (GLN)"), 13, 13),
+    "414": (N_("Ubicación (GLN)"), 13, 13), "422": (N_("País de origen"), 3, 3),
+    "7003": (N_("Vence (fecha y hora)"), 10, 10),
 }
 DATES = {"11", "12", "13", "15", "16", "17"}
 # 4 dígitos: 310n peso neto (kg), 320n (lb), 330n peso bruto, 392n/393n precio
-MEASURES = {"310": ("Peso neto", "kg"), "311": ("Largo", "m"), "320": ("Peso neto", "lb"),
-            "330": ("Peso bruto", "kg"), "392": ("Precio", ""), "393": ("Precio", "")}
+MEASURES = {"310": (N_("Peso neto"), "kg"), "311": (N_("Largo"), "m"), "320": (N_("Peso neto"), "lb"),
+            "330": (N_("Peso bruto"), "kg"), "392": (N_("Precio"), ""), "393": (N_("Precio"), "")}
 
 # Prefijo GS1 -> país de la organización que asignó el código (no siempre el de fabricación)
 PREFIXES = [
-    (0, 19, "EE. UU. y Canadá"), (30, 39, "EE. UU."), (60, 139, "EE. UU. y Canadá"), (300, 379, "Francia"),
-    (380, 380, "Bulgaria"), (400, 440, "Alemania"), (450, 459, "Japón"), (460, 469, "Rusia"),
-    (471, 471, "Taiwán"), (480, 480, "Filipinas"), (489, 489, "Hong Kong"), (490, 499, "Japón"),
-    (500, 509, "Reino Unido"), (520, 521, "Grecia"), (539, 539, "Irlanda"), (540, 549, "Bélgica y Luxemburgo"),
-    (560, 560, "Portugal"), (570, 579, "Dinamarca"), (590, 590, "Polonia"), (600, 601, "Sudáfrica"),
-    (690, 699, "China"), (700, 709, "Noruega"), (729, 729, "Israel"), (730, 739, "Suecia"),
-    (740, 740, "Guatemala"), (741, 741, "El Salvador"), (742, 742, "Honduras"), (743, 743, "Nicaragua"),
-    (744, 744, "Costa Rica"), (745, 745, "Panamá"), (746, 746, "República Dominicana"), (750, 750, "México"),
-    (754, 755, "Canadá"), (759, 759, "Venezuela"), (760, 769, "Suiza"), (770, 771, "Colombia"),
-    (773, 773, "Uruguay"), (775, 775, "Perú"), (777, 777, "Bolivia"), (778, 779, "Argentina"),
-    (780, 780, "Chile"), (784, 784, "Paraguay"), (786, 786, "Ecuador"), (789, 790, "Brasil"),
-    (800, 839, "Italia"), (840, 849, "España"), (850, 850, "Cuba"), (858, 858, "Eslovaquia"),
-    (859, 859, "República Checa"), (869, 869, "Turquía"), (870, 879, "Países Bajos"), (880, 880, "Corea del Sur"),
-    (885, 885, "Tailandia"), (888, 888, "Singapur"), (890, 890, "India"), (893, 893, "Vietnam"),
-    (899, 899, "Indonesia"), (900, 919, "Austria"), (930, 939, "Australia"), (940, 949, "Nueva Zelanda"),
-    (955, 955, "Malasia"), (977, 977, "Revista (ISSN)"), (978, 979, "Libro (ISBN)"),
+    (0, 19, N_("EE. UU. y Canadá")), (30, 39, N_("EE. UU.")), (60, 139, N_("EE. UU. y Canadá")),
+    (300, 379, N_("Francia")), (380, 380, "Bulgaria"), (400, 440, N_("Alemania")), (450, 459, N_("Japón")),
+    (460, 469, N_("Rusia")), (471, 471, N_("Taiwán")), (480, 480, N_("Filipinas")), (489, 489, "Hong Kong"),
+    (490, 499, N_("Japón")), (500, 509, N_("Reino Unido")), (520, 521, N_("Grecia")), (539, 539, N_("Irlanda")),
+    (540, 549, N_("Bélgica y Luxemburgo")), (560, 560, "Portugal"), (570, 579, N_("Dinamarca")),
+    (590, 590, N_("Polonia")), (600, 601, N_("Sudáfrica")), (690, 699, "China"), (700, 709, N_("Noruega")),
+    (729, 729, "Israel"), (730, 739, N_("Suecia")), (740, 740, "Guatemala"), (741, 741, "El Salvador"),
+    (742, 742, "Honduras"), (743, 743, "Nicaragua"), (744, 744, "Costa Rica"), (745, 745, N_("Panamá")),
+    (746, 746, N_("República Dominicana")), (750, 750, N_("México")), (754, 755, N_("Canadá")),
+    (759, 759, "Venezuela"), (760, 769, N_("Suiza")), (770, 771, "Colombia"), (773, 773, "Uruguay"),
+    (775, 775, N_("Perú")), (777, 777, "Bolivia"), (778, 779, "Argentina"), (780, 780, "Chile"),
+    (784, 784, "Paraguay"), (786, 786, "Ecuador"), (789, 790, N_("Brasil")), (800, 839, N_("Italia")),
+    (840, 849, N_("España")), (850, 850, "Cuba"), (858, 858, N_("Eslovaquia")), (859, 859, N_("República Checa")),
+    (869, 869, N_("Turquía")), (870, 879, N_("Países Bajos")), (880, 880, N_("Corea del Sur")),
+    (885, 885, N_("Tailandia")), (888, 888, N_("Singapur")), (890, 890, "India"), (893, 893, "Vietnam"),
+    (899, 899, "Indonesia"), (900, 919, "Austria"), (930, 939, "Australia"), (940, 949, N_("Nueva Zelanda")),
+    (955, 955, N_("Malasia")), (977, 977, N_("Revista (ISSN)")), (978, 979, N_("Libro (ISBN)")),
 ]
 
 
@@ -71,8 +74,9 @@ def prefix_country(gtin):
         return None
     p = int(g[1:4])
     if 20 <= p <= 29 or 40 <= p <= 49 or 200 <= p <= 299:
-        return "Uso interno de la tienda"
-    return next((name for lo, hi, name in PREFIXES if lo <= p <= hi), None)
+        return _("Uso interno de la tienda")
+    name = next((name for lo, hi, name in PREFIXES if lo <= p <= hi), None)
+    return _(name) if name else None
 
 
 def gs1_date(yymmdd):
@@ -149,6 +153,7 @@ def parse_digital_link(text):
 
 def _measure(ai, value):
     name, unit = MEASURES[ai[:3]]
+    name = _(name)
     decimals = int(ai[3])
     try:
         number = int(value) / 10 ** decimals
@@ -166,21 +171,21 @@ def product_result(pairs, source="", today=None):
     if gtin:
         items.append(("GTIN", short_gtin(gtin)))
         if not gtin_valid(gtin):
-            warnings.append("El dígito verificador del GTIN no cuadra: el código puede estar mal leído")
+            warnings.append(_("El dígito verificador del GTIN no cuadra: el código puede estar mal leído"))
         country = prefix_country(gtin)
         if country:
-            items.append(("Registrado en", country))
+            items.append((_("Registrado en"), country))
     expiry = None
     for ai, value in pairs:
         if ai == "01":
             continue
         if ai in DATES:
             d = gs1_date(value)
-            items.append((AIS[ai][0], d.strftime("%d/%m/%Y") if d else value))
+            items.append((_(AIS[ai][0]), d.strftime("%d/%m/%Y") if d else value))
             if ai in ("17", "15") and d and expiry is None:
                 expiry = (ai, d)
         elif ai in AIS:
-            items.append((AIS[ai][0], value))
+            items.append((_(AIS[ai][0]), value))
         elif ai[:3] in MEASURES:
             items.append(_measure(ai, value))
     level = "warn"
@@ -188,22 +193,24 @@ def product_result(pairs, source="", today=None):
         ai, d = expiry
         days = (d - today).days
         if days < 0:
-            warnings.append(f"Producto vencido el {d:%d/%m/%Y}" if ai == "17"
-                            else f"Pasó la fecha de consumo preferente ({d:%d/%m/%Y})")
+            warnings.append(_("Producto vencido el {fecha}", fecha=f"{d:%d/%m/%Y}") if ai == "17"
+                            else _("Pasó la fecha de consumo preferente ({fecha})", fecha=f"{d:%d/%m/%Y}"))
             level = "bad" if ai == "17" else "warn"
         elif days <= 30:
-            warnings.append("Vence hoy" if days == 0 else f"Vence en {days} día{'s' if days != 1 else ''}")
+            warnings.append(_("Vence hoy") if days == 0 else _("Vence en {dias} día", dias=days) if days == 1
+                            else _("Vence en {dias} días", dias=days))
     actions = []
     if gtin:
-        actions.append(("Buscar producto ↗", "open", "https://www.google.com/search?q=" + quote(items[0][1])))
-        actions.append(("Ver en GS1 ↗", "open", f"https://id.gs1.org/01/{gtin}"))
+        actions.append((_("Buscar producto ↗"), "open", "https://www.google.com/search?q=" + quote(items[0][1])))
+        actions.append((_("Ver en GS1 ↗"), "open", f"https://id.gs1.org/01/{gtin}"))
     if source.startswith(("http://", "https://")):
-        actions.append(("Abrir enlace del fabricante ↗", "open", source))
-    head = ("Producto", items[0][1]) if gtin else (items[0] if items else ("Código GS1", source))
+        actions.append((_("Abrir enlace del fabricante ↗"), "open", source))
+    head = (_("Producto"), items[0][1]) if gtin else (items[0] if items else (_("Código GS1"), source))
     lot = data.get("10")
-    subtitle = " · ".join(x for x in (f"Lote {lot}" if lot else "",
-                                      f"Vence {expiry[1]:%d/%m/%Y}" if expiry else "") if x) or None
-    return Result("product", "Producto · GS1", items, actions, warnings, head, subtitle,
+    subtitle = " · ".join(x for x in (_("Lote {lote}", lote=lot) if lot else "",
+                                      _("Vence {fecha}", fecha=f"{expiry[1]:%d/%m/%Y}") if expiry else "")
+                          if x) or None
+    return Result("product", _("Producto · GS1"), items, actions, warnings, head, subtitle,
                   warning_level=level)
 
 
@@ -218,6 +225,6 @@ def parse_gs1(text):
     if not (t.startswith("(") or re.match(r"^(\][A-Za-z]\d)?(01\d{14}|00\d{18})", t)):
         return None
     pairs = parse_element_string(t)
-    if not pairs or not any(ai in AIS or ai[:3] in MEASURES for ai, _ in pairs):
+    if not pairs or not any(ai in AIS or ai[:3] in MEASURES for ai, _value in pairs):
         return None
     return product_result(pairs, t)
