@@ -46,8 +46,9 @@ class PopupMixin:
         g, gf = self.glyph(kind)
         tk.Label(meta, text=g, font=(gf[0], 10), bg=c["card"], fg=accent).pack(side="left", padx=(0, self.px(5)))
         tk.Label(meta, text=title.upper(), bg=c["card"], fg=accent, font=self.font(8, "bold")).pack(side="left")
-        tk.Label(meta, text=f"  ·  {format_name(code['format'])}", bg=c["card"], fg=c["muted"],
-                 font=self.font(8)).pack(side="left")
+        if " · " not in title:  # «Factura · ARCA» ya ocupa la línea: el tipo de código sobra
+            tk.Label(meta, text=f"  ·  {format_name(code['format'])}", bg=c["card"], fg=c["muted"],
+                     font=self.font(8)).pack(side="left")
         tk.Label(head, text=shorten(head_value, 70), bg=c["card"], fg=c["fg"], font=self.font(15, "bold"),
                  anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
         subtitle = r.subtitle or (shorten(text, 90, middle=True) if kind == "link" else None)
