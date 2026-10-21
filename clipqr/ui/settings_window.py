@@ -2,7 +2,8 @@
 import time
 import tkinter as tk
 
-from clipqr.settings import HOTKEY_FOCUS_CHOICES, HOTKEY_REGION_CHOICES, error_report, hotkey_label
+from clipqr.settings import (HOTKEY_CREATE_CHOICES, HOTKEY_FOCUS_CHOICES, HOTKEY_REGION_CHOICES, error_report,
+                             hotkey_label)
 
 from PIL import Image, ImageTk
 
@@ -162,6 +163,9 @@ class SettingsWindowMixin:
             "Congela la pantalla y lees el código que rodees, sin capturas ni portapapeles.",
             lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_REGION_CHOICES],
                                       st["hotkey_region"], lambda v: set_hotkey(hotkey_region=v)), stacked=True)
+        row(card, "Crear un QR", "Abre «Crear QR» con lo que tengas copiado.",
+            lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_CREATE_CHOICES],
+                                      st["hotkey_create"], lambda v: set_hotkey(hotkey_create=v)), stacked=True)
         row(card, "Usar el aviso con el teclado",
             "Pasa el foco al aviso abierto. Luego: Enter = acción, 1–9 = copiar ese dato, Tab = moverse, Esc = cerrar.",
             lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_FOCUS_CHOICES],

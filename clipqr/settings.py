@@ -20,6 +20,7 @@ DEFAULT_SETTINGS = {
     # (Ctrl+Alt+Q escribe @) y el atajo impediría escribir esos caracteres.
     "hotkey_focus": "Ctrl+Shift+Space",
     "hotkey_region": "Win+Shift+Q",  # junto a Win+Shift+S, el de las capturas de Windows
+    "hotkey_create": "Win+Shift+G",  # G de «generar»
     "check_updates": True,  # una vez al día consulta las releases de GitHub
     "show_passwords": False,  # contraseñas Wi-Fi y secretos 2FA visibles sin pulsar el ojo
 }
@@ -39,6 +40,7 @@ def error_report(version, limit=60):
 
 HOTKEY_FOCUS_CHOICES = ("Ctrl+Shift+Space", "Win+Alt+Space", "")
 HOTKEY_REGION_CHOICES = ("Win+Shift+Q", "Win+Alt+Q", "Alt+Shift+Q", "")
+HOTKEY_CREATE_CHOICES = ("Win+Shift+G", "Alt+Shift+G", "")
 
 
 def hotkey_label(hotkey):

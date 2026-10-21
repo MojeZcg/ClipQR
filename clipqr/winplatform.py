@@ -86,6 +86,35 @@ def force_foreground(hwnd):
             user32.AttachThreadInput(me, fg_thread, False)
 
 
+def copy_image_to_clipboard(img):
+    """Copia una imagen PIL al portapapeles de Windows (formato CF_DIB: lo que pega Word, Paint, WhatsApp…)."""
+    import io
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, "BMP")
+    data = buf.getvalue()[14:]  # sin la cabecera de archivo BMP
+    kernel32.GlobalAlloc.restype = ctypes.c_void_p
+    kernel32.GlobalAlloc.argtypes = [wintypes.UINT, ctypes.c_size_t]
+    kernel32.GlobalLock.restype = ctypes.c_void_p
+    kernel32.GlobalLock.argtypes = [ctypes.c_void_p]
+    kernel32.GlobalUnlock.argtypes = [ctypes.c_void_p]
+    user32.SetClipboardData.argtypes = [wintypes.UINT, ctypes.c_void_p]
+    handle = kernel32.GlobalAlloc(0x2, len(data))  # GMEM_MOVEABLE
+    ctypes.memmove(kernel32.GlobalLock(handle), data, len(data))
+    kernel32.GlobalUnlock(handle)
+    for _ in range(10):  # otra app puede tener el portapapeles abierto un instante
+        if user32.OpenClipboard(None):
+            break
+        import time
+        time.sleep(0.05)
+    else:
+        return False
+    try:
+        user32.EmptyClipboard()
+        return bool(user32.SetClipboardData(8, handle))  # CF_DIB; Windows se queda con la memoria
+    finally:
+        user32.CloseClipboard()
+
+
 def cursor_pos():
     p = wintypes.POINT()
     user32.GetCursorPos(ctypes.byref(p))
