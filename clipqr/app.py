@@ -265,24 +265,36 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         """Lee los códigos de las imágenes en segundo plano y muestra el aviso. Con capture_since, busca
         después el archivo que Windows guardó de esa captura (para ofrecer borrarlo)."""
         def work():
+            # el archivo de la captura se busca a la vez que se leen los códigos: así el botón de borrarla
+            # aparece casi junto con el aviso
+            found = {}
+            finder = None
+            if capture_since is not None:
+                finder = threading.Thread(target=lambda: found.update(path=find_saved_capture(imgs[0], capture_since)),
+                                          daemon=True)
+                finder.start()
             codes, texts = [], set()
             for img in imgs:
                 for c in decode_image(img, self.settings["qr_only"]):
                     if c["text"] not in texts:
                         texts.add(c["text"])
                         codes.append({"format": c["format"], "text": c["text"],
-                                      "thumb": make_thumb(img, c["box"]), "time": time.time()})
+                                      "thumb": make_thumb(img, c["box"]), "time": time.time(),
+                                      "capture_pending": finder is not None})
             self.root.after(0, lambda: self._on_result(codes, force))
-            if codes and capture_since is not None:
-                path = find_saved_capture(imgs[0], capture_since)
-                if path:
-                    self.root.after(0, lambda: self._on_capture(codes, path))
+            if codes and finder is not None:
+                finder.join()
+                self.root.after(0, lambda: self._on_capture(codes, found.get("path")))
 
         threading.Thread(target=work, daemon=True).start()
 
     def _on_capture(self, codes, path):
         for c in codes:
+            c["capture_pending"] = False
             c["capture"] = path
+        if not path:
+            self._paint_capture_slot(codes)  # no se guardó archivo: quitar «Buscando…»
+            return
         if self.settings["delete_capture"]:
             deleted = send_to_recycle_bin(path)
             for c in codes:
