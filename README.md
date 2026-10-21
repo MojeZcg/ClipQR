@@ -41,8 +41,17 @@
 | 📞 **Teléfono / SMS** | Número, mensaje | **Llamar**, **Enviar SMS** |
 | 📍 **Ubicación** | Coordenadas | **Ver en el mapa** |
 | 🔑 **2FA (otpauth)** | Cuenta, emisor, secreto (oculto) | — |
-| 🛒 **Producto** (EAN / UPC) | Código | **Buscar producto** |
+| 🧾 **Factura** | Importe en grande, tipo, número, fecha, emisor, receptor, código de autorización | **Verificar** en el organismo, **Copiar resumen** |
+| 💳 **Pago QR** | Importe, comercio, CVU/CBU, clave Pix o IBAN, referencia, red | **Copiar código de pago** (nunca paga por su cuenta) |
+| 🛒 **Producto** (EAN / UPC / GS1) | GTIN, lote, serie, vencimiento, peso | **Buscar producto**, **Ver en GS1** |
+| 🪪 **DNI argentino** | Titular, número, nacimiento, ejemplar | **Copiar DNI** (no se guarda en el historial) |
+| ✈️ **Tarjeta de embarque** | Vuelo, ruta, fecha, asiento, reserva | **Copiar reserva** (no se guarda en el historial) |
+| 💬 **WhatsApp, Telegram, redes, apps** | Número o usuario, mensaje, app | **Abrir chat**, **Abrir en…** |
 | 📄 **Texto** | URLs y emails que contenga | **Buscar en Google** |
+
+**Facturas con QR:** Argentina (ARCA, ex AFIP), México (CFDI), Chile (SII), Perú (SUNAT), Colombia (DIAN), Uruguay (DGI), Brasil (NF-e / NFC-e), Ecuador (SRI), España (VeriFactu y TicketBAI) y Portugal (ATCUD). **Pagos:** Transferencias 3.0 (Mercado Pago, MODO, bancos), Pix y demás QR EMVCo, transferencias SEPA, QR-factura suiza, UPI y criptomonedas (solo copiar). Si algo no cuadra (QR alterado, identificador fiscal inválido, producto vencido), lo avisa.
+
+**Crear QR** (`Win`+`Shift`+`G`): Wi‑Fi, contacto, enlace, email, teléfono, SMS, WhatsApp o ubicación, con colores y logo. Se copia o se guarda en PNG o SVG.
 
 También lee DataMatrix, Aztec, PDF417, Code 128, Code 39 y otros formatos, gracias a [zxing-cpp](https://github.com/zxing-cpp/zxing-cpp). Funciona con capturas de pantalla, con fotos borrosas de QR impresos y con imágenes que tienen varios códigos a la vez.
 
@@ -76,7 +85,7 @@ Desde el icono ⚙ del aviso o desde **Configuración…** en el menú de la ban
 - **Detección:** solo QR o también códigos de barras, leer archivos copiados desde el Explorador, sonido al detectar y pausar la detección.
 - **Borrar las capturas con QR:** Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR, el aviso ofrece **Borrar captura**, o lo hace solo si activas esta opción. Va a la Papelera (se puede recuperar) y solo se borra el archivo idéntico a la captura.
 - **Historial:** cuántos escaneos se guardan y borrar el historial.
-- **Atajos de teclado:** escanear una zona de la pantalla (`Win`+`Shift`+`Q`) y usar el aviso con el teclado (`Ctrl`+`Shift`+`Espacio`). Se pueden cambiar o desactivar. Nunca son `Ctrl`+`Alt`+letra, porque en teclados español y latinoamericano eso es `AltGr` y te impediría escribir @, #, €…
+- **Atajos de teclado:** escanear una zona de la pantalla (`Win`+`Shift`+`Q`), crear un QR (`Win`+`Shift`+`G`) y usar el aviso con el teclado (`Ctrl`+`Shift`+`Espacio`). Se pueden cambiar o desactivar. Nunca son `Ctrl`+`Alt`+letra, porque en teclados español y latinoamericano eso es `AltGr` y te impediría escribir @, #, €…
 - **General:** iniciar con Windows, buscar actualizaciones (una vez al día; se instalan solo si aceptas y tras comprobar el instalador) e informe de errores para pegar en una incidencia.
 
 Los ajustes se guardan en `%APPDATA%\ClipQR\settings.json`.
@@ -130,7 +139,7 @@ Genera `dist\ClipQR-<versión>.msix`. Al instalarse desde la Store, el inicio co
 
 ## Próximas versiones
 
-- [Hoja de ruta](docs/ROADMAP.md): qué viene hasta la 1.4, PR por PR: crear QR, facturas de ARCA (AFIP) y de otros países, pagos QR, productos y más.
+- [Hoja de ruta](docs/ROADMAP.md): qué viene hasta la 1.4, PR por PR.
 - [Distribución](docs/DISTRIBUCION.md): releases automáticas, firma de código, winget y Microsoft Store.
 
 ## Licencia
