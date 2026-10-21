@@ -7,7 +7,7 @@ nunca paga ni abre la app del banco por su cuenta.
 """
 import re
 
-from clipqr.fiscal.ids import cbu_valid, cnpj_valid, cpf_valid
+from clipqr.fiscal.ids import cbu_valid, cnpj_valid, cpf_valid, format_iban, iban_valid
 from clipqr.structured import Result, format_money, register, to_decimal
 
 # ISO 4217 numérico -> alfabético
@@ -139,3 +139,79 @@ def parse_emv(text):
     for acc in accounts[:1]:
         actions.append((f"Copiar {'CVU' if acc.startswith('000') else 'CBU'}", "copy", acc))
     return Result("payment", title, items, actions, warnings, headline, subtitle)
+
+
+# ---------------------------------------------------------------- Europa: transferencia SEPA y QR-factura suiza
+
+SEPA_PURPOSES = {"GDDS": "Compra de bienes", "SALA": "Salario", "RENT": "Alquiler", "CHAR": "Donación",
+                 "SUPP": "Pago a proveedor", "TAXS": "Impuestos"}
+
+
+def _transfer_result(title, name, iban, amount, currency, country, reference, message, warnings, extra=()):
+    items = [("Beneficiario", name)] if name else []
+    items.append(("IBAN", format_iban(iban)))
+    if not iban_valid(iban):
+        warnings.append("El IBAN no es válido (dígitos de control)")
+    items += [i for i in extra if i[1]]
+    if reference:
+        items.append(("Referencia", reference))
+    if message:
+        items.append(("Concepto", message))
+    actions = [("Copiar IBAN", "copy", iban.replace(" ", ""))]
+    if reference:
+        actions.append(("Copiar referencia", "copy", reference))
+    if amount is not None:
+        headline = ("Importe", format_money(amount, currency, country))
+        subtitle = f"Para {name}" if name else None
+    else:
+        headline = ("Beneficiario", name or format_iban(iban))
+        subtitle = "Sin importe: lo eliges en la app al pagar"
+    return Result("payment", title, items, actions, warnings, headline, subtitle)
+
+
+@register
+def parse_epc(text):
+    """QR de transferencia SEPA (EPC069-12, «código GiroCode»): líneas BCD / versión / codificación / SCT…"""
+    lines = text.replace("\r\n", "\n").split("\n")
+    if lines[0].strip() != "BCD" or len(lines) < 7:
+        return None
+    lines += [""] * (12 - len(lines))
+    version, service, bic, name, iban, amount_txt, purpose, ref, msg = (
+        lines[1].strip(), lines[3].strip(), lines[4].strip(), lines[5].strip(), lines[6].strip(),
+        lines[7].strip(), lines[8].strip(), lines[9].strip(), lines[10].strip())
+    warnings = []
+    if version not in ("001", "002") or service not in ("SCT", "INST") or not name or not iban:
+        warnings.append("QR de transferencia incompleto o con un formato que no se reconoce")
+    amount = None
+    m = re.fullmatch(r"EUR(\d{1,9}(\.\d{1,2})?)", amount_txt)
+    if m:
+        amount = to_decimal(m[1])
+    elif amount_txt:
+        warnings.append("El importe no tiene el formato «EUR123.45»")
+    extra = [("BIC", bic), ("Motivo", SEPA_PURPOSES.get(purpose, purpose))]
+    title = "Transferencia SEPA" + (" inmediata" if service == "INST" else "")
+    return _transfer_result(title, name, iban, amount, "EUR", iban[:2].upper() if iban else "ES",
+                            ref, msg, warnings, extra)
+
+
+@register
+def parse_swiss_qr(text):
+    """QR-factura suiza (Swiss Payment Standards): líneas SPC / 0200 / 1 / IBAN / acreedor… / importe…"""
+    lines = text.replace("\r\n", "\n").split("\n")
+    if lines[0].strip() != "SPC" or len(lines) < 28:
+        return None
+    lines += [""] * (32 - len(lines))
+    get = lambda i: lines[i].strip()
+    warnings = []
+    if not get(1).startswith("02") or get(30) not in ("EPD", ""):
+        warnings.append("QR-factura suiza incompleta o con un formato que no se reconoce")
+    iban, name = get(3), get(5)
+    city = get(9) if get(4) == "S" else get(7)
+    place = " ".join(x for x in (get(8) if get(4) == "S" else "", city) if x)
+    amount = to_decimal(get(18)) if get(18) else None
+    currency = get(19) or "CHF"
+    ref_type, ref = get(27), get(28)
+    return _transfer_result("QR-factura suiza", name, iban, amount, currency, "CH", ref, get(29), warnings,
+                            [("Localidad", place), ("País", get(10)),
+                             ("Tipo de referencia", {"QRR": "Referencia QR", "SCOR": "Referencia ISO 11649"}
+                              .get(ref_type, ""))])
