@@ -1,0 +1,74 @@
+name: Release
+
+# Al subir una etiqueta vX.Y.Z: tests, compilar exe portátil + instalador (+ MSIX si están las
+# variables de la Store), sumas SHA-256 y release en GitHub.
+# A mano (Actions › Release › Run workflow) hace un ensayo: compila y deja los archivos como
+# artefacto, sin publicar nada.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PY: python
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Dependencias
+        run: python -m pip install -r requirements-dev.txt
+      - name: Pyflakes y tests
+        run: |
+          python -m pyflakes clipqr main.py installer tools tests
+          python -m pytest -q
+      - name: Versión
+        id: version
+        shell: pwsh
+        run: |
+          $v = (python -c "import clipqr; print(clipqr.VERSION)").Trim()
+          "version=$v" >> $env:GITHUB_OUTPUT
+          if ("${{ github.ref_type }}" -eq "tag" -and "v$v" -ne "${{ github.ref_name }}") {
+            throw "VERSION=$v no coincide con la etiqueta ${{ github.ref_name }}"
+          }
+      - name: Compilar exe portátil e instalador
+        run: cmd /c build_setup.bat
+      - name: Compilar MSIX
+        if: ${{ vars.MSIX_IDENTITY_NAME != '' && vars.MSIX_PUBLISHER != '' }}
+        shell: pwsh
+        run: ./build_msix.ps1 -IdentityName "${{ vars.MSIX_IDENTITY_NAME }}" -Publisher "${{ vars.MSIX_PUBLISHER }}" -PublisherDisplayName "MojeZcg"
+      - name: Sumas SHA-256
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem dist -File | Where-Object { $_.Extension -in ".exe", ".msix" }
+          $files | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
+          Get-Content dist/SHA256SUMS.txt
+      - name: Guardar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipQR-${{ steps.version.outputs.version }}
+          path: |
+            dist/*.exe
+            dist/*.msix
+            dist/SHA256SUMS.txt
+      - name: Publicar release
+        if: ${{ github.ref_type == 'tag' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $notes = "docs/release-notes/${{ github.ref_name }}.md"
+          $assets = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in ".exe", ".msix", ".txt" } | ForEach-Object { $_.FullName })
+          if (Test-Path $notes) {
+            gh release create "${{ github.ref_name }}" @assets --title "ClipQR ${{ steps.version.outputs.version }}" --notes-file $notes
+          } else {
+            gh release create "${{ github.ref_name }}" @assets --title "ClipQR ${{ steps.version.outputs.version }}" --generate-notes
+          }

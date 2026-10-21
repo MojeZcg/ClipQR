@@ -15,8 +15,8 @@ jobs:
           python-version: "3.13"
           cache: pip
       - name: Dependencias
-        run: py -m pip install -r requirements-dev.txt
+        run: python -m pip install -r requirements-dev.txt
       - name: Pyflakes
-        run: py -m pyflakes clipqr main.py installer tools tests
+        run: python -m pyflakes clipqr main.py installer tools tests
       - name: Tests
-        run: py -m pytest -q
+        run: python -m pytest -q

@@ -23,6 +23,7 @@ param(
   [switch]$Register
 )
 $ErrorActionPreference = "Stop"
+$py = if ($env:PY) { $env:PY } else { "py" }  # en GitHub Actions: python
 Set-Location $PSScriptRoot
 
 $sdk = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.*\x64" -Directory -ErrorAction SilentlyContinue |
@@ -31,14 +32,14 @@ if (-not $sdk) { throw "No se encontró makeappx.exe. Instala el Windows SDK (ht
 $makeappx = "$($sdk.FullName)\makeappx.exe"
 $makepri = "$($sdk.FullName)\makepri.exe"
 
-$appVersion = (py -c "import clipqr; print(clipqr.VERSION)").Trim()
+$appVersion = (& $py -c "import clipqr; print(clipqr.VERSION)").Trim()
 $version = "$appVersion.0"  # MSIX exige 4 partes; la última debe ser 0 para la Store
 Write-Host "ClipQR $version  ($IdentityName / $Publisher)"
 
 # 1) programa
-py -m pip install --user -q -r requirements.txt pyinstaller
-py -c "from clipqr.icons import make_icon; make_icon(size=256, outline=True).save('assets/clipqr.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
-py -m PyInstaller --noconfirm --windowed --name ClipQR --exclude-module numpy --icon "$PSScriptRoot\assets\clipqr.ico" `
+& $py -m pip install -q -r requirements.txt pyinstaller
+& $py -c "from clipqr.icons import make_icon; make_icon(size=256, outline=True).save('assets/clipqr.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])"
+& $py -m PyInstaller --noconfirm --windowed --name ClipQR --exclude-module numpy --icon "$PSScriptRoot\assets\clipqr.ico" `
   --add-data "$PSScriptRoot\assets\logo.png;assets" --add-data "$PSScriptRoot\assets\logo-white.png;assets" `
   --distpath build\msix-dist --workpath build\msix-work --specpath build main.py
 if ($LASTEXITCODE) { throw "PyInstaller falló" }
@@ -50,7 +51,7 @@ $layout = "build\msix-layout"
 if (Test-Path $layout) { Remove-Item $layout -Recurse -Force }
 New-Item -ItemType Directory -Force $layout | Out-Null
 Copy-Item build\msix-dist\ClipQR "$layout\ClipQR" -Recurse
-py tools\msix_assets.py "$layout\Assets"
+& $py tools\msix_assets.py "$layout\Assets"
 (Get-Content msix\AppxManifest.xml -Raw -Encoding utf8) `
   -replace '\{\{IDENTITY_NAME\}\}', $IdentityName `
   -replace '\{\{PUBLISHER\}\}', [Security.SecurityElement]::Escape($Publisher) `
