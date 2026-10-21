@@ -6,7 +6,7 @@ from PIL import ImageTk
 
 from clipqr import APP_NAME
 from clipqr.icons import make_icon
-from clipqr.payloads import parse_payload
+from clipqr.payloads import analyze
 from clipqr.ui.theme import KINDS, THEMES
 from clipqr.winplatform import style_window
 
@@ -74,7 +74,8 @@ class HistoryMixin:
                      font=self.font(10), justify="center").pack(pady=self.px(40))
             return
         for code in entries:
-            kind, title, items, _ = parse_payload(code["text"])
+            r = analyze(code["text"])
+            kind, title, items = r.kind, r.title, r.items
             row = tk.Frame(self.hist_list, bg=c["card"], highlightthickness=1, highlightbackground=c["border"],
                            cursor="hand2")
             row.pack(fill="x", pady=(0, self.px(6)))
@@ -95,8 +96,12 @@ class HistoryMixin:
                      fg=c["muted"], font=self.font(8)).pack(side="left")
             # resumen legible (Ana Pérez · +34 600…) en vez del texto crudo de vCard / Wi-Fi
             summary = [v for l, v in items if l not in ("Contraseña", "Secreto", "Dominio")][:3]
-            preview = " · ".join(summary) if kind not in ("link", "text", "product") and summary else \
-                code["text"].replace("\r", "").replace("\n", " · ")
+            if r.headline:  # facturas, pagos…: «$ 12.345,67 · Factura B · 0003-00001234»
+                preview = " · ".join(x for x in (r.headline[1], r.subtitle) if x)
+            elif kind not in ("link", "text", "product") and summary:
+                preview = " · ".join(summary)
+            else:
+                preview = code["text"].replace("\r", "").replace("\n", " · ")
             tk.Label(mid, text=(preview[:52] + "…") if len(preview) > 52 else preview, bg=c["card"],
                      fg=c["muted"], font=self.font(9), anchor="w").pack(anchor="w", fill="x")
             open_it = lambda e, cd=code: self.show_popup([cd])

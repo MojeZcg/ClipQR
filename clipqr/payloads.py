@@ -1,8 +1,10 @@
 """Interpretación del texto de un código: tipo, datos y acciones (botones)."""
+import importlib
 import re
 import urllib.parse
 
-from clipqr.linksafety import registrable_domain
+from clipqr.linksafety import link_warnings, registrable_domain
+from clipqr.structured import Result, detect
 
 def _unescape(s):
     return re.sub(r"\\([\\;,:\"])", r"\1", s)
@@ -65,8 +67,26 @@ def _contact_actions(items, card_text):
         actions.append(("Abrir web ↗", "open", web if "://" in web else "https://" + web))
     return actions
 
+def analyze(text):
+    """Interpretación completa de un código: formatos estructurados (facturas, pagos…) y, si no, los tipos
+    básicos. Devuelve un Result (tipo, título, datos, acciones, avisos, dato principal, subtítulo)."""
+    importlib.import_module("clipqr.formats")  # registra los formatos estructurados (una sola vez)
+    r = detect(text.strip())
+    if r is not None:
+        return r
+    kind, title, items, actions = _basic_payload(text)
+    warnings = link_warnings(actions[0][2]) if kind == "link" and actions else []
+    return Result(kind, title, items, actions, warnings)
+
+
 def parse_payload(text):
-    """Devuelve (tipo, titulo, [(etiqueta, valor)], [(texto_boton, accion, arg)]).
+    """(tipo, titulo, [(etiqueta, valor)], [(texto_boton, accion, arg)]) — forma corta de analyze()."""
+    r = analyze(text)
+    return r.kind, r.title, r.items, r.actions
+
+
+def _basic_payload(text):
+    """Tipos básicos: (tipo, titulo, [(etiqueta, valor)], [(texto_boton, accion, arg)]).
 
     Las acciones son siempre botones: nada se ejecuta sin que el usuario lo pulse.
     accion: "open" (abrir URI), "wifi" (conectar), "file" (guardar y abrir (contenido, extensión)).
