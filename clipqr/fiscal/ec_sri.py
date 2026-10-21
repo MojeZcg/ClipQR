@@ -12,14 +12,15 @@ import re
 from clipqr.fiscal import Comprobante, invoice_result
 from clipqr.fiscal.comun_latam import fecha_dmy
 from clipqr.fiscal.ids_latam import format_ruc_ec, ruc_ec_valid
+from clipqr.i18n import N_, _
 from clipqr.structured import register
 
 URL_SRI = ("https://srienlinea.sri.gob.ec/comprobantes-electronicos-internet/publico/"
            "validezComprobantes.jsf")  # consulta pública de validez de comprobantes electrónicos
 
 TIPOS = {  # tabla 3 de la ficha técnica
-    "01": "Factura", "03": "Liquidación de compra", "04": "Nota de crédito", "05": "Nota de débito",
-    "06": "Guía de remisión", "07": "Comprobante de retención",
+    "01": N_("Factura"), "03": N_("Liquidación de compra"), "04": N_("Nota de crédito"),
+    "05": N_("Nota de débito"), "06": N_("Guía de remisión"), "07": N_("Comprobante de retención"),
 }
 
 
@@ -46,16 +47,17 @@ def parse_ec_sri(text):
 
     avisos = []
     if not ruc_ec_valid(ruc):
-        avisos.append(f"El RUC del emisor ({ruc}) no supera la verificación: comprueba la clave en el SRI")
+        avisos.append(_("El RUC del emisor ({ruc}) no supera la verificación: comprueba la clave en el SRI",
+                        ruc=ruc))
     if ambiente == "1":
-        avisos.append("Comprobante del ambiente de pruebas: sin validez tributaria")
-    extra = [("Ambiente", "Pruebas" if ambiente == "1" else "Producción")]
+        avisos.append(_("Comprobante del ambiente de pruebas: sin validez tributaria"))
+    extra = [(_("Ambiente"), _("Pruebas") if ambiente == "1" else _("Producción"))]
     if clave[47] == "2":
-        extra.append(("Emisión", "Contingencia"))
+        extra.append((_("Emisión"), _("Contingencia")))
 
     return invoice_result(Comprobante(
-        "EC", "SRI", TIPOS[tipo], f"{estab}-{punto}-{secuencial}",
+        "EC", "SRI", _(TIPOS[tipo]), f"{estab}-{punto}-{secuencial}",
         fecha_dmy(f"{clave[0:2]}/{clave[2:4]}/{clave[4:8]}"), emisor=format_ruc_ec(ruc),
-        emisor_label="RUC emisor", moneda="USD", autorizacion=clave, autorizacion_label="Clave de acceso",
-        url_verificacion=URL_SRI, organismo="el SRI", extra=extra, avisos=avisos,
-        acciones=[("Copiar clave", "copy", clave)]))
+        emisor_label=_("RUC emisor"), moneda="USD", autorizacion=clave, autorizacion_label=_("Clave de acceso"),
+        url_verificacion=URL_SRI, organismo=_("el SRI"), extra=extra, avisos=avisos,
+        acciones=[(_("Copiar clave"), "copy", clave)]))

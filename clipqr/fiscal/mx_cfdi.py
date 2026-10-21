@@ -11,6 +11,7 @@ from urllib.parse import unquote_plus, urlencode, urlsplit
 from clipqr.fiscal import Comprobante, invoice_result
 from clipqr.fiscal.comun_latam import AVISO_INCOMPLETO, importe
 from clipqr.fiscal.ids_latam import format_rfc, rfc_valid
+from clipqr.i18n import _
 from clipqr.structured import register
 
 HOST = "verificacfdi.facturaelectronica.sat.gob.mx"
@@ -28,14 +29,16 @@ def _params(query):
     return out
 
 
-def _rfc(value, label, avisos):
+def _rfc(value, del_emisor, avisos):
     rfc = format_rfc(value)
     if not rfc_valid(rfc):
-        avisos.append(f"El RFC {label} ({rfc}) no es válido: el QR puede estar modificado")
+        avisos.append(_("El RFC del emisor ({rfc}) no es válido: el QR puede estar modificado", rfc=rfc)
+                      if del_emisor else
+                      _("El RFC del receptor ({rfc}) no es válido: el QR puede estar modificado", rfc=rfc))
     elif rfc == "XAXX010101000":
-        return f"{rfc} (público en general)"
+        return _("{rfc} (público en general)", rfc=rfc)
     elif rfc == "XEXX010101000":
-        return f"{rfc} (residente en el extranjero)"
+        return _("{rfc} (residente en el extranjero)", rfc=rfc)
     return rfc
 
 
@@ -56,20 +59,19 @@ def parse_mx_cfdi(text):
     avisos = []
     uuid = params.get("id", "").upper()
     if not uuid or not params.get("re") or not params.get("tt"):
-        avisos.append(AVISO_INCOMPLETO)
+        avisos.append(_(AVISO_INCOMPLETO))
     elif not _UUID.match(uuid):
-        avisos.append(f"El folio fiscal (UUID) «{uuid}» no tiene el formato del SAT")
+        avisos.append(_("El folio fiscal (UUID) «{uuid}» no tiene el formato del SAT", uuid=uuid))
     # El QR no dice la moneda: «tt» es el Total del CFDI, casi siempre en MXN (puede ser USD u otra).
     total = importe(params.get("tt"))
     if params.get("tt") and total is None:
-        avisos.append(f"El total «{params['tt']}» no es un importe válido")
-    emisor = _rfc(params["re"], "del emisor", avisos) if params.get("re") else ""
-    receptor = _rfc(params["rr"], "del receptor", avisos) if params.get("rr") else ""
-    extra = [("Sello (últimos 8)", params["fe"])] if params.get("fe") else []
+        avisos.append(_("El total «{total}» no es un importe válido", total=params["tt"]))
+    emisor = _rfc(params["re"], True, avisos) if params.get("re") else ""
+    receptor = _rfc(params["rr"], False, avisos) if params.get("rr") else ""
+    extra = [(_("Sello (últimos 8)"), params["fe"])] if params.get("fe") else []
 
     return invoice_result(Comprobante(
-        "MX", "SAT (CFDI)", "Factura (CFDI)", emisor=emisor, emisor_label="RFC emisor", receptor=receptor,
-        receptor_label="RFC receptor", importe=total, moneda="MXN", autorizacion=uuid,
-        autorizacion_label="Folio fiscal (UUID)", url_verificacion=url, organismo="el SAT",
+        "MX", "SAT (CFDI)", _("Factura (CFDI)"), emisor=emisor, emisor_label=_("RFC emisor"), receptor=receptor,
+        receptor_label=_("RFC receptor"), importe=total, moneda="MXN", autorizacion=uuid,
+        autorizacion_label=_("Folio fiscal (UUID)"), url_verificacion=url, organismo=_("el SAT"),
         extra=extra, avisos=avisos))
-

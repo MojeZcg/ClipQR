@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 
 from clipqr.fiscal import Comprobante, invoice_result
 from clipqr.fiscal.ids_europe import format_nif_es, nif_es_valid
+from clipqr.i18n import N_, _
 from clipqr.structured import register
 
 HOST_PRODUCCION = "www2.agenciatributaria.gob.es"
@@ -19,7 +20,7 @@ HOST_PRUEBAS = "prewww2.aeat.es"
 RUTAS = {"/wlpl/tike-cont/validarqr": True, "/wlpl/tike-cont/validarqrnoverifactu": False}
 # los 4 obligatorios y el opcional «idioma» («formato» nunca puede ir en el QR)
 PARAMETROS = {"nif", "numserie", "fecha", "importe", "idioma"}
-INCOMPLETO = "QR de factura incompleto o modificado"
+INCOMPLETO = N_("QR de factura incompleto o modificado")
 
 
 def _fecha(valor):
@@ -61,29 +62,30 @@ def parse_verifactu(text):
     oficial = host in (HOST_PRODUCCION, HOST_PRUEBAS)
     if not oficial:
         # Misma forma que el QR de la AEAT en otro dominio: posible suplantación, no se ofrece abrirlo.
-        avisos.append(f"El enlace no es de la AEAT: apunta a {host or 'un dominio desconocido'}")
+        avisos.append(_("El enlace no es de la AEAT: apunta a {host}", host=host) if host
+                      else _("El enlace no es de la AEAT: apunta a un dominio desconocido"))
     if host == HOST_PRUEBAS:
-        avisos.append("QR del entorno de pruebas de la AEAT")
+        avisos.append(_("QR del entorno de pruebas de la AEAT"))
 
     fecha = _fecha(fecha_txt)
     importe = _importe(importe_txt)
     if not (nif and numserie and fecha_txt and importe_txt) or fecha is None or importe is None \
             or len(numserie) > 60 or set(query) - PARAMETROS:
         # un parámetro de más suele ser un «&» sin codificar dentro de numserie (ejemplo erróneo de la AEAT)
-        avisos.append(INCOMPLETO)
+        avisos.append(_(INCOMPLETO))
     if nif and not nif_es_valid(nif):
-        avisos.append("El NIF del emisor no es válido (letra o dígito de control incorrecto)")
+        avisos.append(_("El NIF del emisor no es válido (letra o dígito de control incorrecto)"))
     if fecha and fecha > datetime.date.today():
-        avisos.append("La fecha de la factura es posterior a hoy")
+        avisos.append(_("La fecha de la factura es posterior a hoy"))
 
     c = Comprobante(
-        "ES", "VeriFactu" if verificable else "AEAT (no VERI*FACTU)", "Factura",
+        "ES", "VeriFactu" if verificable else _("AEAT (no VERI*FACTU)"), _("Factura"),
         numero=numserie, fecha=fecha.strftime("%d/%m/%Y") if fecha else fecha_txt,
-        emisor=format_nif_es(nif) if nif else "", emisor_label="NIF emisor",
+        emisor=format_nif_es(nif) if nif else "", emisor_label=_("NIF emisor"),
         importe=importe, moneda="EUR", organismo="AEAT",
-        extra=[("Modalidad", "VERI*FACTU (verificable en la AEAT)" if verificable
-                else "Sistema no VERI*FACTU")],
+        extra=[(_("Modalidad"), _("VERI*FACTU (verificable en la AEAT)") if verificable
+                else _("Sistema no VERI*FACTU"))],
         avisos=avisos,
-        acciones=[("Comprobar en la AEAT ↗", "open", s)] if oficial else [],
+        acciones=[(_("Comprobar en la AEAT ↗"), "open", s)] if oficial else [],
     )
     return invoice_result(c)
