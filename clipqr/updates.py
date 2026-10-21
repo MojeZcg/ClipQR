@@ -12,6 +12,7 @@ import tempfile
 import urllib.request
 
 from clipqr import VERSION
+from clipqr.i18n import _
 
 REPO = "MojeZcg/ClipQR"
 API_LATEST = f"https://api.github.com/repos/{REPO}/releases/latest"
@@ -68,13 +69,13 @@ def download_verified(info, folder=None):
     """Descarga el instalador de la release y comprueba su SHA-256. Devuelve la ruta o lanza ValueError."""
     assets = info["assets"]
     if SETUP_NAME not in assets or SUMS_NAME not in assets:
-        raise ValueError("La release no incluye el instalador o sus sumas de comprobación.")
+        raise ValueError(_("La versión publicada no incluye el instalador o sus sumas de comprobación."))
     expected = parse_sums(_get(assets[SUMS_NAME]).decode("utf-8", "replace")).get(SETUP_NAME)
     if not expected:
-        raise ValueError("SHA256SUMS.txt no tiene la suma del instalador.")
+        raise ValueError(_("SHA256SUMS.txt no tiene la suma del instalador."))
     data = _get(assets[SETUP_NAME], timeout=120)
     if hashlib.sha256(data).hexdigest() != expected:
-        raise ValueError("El instalador descargado no coincide con su suma SHA-256: no se instala.")
+        raise ValueError(_("El instalador descargado no coincide con su suma SHA-256: no se instala."))
     folder = folder or tempfile.mkdtemp(prefix="clipqr-update-")
     path = os.path.join(folder, SETUP_NAME)
     with open(path, "wb") as f:

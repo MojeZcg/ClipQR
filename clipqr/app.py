@@ -17,7 +17,7 @@ from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze, parse_payload
 from clipqr.hotkeys import HotkeyManager
-from clipqr.i18n import set_language
+from clipqr.i18n import _, set_language
 from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_label, load_settings, load_state,
                              log_exception, save_state)
 from clipqr.ui.create_qr import CreateQRMixin
@@ -29,8 +29,8 @@ from clipqr.ui.settings_window import SettingsWindowMixin
 from clipqr.ui.theme import THEMES
 from clipqr.ui.widgets import WidgetsMixin
 from clipqr.winplatform import (FROZEN, PACKAGED, RUN_KEY, UNINSTALL_KEY, installed_by_setup, msix_set_startup,
-                                msix_startup_state, send_to_recycle_bin, shortcut_paths, single_instance,
-                                taskbar_is_dark, user32, windows_theme)
+                                msix_startup_state, send_to_recycle_bin, release_single_instance,
+                                shortcut_paths, single_instance, taskbar_is_dark, user32, windows_theme)
 
 POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a menudo
 
@@ -49,6 +49,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.paused = False
         self.settings = load_settings()
         set_language(self.settings["language"])
+        self.started_language = self.settings["language"]  # el idioma cambia al reiniciar
         self.c = THEMES[self.theme_name()]
         self.last_seq = user32.GetClipboardSequenceNumber()
         self.last_hash = None
@@ -92,8 +93,9 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             self.root.after(1500, lambda: self.apply_hotkeys(retries - 1))
             return
         if failed:
-            self.toast(f"El atajo {', '.join(hotkey_label(h) for h in failed)} ya lo usa otra aplicación.\n"
-                       "Puedes elegir otro en Configuración › Atajos.", seconds=8)
+            self.toast(_("El atajo {atajo} ya lo usa otra aplicación.\n"
+                         "Puedes elegir otro en Configuración › Atajos.",
+                         atajo=", ".join(hotkey_label(h) for h in failed)), seconds=8)
 
     def _scan_at_start(self):
         """Si se abre a mano y el portapapeles cambió mientras ClipQR no estaba abierto (por ejemplo, se
@@ -113,32 +115,37 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
 
         def last_label(item):
             if not self.history:
-                return "Último: (nada todavía)"
+                return _("Último: (nada todavía)")
             text = self.history[0][0]["text"].replace("\n", " ")
-            return "Último: " + ((text[:40] + "…") if len(text) > 40 else text)
+            return _("Último: {texto}", texto=(text[:40] + "…") if len(text) > 40 else text)
 
         menu = pystray.Menu(
             pystray.MenuItem(last_label, ui(lambda: self.history and self.show_popup(self.history[0])),
                              enabled=lambda item: bool(self.history)),
-            pystray.MenuItem("Abrir historial", ui(self.show_history), default=True),
-            pystray.MenuItem("Escanear portapapeles ahora", ui(lambda: self.scan(force=True))),
-            pystray.MenuItem(lambda item: "Escanear zona de la pantalla" + (
+            pystray.MenuItem(_("Abrir historial"), ui(self.show_history), default=True),
+            pystray.MenuItem(_("Escanear portapapeles ahora"), ui(lambda: self.scan(force=True))),
+            pystray.MenuItem(lambda item: _("Escanear zona de la pantalla") + (
                 f"  ({hotkey_label(self.settings['hotkey_region'])})" if self.settings["hotkey_region"] else ""),
                 ui(self.scan_region)),
-            pystray.MenuItem(lambda item: "Crear QR…" + (
+            pystray.MenuItem(lambda item: _("Crear QR…") + (
                 f"  ({hotkey_label(self.settings['hotkey_create'])})" if self.settings["hotkey_create"] else ""),
                 ui(self.show_create_qr)),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem(lambda item: f"Actualizar a ClipQR {self.update_info['version']}…" if self.update_info
+            pystray.MenuItem(lambda item: _("Actualizar a ClipQR {version}…", version=self.update_info["version"])
+                             if self.update_info
                              else "", ui(self.show_update_notice), visible=lambda item: bool(self.update_info)),
-            pystray.MenuItem("Configuración…", ui(self.show_settings)),
-            pystray.MenuItem("Invitar un cafecito ☕", lambda: os.startfile(DONATE_URL)),
-            pystray.MenuItem("Pausar", ui(self.toggle_pause), checked=lambda item: self.paused),
-            pystray.MenuItem("Iniciar con Windows", ui(self.toggle_autostart), checked=lambda item: self.autostart_enabled()),
+            pystray.MenuItem(_("Configuración…"), ui(self.show_settings)),
+            pystray.MenuItem(_("Invitar un cafecito ☕"), lambda: os.startfile(DONATE_URL)),
+            pystray.MenuItem(_("Pausar"), ui(self.toggle_pause), checked=lambda item: self.paused),
+            pystray.MenuItem(_("Iniciar con Windows"), ui(self.toggle_autostart), checked=lambda item: self.autostart_enabled()),
             pystray.Menu.SEPARATOR,
-            pystray.MenuItem("Salir", ui(self.quit)),
+            pystray.MenuItem(_("Salir"), ui(self.quit)),
         )
-        return pystray.Icon(APP_NAME, self._icon_image(), f"{APP_NAME} - vigilando portapapeles", menu)
+        return pystray.Icon(APP_NAME, self._icon_image(), self._tray_title(), menu)
+
+    def _tray_title(self):
+        return _("{app} - en pausa", app=APP_NAME) if self.paused else _("{app} - vigilando portapapeles",
+                                                                             app=APP_NAME)
 
     def save_settings(self):
         import json
@@ -161,7 +168,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
     def toggle_pause(self):
         self.paused = not self.paused
         self.tray.icon = self._icon_image(self.paused)
-        self.tray.title = f"{APP_NAME} - {'en pausa' if self.paused else 'vigilando portapapeles'}"
+        self.tray.title = self._tray_title()
         self.tray.update_menu()
 
     def _autostart_cmd(self):
@@ -200,19 +207,19 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             with open(FIRST_RUN_MARK, "w") as f:
                 f.write("1")
             if PACKAGED:  # en la Store el inicio con Windows lo activa el usuario
-                self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
-                           "Haz una captura de un QR y aparecerá aquí.\n"
-                           "Puedes hacer que se inicie con Windows en Configuración (⚙).", seconds=10)
+                self.toast(_("ClipQR está activo en la bandeja (junto al reloj).\n"
+                             "Haz una captura de un QR y aparecerá aquí.\n"
+                             "Puedes hacer que se inicie con Windows en Configuración (⚙)."), seconds=10)
                 return
             if installed_by_setup():  # el asistente ya preguntó por el inicio con Windows
-                self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
-                           "Haz una captura de un QR y aparecerá aquí.", seconds=8)
+                self.toast(_("ClipQR está activo en la bandeja (junto al reloj).\n"
+                             "Haz una captura de un QR y aparecerá aquí."), seconds=8)
                 return
             self._set_autostart()
             self.tray.update_menu()
-            self.toast("ClipQR está activo en la bandeja (junto al reloj).\n"
-                       "Haz una captura de un QR y aparecerá aquí.\n"
-                       "Se iniciará solo con Windows.", seconds=8)
+            self.toast(_("ClipQR está activo en la bandeja (junto al reloj).\n"
+                         "Haz una captura de un QR y aparecerá aquí.\n"
+                         "Se iniciará solo con Windows."), seconds=8)
         elif not PACKAGED and self.autostart_enabled() and self._autostart_value() != self._autostart_cmd():
             self._set_autostart()
 
@@ -236,6 +243,27 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.tray.stop()
         self.root.destroy()
 
+    def restart(self):
+        """Abre otra instancia de ClipQR y cierra esta (p. ej. para cambiar de idioma). Antes se suelta el
+        mutex de instancia única para que la nueva no se crea repetida; los atajos los reintenta ella sola."""
+        import subprocess
+        if FROZEN:
+            args = [sys.executable]
+        else:
+            launcher = os.path.abspath(sys.argv[0]) if sys.argv[0].lower().endswith(".py") else \
+                os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
+            args = [sys.executable, launcher]
+        # PyInstaller --onefile: que la nueva instancia se descomprima aparte y no use la carpeta de esta
+        env = {**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"}
+        release_single_instance()
+        try:
+            subprocess.Popen(args, cwd=os.getcwd(), env=env, close_fds=True)
+        except OSError as e:
+            single_instance()
+            self.toast(_("No se pudo reiniciar ClipQR.\n{error}", error=e.strerror or e), seconds=6)
+            return
+        self.quit()
+
     def _poll(self):
         try:
             seq = user32.GetClipboardSequenceNumber()
@@ -254,7 +282,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         imgs = grab_clipboard_images(self.settings["explorer_files"])
         if not imgs:
             if force:
-                self.toast("No hay ninguna imagen en el portapapeles.")
+                self.toast(_("No hay ninguna imagen en el portapapeles."))
             return
         h = hashlib.md5(b"".join(i.convert("RGB").tobytes()[:2_000_000] for i in imgs)).hexdigest()
         if h == self.last_hash and not force:
@@ -307,7 +335,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
     def _on_result(self, codes, force):
         if not codes:
             if force:
-                self.toast("No se encontró ningún QR en la imagen.")
+                self.toast(_("No se encontró ningún QR en la imagen."))
             return
         # los datos personales (documentos de identidad, tarjetas de embarque) no se guardan en el historial
         keep = [c for c in codes if not analyze(c["text"]).private]
@@ -328,7 +356,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.root.update()
         self.last_seq = user32.GetClipboardSequenceNumber()  # no re-escanear lo que copiamos
         if btn is not None:
-            self._flash(btn, "✓ Copiado")
+            self._flash(btn, _("✓ Copiado"))
 
     def run_action(self, kind, arg, btn):
         """Solo se llama al pulsar un botón."""
@@ -342,7 +370,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
                 open_with_default_app(*arg)
                 self._close_popup()
             elif kind == "wifi":
-                btn.config(text="Conectando…", state="disabled")
+                btn.config(text=_("Conectando…"), state="disabled")
 
                 def work():
                     ok, msg = connect_wifi(arg["ssid"], arg["password"], arg["auth"], arg["hidden"])
@@ -350,7 +378,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
 
                 threading.Thread(target=work, daemon=True).start()
         except OSError as e:
-            self.toast(f"No hay ninguna aplicación para abrir esto.\n{e.strerror or e}", seconds=6)
+            self.toast(_("No hay ninguna aplicación para abrir esto.\n{error}", error=e.strerror or e), seconds=6)
 
     def run(self):
         self.root.mainloop()
@@ -369,7 +397,7 @@ def uninstall(silent=False):
     if not silent:
         root = tk.Tk()
         root.withdraw()
-        if not messagebox.askyesno("Desinstalar ClipQR", "¿Quieres desinstalar ClipQR de este equipo?"):
+        if not messagebox.askyesno(_("Desinstalar ClipQR"), _("¿Quieres desinstalar ClipQR de este equipo?")):
             return
     no_window = 0x08000000
     subprocess.run(["taskkill", "/F", "/IM", "ClipQR.exe", "/FI", f"PID ne {os.getpid()}",
@@ -390,7 +418,7 @@ def uninstall(silent=False):
             pass
     shutil.rmtree(CONFIG_DIR, ignore_errors=True)
     if root is not None:
-        messagebox.showinfo("ClipQR", "ClipQR se ha desinstalado.")
+        messagebox.showinfo("ClipQR", _("ClipQR se ha desinstalado."))
         root.destroy()
     if FROZEN:  # el programa no puede borrarse a sí mismo mientras se ejecuta: cmd lo reintenta al salir
         exe, folder = sys.executable, os.path.dirname(sys.executable)
@@ -422,6 +450,7 @@ def main():
         pass
     mode, arg = parse_cli(sys.argv[1:])
     if mode == "uninstall":
+        set_language(load_settings()["language"])
         uninstall(silent=arg)
         return
     if mode == "decode":

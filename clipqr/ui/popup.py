@@ -3,6 +3,7 @@ import os
 import tkinter as tk
 
 
+from clipqr.i18n import N_, _
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze, format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
@@ -35,7 +36,7 @@ class PopupMixin:
         if code.get("thumb") is not None:
             tk.Label(top, image=self._photo(code["thumb"], self.px(46)), bg=c["card"], bd=0).pack(
                 side="left", anchor="n", padx=(0, self.px(12)))
-        b_head = self._button(top, "Copiar")
+        b_head = self._button(top, _("Copiar"))
         b_head.config(command=lambda: self.copy(head_value, b_head))
         b_head.pack(side="right", anchor="n")
         copy_buttons = [b_head]  # para los atajos 1–9: el dato principal y luego el resto, en orden
@@ -89,7 +90,7 @@ class PopupMixin:
         raw = tk.Frame(inner, bg=c["card"])
         toggle = tk.Label(foot, bg=c["card"], fg=c["muted"], font=self.font(9), cursor="hand2")
         toggle.pack(side="left")
-        b_all = self._button(foot, "Copiar todo")
+        b_all = self._button(foot, _("Copiar todo"))
         b_all.config(command=lambda: self.copy(text, b_all))
         b_all.pack(side="right")
         state = {"open": False, "built": False}
@@ -102,13 +103,13 @@ class PopupMixin:
             txt.insert("1.0", text)
             txt.config(state="disabled")
             txt.pack(fill="x", pady=(self.px(6), self.px(4)))
-            b_sel = self._button(raw, "Copiar selección")
+            b_sel = self._button(raw, _("Copiar selección"))
 
             def copy_sel():
                 try:
                     self.copy(txt.get("sel.first", "sel.last"), b_sel)
                 except tk.TclError:
-                    self._flash(b_sel, "Selecciona texto arriba", ok=False)
+                    self._flash(b_sel, _("Selecciona texto arriba"), ok=False)
 
             b_sel.config(command=copy_sel)
             b_sel.pack(anchor="e")
@@ -122,11 +123,11 @@ class PopupMixin:
                 raw.pack(fill="x", after=foot)
             else:
                 raw.pack_forget()
-            toggle.config(text=("▾ Ocultar texto completo" if state["open"] else "▸ Ver texto completo"))
+            toggle.config(text=(_("▾ Ocultar texto completo") if state["open"] else _("▸ Ver texto completo")))
             if e is not None and self.popup is not None:
                 self._refit_popup()
 
-        toggle.config(text="▸ Ver texto completo")
+        toggle.config(text=_("▸ Ver texto completo"))
         toggle.bind("<Button-1>", flip)
         toggle.bind("<Enter>", lambda e: toggle.config(fg=c["fg"]))
         toggle.bind("<Leave>", lambda e: toggle.config(fg=c["muted"]))
@@ -278,7 +279,7 @@ class PopupMixin:
         head.pack(fill="x", padx=self.px(12), pady=(self.px(10), self.px(8)))
         tk.Label(head, image=self._logo(18), bg=c["bg"], bd=0).pack(side="left", padx=(0, self.px(8)))
         n = len(codes)
-        tk.Label(head, text=f"{n} código{'s' if n > 1 else ''} detectado{'s' if n > 1 else ''}",
+        tk.Label(head, text=_("1 código detectado") if n == 1 else _("{n} códigos detectados", n=n),
                  bg=c["bg"], fg=c["fg"], font=self.font(11, "bold")).pack(side="left")
         x = tk.Label(head, text="" if self.icon_font else "✕", bg=c["bg"], fg=c["muted"],
                      font=(self.icon_font, 9) if self.icon_font else self.font(11), cursor="hand2",
@@ -287,7 +288,7 @@ class PopupMixin:
         x.bind("<Button-1>", lambda e: self.root.after(0, self._close_popup))
         x.bind("<Enter>", lambda e: x.config(fg=c["fg"]))
         x.bind("<Leave>", lambda e: x.config(fg=c["muted"]))
-        hist = tk.Label(head, text="" if self.icon_font else "Historial", bg=c["bg"], fg=c["muted"],
+        hist = tk.Label(head, text="" if self.icon_font else _("Historial"), bg=c["bg"], fg=c["muted"],
                         font=(self.icon_font, 10) if self.icon_font else self.font(8), cursor="hand2",
                         padx=self.px(6), pady=self.px(4))
         hist.pack(side="right", padx=(0, self.px(4)))
@@ -353,10 +354,10 @@ class PopupMixin:
         self._kbd_copy = self._kbd_primary = None
         win._capture_slot = tk.Frame(win, bg=c["bg"])
         if n > MAX_CARDS:
-            tk.Label(win, text=f"+{n - MAX_CARDS} más en el historial", bg=c["bg"], fg=c["muted"],
+            tk.Label(win, text=_("+{n} más en el historial", n=n - MAX_CARDS), bg=c["bg"], fg=c["muted"],
                      font=self.font(8)).pack()
 
-        win._hint = tk.Label(win, text=self.HINT_MOUSE, bg=c["bg"], fg=c["muted"], font=self.font(8))
+        win._hint = tk.Label(win, text=_(self.HINT_MOUSE), bg=c["bg"], fg=c["muted"], font=self.font(8))
         win._hint.pack(pady=(0, self.px(6)))
         cd = tk.Canvas(win, height=self.px(3), bg=c["bg"], highlightthickness=0, bd=0)
         cd.pack(fill="x", side="bottom")
@@ -369,8 +370,8 @@ class PopupMixin:
         self._paint_capture_slot(codes)  # al reabrir desde el historial
 
     # ---- teclado
-    HINT_MOUSE = "Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar"
-    HINT_KEYS = "Enter: acción · 1–9: copiar · Supr: borrar captura · Esc: cerrar"
+    HINT_MOUSE = N_("Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar")
+    HINT_KEYS = N_("Enter: acción · 1–9: copiar · Supr: borrar captura · Esc: cerrar")
 
     def _bind_keyboard(self, win):
         """El aviso no roba el foco al aparecer. Al tomarlo (atajo global o clic) se maneja con el teclado:
@@ -413,8 +414,8 @@ class PopupMixin:
         win._kbd_on = on
         for n, b in enumerate(win._kbd_copy[:9], start=1):
             if b.winfo_exists():
-                b.config(text=f"Copiar  {n}" if on else "Copiar")
-        win._hint.config(text=self.HINT_KEYS if on else self.HINT_MOUSE)
+                b.config(text=_("Copiar  {n}", n=n) if on else _("Copiar"))
+        win._hint.config(text=_(self.HINT_KEYS if on else self.HINT_MOUSE))
 
     def focus_popup(self):
         """Atajo global: pasa el foco al aviso abierto para usarlo con el teclado."""
@@ -486,12 +487,12 @@ class PopupMixin:
         msg = tk.Label(slot, bg=c["bg"], fg=c["muted"], font=self.font(9), anchor="w", justify="left")
         msg.pack(side="left", fill="x", expand=True)
         if pending:
-            msg.config(text="Buscando la captura guardada…")
+            msg.config(text=_("Buscando la captura guardada…"))
         elif codes[0].get("capture_deleted"):
-            msg.config(text="Captura enviada a la Papelera", fg=c["fg"])
+            msg.config(text=_("Captura enviada a la Papelera"), fg=c["fg"])
             icon.config(fg=c["ok"])
         elif os.path.exists(path):
-            msg.config(text=f"Captura: {shorten(os.path.basename(path), 22, middle=True)}")
+            msg.config(text=_("Captura: {archivo}", archivo=shorten(os.path.basename(path), 22, middle=True)))
 
             def delete(always=False):
                 if always:  # a partir de ahora, solas
@@ -502,14 +503,14 @@ class PopupMixin:
                 if ok:
                     self._paint_capture_slot(codes)
                 else:
-                    self._flash(b, "No se pudo borrar", ok=False)
+                    self._flash(b, _("No se pudo borrar"), ok=False)
 
-            always = self._button(slot, "Borrar siempre", cmd=lambda: delete(always=True))
+            always = self._button(slot, _("Borrar siempre"), cmd=lambda: delete(always=True))
             always.pack(side="right", padx=(self.px(6), 0))
-            b = self._button(slot, "🗑 Borrar captura", color="#d64545", cmd=delete)
+            b = self._button(slot, _("🗑 Borrar captura"), color="#d64545", cmd=delete)
             b.pack(side="right")
             win._delete_capture = delete  # tecla Supr
         else:
-            msg.config(text="La captura ya no está en la carpeta")
+            msg.config(text=_("La captura ya no está en la carpeta"))
         slot.pack(fill="x", padx=self.px(14), pady=(0, self.px(8)), before=win._hint)
         self._refit_popup()

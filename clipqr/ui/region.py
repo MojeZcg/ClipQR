@@ -4,6 +4,7 @@ import tkinter as tk
 
 from PIL import ImageEnhance, ImageGrab, ImageTk
 
+from clipqr.i18n import _
 from clipqr.ui.theme import KINDS
 from clipqr.winplatform import force_foreground, monitor_area, user32, virtual_screen, work_area
 
@@ -48,7 +49,7 @@ class RegionMixin:
         # instrucciones arriba, en el monitor donde está el ratón
         area = work_area()
         cx, ty = (area.left + area.right) // 2 - vs.left, area.top - vs.top + self.px(28)
-        text = "Arrastra alrededor del código  ·  Clic: toda la pantalla  ·  Esc: cancelar"
+        text = _("Arrastra alrededor del código  ·  Clic: toda la pantalla  ·  Esc: cancelar")
         label = cv.create_text(cx, ty, text=text, fill="white", font=self.font(12, "bold"))
         x0, y0, x1, y1 = cv.bbox(label)
         pad = self.px(10)

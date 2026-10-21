@@ -6,6 +6,7 @@ import time
 
 from PIL import Image
 
+from clipqr.i18n import _
 from clipqr.winplatform import screenshots_folder
 
 def _xml(s):
@@ -49,7 +50,7 @@ def connect_wifi(ssid, password, auth, hidden=False):
         return r.returncode, out.strip()
 
     def connected():
-        _, out = run("show", "interfaces")
+        __, out = run("show", "interfaces")
         return any(re.match(r"^\s*SSID\s*:\s*(.*)$", l) and l.split(":", 1)[1].strip() == ssid
                    for l in out.splitlines())
 
@@ -64,23 +65,23 @@ def connect_wifi(ssid, password, auth, hidden=False):
         if code != 0:
             code, err2 = run("add", "profile", f"filename={path}", "user=current")
             if code != 0:
-                exists, _ = run("show", "profile", f"name={ssid}")
+                exists, __ = run("show", "profile", f"name={ssid}")
                 if exists != 0:
-                    return False, err2 or err or "No se pudo crear el perfil Wi-Fi."
+                    return False, err2 or err or _("No se pudo crear el perfil Wi‑Fi.")
     finally:
         os.remove(path)
 
     if connected():
-        return True, f"Ya estás conectado a «{ssid}»."
+        return True, _("Ya estás conectado a «{red}».", red=ssid)
     code, out = run("connect", f"name={ssid}", f"ssid={ssid}")
     if code != 0:
-        return False, out or "No se pudo conectar."
-    for _ in range(20):  # esperar hasta ~10 s a que Windows confirme la conexión
+        return False, out or _("No se pudo conectar.")
+    for __ in range(20):  # esperar hasta ~10 s a que Windows confirme la conexión
         time.sleep(0.5)
         if connected():
-            return True, f"Conectado a «{ssid}»."
-    return False, (f"Windows no confirmó la conexión a «{ssid}».\n"
-                   "Comprueba que la red está al alcance y que la contraseña es correcta.")
+            return True, _("Conectado a «{red}».", red=ssid)
+    return False, _("Windows no confirmó la conexión a «{red}».\n"
+                    "Comprueba que la red está al alcance y que la contraseña es correcta.", red=ssid)
 
 def _netsh(*args):
     import subprocess
@@ -113,12 +114,12 @@ def parse_wifi_profile(text):
 def current_wifi():
     """(red, contraseña, seguridad) de la Wi‑Fi a la que está conectado el equipo, o None.
     Windows solo da la contraseña de redes cuyo perfil está guardado en este equipo."""
-    _, out = _netsh("show", "interfaces")
+    __, out = _netsh("show", "interfaces")
     ssid = next((l.split(":", 1)[1].strip() for l in out.splitlines()
                  if re.match(r"^\s*SSID\s*:", l)), None)
     if not ssid:
         return None
-    _, profile = _netsh("show", "profile", f"name={ssid}", "key=clear")
+    __, profile = _netsh("show", "profile", f"name={ssid}", "key=clear")
     password, security = parse_wifi_profile(profile)
     return ssid, password, security
 

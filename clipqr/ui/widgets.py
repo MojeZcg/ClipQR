@@ -3,6 +3,7 @@ import tkinter as tk
 
 from PIL import Image, ImageTk
 
+from clipqr.i18n import _
 from clipqr.icons import make_icon
 from clipqr.ui.theme import KINDS, _shade
 
@@ -17,7 +18,7 @@ class WidgetsMixin:
     def glyph(self, kind_or_char):
         """(texto, fuente) para un icono: glifo de Segoe Fluent Icons o emoji de reserva."""
         if kind_or_char in KINDS:
-            g, emoji, _ = KINDS[kind_or_char]
+            g, emoji, __ = KINDS[kind_or_char]
             return (g, (self.icon_font, 12)) if self.icon_font else (emoji, self.font(11))
         return kind_or_char, (self.icon_font or self.ui_font, 10)
 
@@ -58,7 +59,7 @@ class WidgetsMixin:
         tk.Label(row, text=label, bg=c["card"], fg=c["muted"], font=self.font(8), width=11,
                  anchor="w").pack(side="left")
         shown = value if len(value) <= 60 else value[:60] + "…"
-        if label.lower().startswith("contraseña") or label == "Secreto":
+        if label.lower().startswith(_("Contraseña").lower()) or label == _("Secreto"):
             hidden = "•" * min(len(value), 14)
             var = tk.StringVar(value=shown if self.settings.get("show_passwords") else hidden)
             lbl = tk.Label(row, textvariable=var, bg=c["card"], fg=c["fg"], font=("Consolas", 10),
@@ -71,7 +72,7 @@ class WidgetsMixin:
                            justify="left", wraplength=self.px(230))
             toggle = None
         lbl.pack(side="left", fill="x", expand=True)
-        b = self._button(row, "Copiar")
+        b = self._button(row, _("Copiar"))
         b.config(command=lambda: self.copy(value, b))
         b.pack(side="right")
         if toggle:
