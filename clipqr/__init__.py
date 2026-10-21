@@ -5,4 +5,4 @@ Ejecutar sin consola:  pythonw main.py
 Probar una imagen:     py main.py imagen.png
 """
 APP_NAME = "ClipQR"
-VERSION = "1.0.0"
+VERSION = "1.1.0"

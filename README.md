@@ -23,11 +23,11 @@
 
 ## Cómo funciona
 
-1. Haz una captura (`Win`+`Shift`+`S` o `Impr Pant`), copia una imagen o copia un archivo de imagen desde el Explorador.
-2. Si contiene un QR o un código de barras, aparece un aviso arriba a la derecha.
-3. Elige qué hacer: copiar un dato, copiar todo, copiar una parte o usar el botón de acción.
+1. Haz una captura (`Win`+`Shift`+`S` o `Impr Pant`), copia una imagen o copia un archivo de imagen desde el Explorador. O pulsa **`Win`+`Shift`+`Q`** y rodea el QR con el ratón: se lee al momento, sin capturas ni portapapeles.
+2. Si contiene un QR o un código de barras, aparece un aviso arriba a la derecha, en el monitor donde estás.
+3. Elige qué hacer: copiar un dato, copiar todo, copiar una parte o usar el botón de acción. Con **`Ctrl`+`Shift`+`Espacio`** lo manejas con el teclado: `Enter` acción, `1`–`9` copiar ese dato, `Esc` cerrar.
 
-**Nada se ejecuta solo.** ClipQR nunca abre enlaces ni se conecta a redes por su cuenta: siempre hay un botón y lo pulsas tú.
+**Nada se ejecuta solo.** ClipQR nunca abre enlaces ni se conecta a redes por su cuenta: siempre hay un botón y lo pulsas tú. En los enlaces, avisa si algo no cuadra: conexión sin cifrar, enlace acortado, dominio que imita a otro o que no es el que parece.
 
 ## Qué reconoce
 
@@ -76,7 +76,8 @@ Desde el icono ⚙ del aviso o desde **Configuración…** en el menú de la ban
 - **Detección:** solo QR o también códigos de barras, leer archivos copiados desde el Explorador, sonido al detectar y pausar la detección.
 - **Borrar las capturas con QR:** Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR, el aviso ofrece **Borrar captura**, o lo hace solo si activas esta opción. Va a la Papelera (se puede recuperar) y solo se borra el archivo idéntico a la captura.
 - **Historial:** cuántos escaneos se guardan y borrar el historial.
-- **General:** iniciar con Windows.
+- **Atajos de teclado:** escanear una zona de la pantalla (`Win`+`Shift`+`Q`) y usar el aviso con el teclado (`Ctrl`+`Shift`+`Espacio`). Se pueden cambiar o desactivar. Nunca son `Ctrl`+`Alt`+letra, porque en teclados español y latinoamericano eso es `AltGr` y te impediría escribir @, #, €…
+- **General:** iniciar con Windows, buscar actualizaciones (una vez al día; se instalan solo si aceptas y tras comprobar el instalador) e informe de errores para pegar en una incidencia.
 
 Los ajustes se guardan en `%APPDATA%\ClipQR\settings.json`.
 
