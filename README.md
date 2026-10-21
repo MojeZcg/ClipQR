@@ -125,7 +125,7 @@ Genera `dist\ClipQR-<versión>.msix`. Al instalarse desde la Store, el inicio co
 
 ## Próximas versiones
 
-- [Hoja de ruta](docs/ROADMAP.md): qué viene en las versiones 1.1, 1.2 y 1.3, PR por PR.
+- [Hoja de ruta](docs/ROADMAP.md): qué viene hasta la 1.4, PR por PR: crear QR, facturas de ARCA (AFIP) y de otros países, pagos QR, productos y más.
 - [Distribución](docs/DISTRIBUCION.md): releases automáticas, firma de código, winget y Microsoft Store.
 
 ## Licencia
