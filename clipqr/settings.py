@@ -4,6 +4,7 @@ import os
 import time
 
 from clipqr import APP_NAME
+from clipqr.i18n import N_, _
 
 CONFIG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), APP_NAME)
 FIRST_RUN_MARK = os.path.join(CONFIG_DIR, "first_run_done")
@@ -36,7 +37,7 @@ def error_report(version, limit=60):
             lines = f.read().splitlines()[-limit:]
     except OSError:
         lines = []
-    body = "\n".join(lines) if lines else "(no hay errores registrados)"
+    body = "\n".join(lines) if lines else _("(no hay errores registrados)")
     return f"ClipQR {version} · {platform.platform()} · Python {platform.python_version()}\n\n```\n{body}\n```\n"
 
 HOTKEY_FOCUS_CHOICES = ("Ctrl+Shift+Space", "Win+Alt+Space", "")
@@ -45,12 +46,12 @@ HOTKEY_CREATE_CHOICES = ("Win+Shift+G", "Alt+Shift+G", "")
 
 
 def hotkey_label(hotkey):
-    """«Ctrl+Alt+Space» -> «Ctrl+Alt+Espacio» para mostrarlo."""
-    return hotkey.replace("Space", "Espacio") if hotkey else "Desactivado"
+    """«Ctrl+Alt+Space» -> «Ctrl+Alt+Espacio» para mostrarlo (en el idioma de la interfaz)."""
+    return hotkey.replace("Space", _("Espacio")) if hotkey else _("Desactivado")
 
 
-POSITIONS = (("top-right", "Arriba a la derecha"), ("bottom-right", "Abajo a la derecha"),
-             ("center", "En el centro"), ("custom", "Donde lo dejé al arrastrarlo"))
+POSITIONS = (("top-right", N_("Arriba a la derecha")), ("bottom-right", N_("Abajo a la derecha")),
+             ("center", N_("En el centro")), ("custom", N_("Donde lo dejé al arrastrarlo")))
 
 
 def load_settings():

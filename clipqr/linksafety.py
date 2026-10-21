@@ -4,6 +4,8 @@ import ipaddress
 import re
 import urllib.parse
 
+from clipqr.i18n import _
+
 SHORTENERS = {
     "bit.ly", "bitly.com", "t.co", "tinyurl.com", "goo.gl", "ow.ly", "is.gd", "v.gd", "buff.ly", "cutt.ly",
     "rebrand.ly", "shorturl.at", "s.id", "rb.gy", "tiny.cc", "lnkd.in", "t.ly", "bit.do", "short.io",
@@ -43,29 +45,30 @@ def link_warnings(url):
     try:
         u = urllib.parse.urlsplit(url.strip())
     except ValueError:
-        return ["El enlace está mal formado."]
+        return [_("El enlace está mal formado.")]
     host = (u.hostname or "").lower()
     warnings = []
     if u.scheme.lower() == "http":
-        warnings.append("La conexión no está cifrada (http).")
+        warnings.append(_("La conexión no está cifrada (http)."))
     if u.username or "@" in u.netloc:
-        warnings.append(f"El enlace no lleva a donde parece: el destino real es {host or '?'}.")
+        warnings.append(_("El enlace no lleva a donde parece: el destino real es {host}.", host=host or "?"))
     if not host:
         return warnings
     if _is_ip(host):
-        warnings.append("Lleva a una dirección IP en vez de a un dominio.")
+        warnings.append(_("Lleva a una dirección IP en vez de a un dominio."))
         return warnings
     if host.startswith("xn--") or ".xn--" in host or not host.isascii():
         try:
             shown = host.encode("ascii").decode("idna") if host.isascii() else host
         except UnicodeError:
             shown = host
-        warnings.append(f"El dominio usa caracteres de otros alfabetos que pueden imitar a otro ({shown}).")
+        warnings.append(_("El dominio usa caracteres de otros alfabetos que pueden imitar a otro ({dominio}).",
+                             dominio=shown))
     real = registrable_domain(host)
     if real in SHORTENERS or host in SHORTENERS:
-        warnings.append("Enlace acortado: no se sabe a dónde lleva hasta abrirlo.")
+        warnings.append(_("Enlace acortado: no se sabe a dónde lleva hasta abrirlo."))
     sub = host[: -len(real)].rstrip(".")
     # «banco.com.ar.cuenta-segura.xyz»: lo de delante parece un dominio, pero el real es el del final
     if sub and any(label in COMMON_TLDS for label in sub.split(".")):
-        warnings.append(f"Ojo: el dominio real es {real}; lo de delante son subdominios.")
+        warnings.append(_("Ojo: el dominio real es {dominio}; lo de delante son subdominios.", dominio=real))
     return warnings
