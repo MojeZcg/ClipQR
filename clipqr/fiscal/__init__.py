@@ -37,7 +37,8 @@ class Comprobante:
         """Texto con todos los datos, para pegar en una planilla o en un correo."""
         lines = [f"{self.tipo} {self.numero}".strip(), f"Fecha: {self.fecha}" if self.fecha else ""]
         for label, value in self.items():
-            lines.append(f"{label}: {value}")
+            if label not in ("Número", "Fecha"):  # ya van en las dos primeras líneas
+                lines.append(f"{label}: {value}")
         if self.url_verificacion:
             lines.append(f"Verificación: {self.url_verificacion}")
         return "\n".join(l for l in lines if l)
