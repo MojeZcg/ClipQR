@@ -60,7 +60,7 @@ class WidgetsMixin:
         shown = value if len(value) <= 60 else value[:60] + "…"
         if label.lower().startswith("contraseña") or label == "Secreto":
             hidden = "•" * min(len(value), 14)
-            var = tk.StringVar(value=hidden)
+            var = tk.StringVar(value=shown if self.settings.get("show_passwords") else hidden)
             lbl = tk.Label(row, textvariable=var, bg=c["card"], fg=c["fg"], font=("Consolas", 10),
                            anchor="w", cursor="hand2")
             toggle = self._button(row, self.glyph("")[0] if self.icon_font else "👁")

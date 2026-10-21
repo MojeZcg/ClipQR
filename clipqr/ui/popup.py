@@ -332,6 +332,8 @@ class PopupMixin:
                 self.settings.update(position="custom", x=win.winfo_x(), y=win.winfo_y())
                 self.save_settings()
                 self.tray.update_menu()
+                win._pinned = True  # si lo has movido es que lo estás usando: este aviso queda fijado
+                paint_pin()
             drag.clear()
 
         for wdg in (head, *[w for w in head.winfo_children() if w not in (x, hist, pin, gear)]):

@@ -1,0 +1,27 @@
+name: Algo no funciona
+description: Un error, un QR que no se lee bien o algo que no hace lo que debería.
+labels: [error]
+body:
+  - type: textarea
+    id: que_paso
+    attributes:
+      label: ¿Qué pasó?
+      description: Qué hiciste, qué esperabas y qué ocurrió.
+    validations:
+      required: true
+  - type: textarea
+    id: informe
+    attributes:
+      label: Informe de errores
+      description: En ClipQR › Configuración › General › Informe de errores › «Copiar informe», y pégalo aquí. No incluye imágenes ni el contenido de tus códigos.
+      render: text
+  - type: textarea
+    id: qr
+    attributes:
+      label: QR de ejemplo (opcional)
+      description: Si un QR concreto no se lee bien, adjunta una imagen. Asegúrate de que no contiene datos personales (contraseñas, facturas con nombres, documentos…).
+  - type: input
+    id: version
+    attributes:
+      label: Versión de ClipQR
+      placeholder: "1.1.0"

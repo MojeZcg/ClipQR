@@ -2,7 +2,7 @@
 import time
 import tkinter as tk
 
-from clipqr.settings import HOTKEY_FOCUS_CHOICES, HOTKEY_REGION_CHOICES, hotkey_label
+from clipqr.settings import HOTKEY_FOCUS_CHOICES, HOTKEY_REGION_CHOICES, error_report, hotkey_label
 
 from PIL import Image, ImageTk
 
@@ -119,6 +119,9 @@ class SettingsWindowMixin:
             "Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. "
             "Si está desactivado, el aviso muestra un botón para hacerlo.",
             lambda p: self._switch(p, st["delete_capture"], lambda v: save(delete_capture=v)))
+        row(card, "Mostrar contraseñas al momento", "Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. "
+            "Desactivado es más seguro si alguien mira tu pantalla.",
+            lambda p: self._switch(p, st["show_passwords"], lambda v: save(show_passwords=v)))
         row(card, "Sonido al detectar", None,
             lambda p: self._switch(p, st["sound"], lambda v: save(sound=v)))
         row(card, "Pausar la detección", "No se escanea el portapapeles hasta que lo reactives.",
@@ -168,6 +171,13 @@ class SettingsWindowMixin:
         row(card, "Iniciar con Windows", None,
             lambda p: self._switch(p, self.autostart_enabled(),
                                    lambda v: self.autostart_enabled() != v and self.toggle_autostart()))
+        def report_button(p):
+            b = self._button(p, "Copiar informe")
+            b.config(command=lambda: self.copy(error_report(VERSION), b))
+            return b
+
+        row(card, "Informe de errores", "Copia la versión y los últimos errores para pegarlos en una incidencia "
+            "de GitHub. No incluye imágenes ni el contenido de tus códigos; no se envía nada.", report_button)
         if not PACKAGED:  # la versión de la Store la actualiza la Store
             row(card, "Buscar actualizaciones",
                 "Una vez al día consulta las versiones publicadas en GitHub. Solo se instalan si las aceptas, "

@@ -1,0 +1,15 @@
+name: Idea o tipo de QR nuevo
+description: Una mejora, o un tipo de QR que ClipQR debería entender (factura, pago, documento de tu país…).
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: ¿Qué te gustaría?
+    validations:
+      required: true
+  - type: textarea
+    id: formato
+    attributes:
+      label: Si es un tipo de QR nuevo
+      description: País, organismo o empresa que lo usa, enlace a la especificación oficial si la hay, y un ejemplo con los datos personales borrados.

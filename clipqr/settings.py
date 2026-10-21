@@ -21,7 +21,21 @@ DEFAULT_SETTINGS = {
     "hotkey_focus": "Ctrl+Shift+Space",
     "hotkey_region": "Win+Shift+Q",  # junto a Win+Shift+S, el de las capturas de Windows
     "check_updates": True,  # una vez al día consulta las releases de GitHub
+    "show_passwords": False,  # contraseñas Wi-Fi y secretos 2FA visibles sin pulsar el ojo
 }
+
+
+def error_report(version, limit=60):
+    """Texto para pegar en una incidencia de GitHub: versión, Windows y los últimos errores registrados.
+    No contiene imágenes ni el contenido de los códigos (los errores no los guardan)."""
+    import platform
+    try:
+        with open(ERROR_LOG, encoding="utf-8") as f:
+            lines = f.read().splitlines()[-limit:]
+    except OSError:
+        lines = []
+    body = "\n".join(lines) if lines else "(no hay errores registrados)"
+    return f"ClipQR {version} · {platform.platform()} · Python {platform.python_version()}\n\n```\n{body}\n```\n"
 
 HOTKEY_FOCUS_CHOICES = ("Ctrl+Shift+Space", "Win+Alt+Space", "")
 HOTKEY_REGION_CHOICES = ("Win+Shift+Q", "Win+Alt+Q", "Alt+Shift+Q", "")
