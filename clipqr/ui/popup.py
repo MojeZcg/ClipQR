@@ -4,6 +4,7 @@ import tkinter as tk
 
 
 from clipqr.icons import make_icon
+from clipqr.linksafety import link_warnings
 from clipqr.payloads import format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
 from clipqr.winplatform import (area_containing, clamp_to_area, force_foreground, send_to_recycle_bin,
@@ -52,6 +53,12 @@ class PopupMixin:
         if kind == "link":  # el dominio no basta: la URL completa, en pequeño
             tk.Label(head, text=shorten(text, 90, middle=True), bg=c["card"], fg=c["muted"], font=self.font(9),
                      anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
+
+        # avisos (enlaces sospechosos, datos que no cuadran…) justo antes de los botones
+        warnings = link_warnings(actions[0][2]) if kind == "link" and actions else []
+        warnings += code.get("warnings", [])
+        if warnings:
+            self._warning_strip(inner, warnings)
 
         # acción principal en grande, las demás al lado
         if actions:
@@ -124,6 +131,20 @@ class PopupMixin:
         toggle.bind("<Leave>", lambda e: toggle.config(fg=c["muted"]))
         if kind == "text" and (len(text) > 70 or "\n" in text):
             flip()
+
+    def _warning_strip(self, parent, warnings, level="warn"):
+        """Franja de avisos: ámbar (warn) o roja (bad). Informa; no bloquea nada."""
+        c = self.c
+        bg, fg = c[f"{level}_bg"], c[f"{level}_fg"]
+        strip = tk.Frame(parent, bg=bg)
+        strip.pack(fill="x", pady=(self.px(10), 0))
+        for w in warnings:
+            line = tk.Frame(strip, bg=bg)
+            line.pack(fill="x", padx=self.px(8), pady=(self.px(3), 0))
+            tk.Label(line, text="⚠", bg=bg, fg=fg, font=self.font(9, "bold")).pack(side="left", anchor="n")
+            tk.Label(line, text=w, bg=bg, fg=fg, font=self.font(9), anchor="w", justify="left",
+                     wraplength=self.px(330)).pack(side="left", fill="x", padx=(self.px(4), 0))
+        tk.Frame(strip, bg=bg, height=self.px(3)).pack()
 
     def _warm_up(self):
         """Muestra un aviso de ejemplo fuera de la pantalla y transparente para que Tk cargue fuentes y

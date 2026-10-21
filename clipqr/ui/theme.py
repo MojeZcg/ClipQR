@@ -2,9 +2,11 @@
 
 THEMES = {
     "dark": dict(bg="#202020", card="#2b2b2b", border="#3d3d3d", fg="#f3f3f3", muted="#a3a3a3",
-                 textbg="#1c1c1c", btn="#383838", btn_hover="#454545", ok="#2e7d32"),
+                 textbg="#1c1c1c", btn="#383838", btn_hover="#454545", ok="#2e7d32",
+                 warn_bg="#3a2e12", warn_fg="#fbbf24", bad_bg="#3b1717", bad_fg="#f87171"),
     "light": dict(bg="#f3f3f3", card="#ffffff", border="#d6d6d6", fg="#1b1b1b", muted="#5f5f5f",
-                  textbg="#f7f7f7", btn="#e8e8e8", btn_hover="#dadada", ok="#2e7d32"),
+                  textbg="#f7f7f7", btn="#e8e8e8", btn_hover="#dadada", ok="#2e7d32",
+                  warn_bg="#fff4d6", warn_fg="#92400e", bad_bg="#fde8e8", bad_fg="#b91c1c"),
 }
 
 KINDS = {

@@ -2,6 +2,8 @@
 import re
 import urllib.parse
 
+from clipqr.linksafety import registrable_domain
+
 def _unescape(s):
     return re.sub(r"\\([\\;,:\"])", r"\1", s)
 
@@ -166,7 +168,11 @@ def parse_payload(text):
 
     if re.match(r"^https?://", t, re.I):
         u = urllib.parse.urlparse(t)
-        return "link", "Enlace", [("Dominio", u.netloc)], [("Abrir enlace ↗", "open", t)]
+        host = (u.hostname or u.netloc).lower()
+        items = [("Dominio", registrable_domain(host))]  # el dominio real, no los subdominios de delante
+        if host not in (items[0][1], "www." + items[0][1]):
+            items.append(("Servidor", host))
+        return "link", "Enlace", items, [("Abrir enlace ↗", "open", t)]
 
     if re.match(r"^(\d{8}|\d{12,14})$", t):  # EAN / UPC / GTIN de un producto
         return "product", "Producto", [("Código", t)], [
