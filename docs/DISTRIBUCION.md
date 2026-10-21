@@ -65,7 +65,7 @@ jobs:
 - En GitHub › *Settings › Secrets and variables › Actions › Variables*, crea `MSIX_IDENTITY_NAME` y `MSIX_PUBLISHER` con los valores de Partner Center (paso 5). Hasta tenerlos, quita el paso «Compilar MSIX».
 
 **Cómo publicar una versión a partir de entonces:**
-1. Sube `VERSION` en `clipqr.py` (por ejemplo `1.1.0`).
+1. Sube `VERSION` en `clipqr/__init__.py` (por ejemplo `1.1.0`).
 2. Escribe las notas en `docs/release-notes/v1.1.0.md`.
 3. Haz commit, y luego:
    ```bash

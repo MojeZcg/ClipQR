@@ -19,7 +19,10 @@ import tkinter as tk  # noqa: E402
 import zxingcpp  # noqa: E402
 from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageGrab, ImageTk  # noqa: E402
 
-import clipqr  # noqa: E402
+from clipqr.app import ClipQR  # noqa: E402
+from clipqr.decode import make_thumb  # noqa: E402
+from clipqr.icons import make_icon  # noqa: E402
+from clipqr.settings import DEFAULT_SETTINGS  # noqa: E402
 
 OUT = os.path.join(ROOT, "docs", "screenshots")
 FONTS = r"C:\Windows\Fonts"
@@ -58,7 +61,7 @@ def qr_image(fmt, text):
 
 
 def code(fmt, text, minutes_ago=0):
-    return {"format": fmt, "text": text, "thumb": clipqr.make_thumb(qr_image(fmt, text), None),
+    return {"format": fmt, "text": text, "thumb": make_thumb(qr_image(fmt, text), None),
             "time": time.time() - minutes_ago * 60}
 
 
@@ -80,7 +83,7 @@ def backdrop(w, h, hero=False):
         d = ImageDraw.Draw(base)
         s = h / 1080
         x, y = int(130 * s), int(300 * s)
-        logo = clipqr.make_icon(size=int(150 * s), dark_bg=True)
+        logo = make_icon(size=int(150 * s), dark_bg=True)
         base.paste(logo, (x, y), logo)
         d.text((x, y + int(165 * s)), "ClipQR", font=font("segoeuib.ttf", int(96 * s)), fill="white")
         d.text((x + int(4 * s), y + int(290 * s)), "Haz una captura de un QR y úsalo al instante.",
@@ -99,12 +102,12 @@ def backdrop(w, h, hero=False):
 
 class Stage:
     def __init__(self):
-        clipqr.ClipQR._build_tray = lambda self: FakeTray()
-        clipqr.ClipQR.first_run = lambda self: None
-        clipqr.ClipQR.save_settings = lambda self: None
-        clipqr.ClipQR.autostart_enabled = lambda self: True
-        self.app = clipqr.ClipQR()
-        self.app.settings = dict(clipqr.DEFAULT_SETTINGS, animation=False, autoclose=False, theme="dark")
+        ClipQR._build_tray = lambda self: FakeTray()
+        ClipQR.first_run = lambda self: None
+        ClipQR.save_settings = lambda self: None
+        ClipQR.autostart_enabled = lambda self: True
+        self.app = ClipQR()
+        self.app.settings = dict(DEFAULT_SETTINGS, animation=False, autoclose=False, theme="dark")
         self.root = self.app.root
         self.W, self.H = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         self.bg = tk.Toplevel(self.root)
@@ -186,7 +189,7 @@ def main():
     st.grab_window("history.png", win)
     win.destroy()
 
-    app.settings = dict(clipqr.DEFAULT_SETTINGS)  # la configuración se muestra con los valores por defecto
+    app.settings = dict(DEFAULT_SETTINGS)  # la configuración se muestra con los valores por defecto
     for theme in ("dark", "light"):
         win = st.window(app.show_settings, W // 3, H // 14, app.px(500), app.px(700), theme=theme)
         st.grab_window(f"settings-{theme}.png", win)

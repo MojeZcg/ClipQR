@@ -1,0 +1,1 @@
+"""Ventanas de ClipQR (Tkinter)."""

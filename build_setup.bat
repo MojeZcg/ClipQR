@@ -7,7 +7,7 @@ for /f %%v in ('py -c "import clipqr; print(clipqr.VERSION)"') do set VERSION=%%
 echo VERSION = "%VERSION%"> installer\_version.py
 py -m PyInstaller --noconfirm --windowed --name ClipQR --exclude-module numpy --icon "%~dp0assets\clipqr.ico" ^
   --add-data "%~dp0assets\logo.png;assets" --add-data "%~dp0assets\logo-white.png;assets" ^
-  --distpath "%~dp0build\app-dist" --workpath "%~dp0build\app-work" --specpath "%~dp0build" "%~dp0clipqr.py" || exit /b 1
+  --distpath "%~dp0build\app-dist" --workpath "%~dp0build\app-work" --specpath "%~dp0build" "%~dp0main.py" || exit /b 1
 rem zonas horarias de Tcl: Tk no las usa y son ~600 archivos (instalacion mas lenta)
 rmdir /s /q "%~dp0build\app-dist\ClipQR\_internal\_tcl_data\tzdata"
 py -m PyInstaller --noconfirm --onefile --windowed --name ClipQR-Setup --icon "%~dp0assets\clipqr.ico" ^

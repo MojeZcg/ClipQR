@@ -88,8 +88,10 @@ Todo se procesa en tu equipo. ClipQR no envía imágenes ni datos a ningún serv
 
 ```bash
 py -m pip install -r requirements.txt
-pythonw clipqr.py                   # ejecutar sin consola
-py clipqr.py imagen.png             # decodificar una imagen y mostrar el resultado
+pythonw main.py                     # ejecutar sin consola
+py main.py imagen.png               # decodificar una imagen y mostrar el resultado
+py -m pip install -r requirements-dev.txt
+py -m pytest                        # tests
 build.bat                           # generar dist\ClipQR.exe con PyInstaller
 build_setup.bat                     # generar dist\ClipQR-Setup.exe (asistente de instalación)
 py tools\make_logo.py               # regenerar assets\logo.png (QR real al repositorio)
@@ -98,7 +100,9 @@ py tools\screenshots.py             # regenerar las capturas de docs/screenshots
 
 | Archivo | Qué contiene |
 |---|---|
-| `clipqr.py` | Toda la aplicación: vigilancia del portapapeles, decodificación, interpretación de cada tipo, interfaz y bandeja del sistema |
+| `main.py` | Punto de entrada (el que usa PyInstaller) |
+| `clipqr/` | La aplicación: `decode` (lectura), `payloads` (interpretación de cada tipo), `actions`, `settings`, `winplatform` (Windows), `app` (bandeja y portapapeles) y `ui/` (ventanas) |
+| `tests/` | Tests automáticos (pytest) |
 | `tools/screenshots.py` | Monta escenas con datos de ejemplo y genera las capturas del README |
 | `assets/` | Logo (`logo.png`, generado desde `logo-source.jpg`). Su QR lleva a este repositorio |
 | `tools/make_logo.py` | Limpia la imagen original y pone en el logo un QR real verificado |

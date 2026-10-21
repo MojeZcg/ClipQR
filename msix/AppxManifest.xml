@@ -41,7 +41,7 @@
       </uap:VisualElements>
       <Extensions>
         <!-- Inicio con Windows: desactivado por defecto; lo activa el usuario desde la configuración de ClipQR.
-             El TaskId debe coincidir con STARTUP_TASK_ID de clipqr.py. -->
+             El TaskId debe coincidir con STARTUP_TASK_ID de clipqr/winplatform.py. -->
         <desktop:Extension Category="windows.startupTask" Executable="ClipQR\ClipQR.exe" EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask TaskId="ClipQRStartup" Enabled="false" DisplayName="ClipQR" />
         </desktop:Extension>
