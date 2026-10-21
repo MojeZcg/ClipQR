@@ -2,6 +2,8 @@
 import time
 import tkinter as tk
 
+from clipqr.settings import HOTKEY_FOCUS_CHOICES, hotkey_label
+
 from PIL import Image, ImageTk
 
 from clipqr import APP_NAME, VERSION
@@ -146,6 +148,17 @@ class SettingsWindowMixin:
             return b
 
         row(card, "Borrar todo el historial", None, clear_button)
+
+        card = section("ATAJOS DE TECLADO")
+
+        def set_hotkey(**kw):
+            save(**kw)
+            self.apply_hotkeys(retries=0)  # elegido a mano: avisar al momento si está ocupado
+
+        row(card, "Usar el aviso con el teclado",
+            "Pasa el foco al aviso abierto. Luego: Enter = acción, 1–9 = copiar ese dato, Tab = moverse, Esc = cerrar.",
+            lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_FOCUS_CHOICES],
+                                      st["hotkey_focus"], lambda v: set_hotkey(hotkey_focus=v)), stacked=True)
 
         card = section("GENERAL")
         row(card, "Iniciar con Windows", None,

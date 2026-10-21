@@ -16,7 +16,8 @@ from clipqr.actions import connect_wifi, find_saved_capture, open_with_default_a
 from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
 from clipqr.payloads import parse_payload
-from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, load_settings, load_state,
+from clipqr.hotkeys import HotkeyManager
+from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_label, load_settings, load_state,
                              log_exception, save_state)
 from clipqr.ui.history import HistoryMixin
 from clipqr.ui.popup import PopupMixin
@@ -56,9 +57,29 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
         self.tray = self._build_tray()
         self.tray.run_detached()
         self.root.after(POLL_MS, self._poll)
+        self.hotkeys = HotkeyManager()
         self.root.after(300, self._warm_up)
+        self.root.after(400, self.apply_hotkeys)
         self.root.after(500, self.first_run)
         self.root.after(700, self._scan_at_start)
+
+    def hotkey_actions(self):
+        """Atajo configurado -> qué hace. Las funciones se llaman desde el hilo de los atajos: pasan a Tk."""
+        on_tk = lambda fn: (lambda: self.root.after(0, fn))
+        actions = {}
+        if self.settings["hotkey_focus"]:
+            actions[self.settings["hotkey_focus"]] = on_tk(self.focus_popup)
+        return actions
+
+    def apply_hotkeys(self, retries=4):
+        failed = self.hotkeys.set(self.hotkey_actions())
+        if failed and retries:
+            # al reiniciar o actualizar, la instancia anterior puede tardar un momento en soltar el atajo
+            self.root.after(1500, lambda: self.apply_hotkeys(retries - 1))
+            return
+        if failed:
+            self.toast(f"El atajo {', '.join(hotkey_label(h) for h in failed)} ya lo usa otra aplicación.\n"
+                       "Puedes elegir otro en Configuración › Atajos.", seconds=8)
 
     def _scan_at_start(self):
         """Si se abre a mano y el portapapeles cambió mientras ClipQR no estaba abierto (por ejemplo, se
@@ -188,6 +209,7 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
         self.tray.update_menu()
 
     def quit(self):
+        self.hotkeys.stop()
         self.tray.stop()
         self.root.destroy()
 

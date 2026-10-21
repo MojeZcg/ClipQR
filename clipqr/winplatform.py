@@ -71,6 +71,21 @@ def _work_of(hmonitor):
     return Area(r.left, r.top, r.right, r.bottom)
 
 
+def force_foreground(hwnd):
+    """Trae una ventana al frente aunque ClipQR esté en segundo plano. Windows se lo niega a las apps que
+    no tienen el foco; uniéndose un instante a la entrada del hilo que sí lo tiene, se permite."""
+    fg = user32.GetForegroundWindow()
+    fg_thread = user32.GetWindowThreadProcessId(fg, None)
+    me = kernel32.GetCurrentThreadId()
+    attached = fg_thread and fg_thread != me and user32.AttachThreadInput(me, fg_thread, True)
+    try:
+        user32.BringWindowToTop(hwnd)
+        user32.SetForegroundWindow(hwnd)
+    finally:
+        if attached:
+            user32.AttachThreadInput(me, fg_thread, False)
+
+
 def cursor_pos():
     p = wintypes.POINT()
     user32.GetCursorPos(ctypes.byref(p))

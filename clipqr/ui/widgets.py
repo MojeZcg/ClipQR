@@ -44,7 +44,11 @@ class WidgetsMixin:
                       font=self.font(9, "bold" if color else "normal"), cursor="hand2", highlightthickness=0)
         b._base_bg, b._base_fg = base, fg
         b.bind("<Enter>", lambda e: b.cget("state") != "disabled" and b.config(bg=hover))
-        b.bind("<Leave>", lambda e: b.config(bg=b._base_bg))
+        b.bind("<Leave>", lambda e: b.focus_get() is not b and b.config(bg=b._base_bg))
+        # con el teclado (Tab) el botón enfocado se resalta igual que con el ratón; Espacio lo pulsa
+        b.bind("<FocusIn>", lambda e: b.config(bg=hover))
+        b.bind("<FocusOut>", lambda e: b.config(bg=b._base_bg))
+        b.bind("<Return>", lambda e: b.invoke())
         return b
 
     def _row(self, parent, label, value):
@@ -72,6 +76,7 @@ class WidgetsMixin:
         b.pack(side="right")
         if toggle:
             toggle.pack(side="right", padx=(0, self.px(4)))
+        return b
 
     def _photo(self, pil_img, size):
         img = pil_img.copy()
