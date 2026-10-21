@@ -6,3 +6,8 @@ from clipqr.fiscal import br_nfe, cl_sii, co_dian, ec_sri, mx_cfdi, pe_sunat, uy
 
 __all__ = ["ar_arca", "es_verifactu", "es_ticketbai", "pt_atcud", "mx_cfdi", "cl_sii", "pe_sunat", "co_dian",
            "uy_dgi", "br_nfe", "ec_sri", "payments", "gs1", "identity", "links"]
+
+
+def load():
+    """No hace nada: importar este módulo ya registra los formatos. Existe para que analyze() lo importe
+    con un import normal (visible para PyInstaller) sin que pyflakes lo marque como no usado."""

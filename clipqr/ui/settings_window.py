@@ -200,6 +200,8 @@ class SettingsWindowMixin:
         row(card, _("Iniciar con Windows"), None,
             lambda p: self._switch(p, self.autostart_enabled(),
                                    lambda v: self.autostart_enabled() != v and self.toggle_autostart()))
+        row(card, _("Avisar al iniciar"), _("Un aviso breve confirma que ClipQR está activo cuando se abre."),
+            lambda p: self._switch(p, st["startup_notice"], lambda v: save(startup_notice=v)))
         def report_button(p):
             b = self._button(p, _("Copiar informe"))
             b.config(command=lambda: self.copy(error_report(VERSION), b))

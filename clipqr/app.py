@@ -220,8 +220,20 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             self.toast(_("ClipQR está activo en la bandeja (junto al reloj).\n"
                          "Haz una captura de un QR y aparecerá aquí.\n"
                          "Se iniciará solo con Windows."), seconds=8)
-        elif not PACKAGED and self.autostart_enabled() and self._autostart_value() != self._autostart_cmd():
-            self._set_autostart()
+        else:
+            if not PACKAGED and self.autostart_enabled() and self._autostart_value() != self._autostart_cmd():
+                self._set_autostart()
+            self.startup_notice()
+
+    def startup_notice(self):
+        """Aviso breve de que ClipQR arrancó (en la bandeja no siempre se ve: Windows oculta los iconos nuevos).
+        Si al abrirlo ya había un QR en el portapapeles, el aviso del QR lo reemplaza."""
+        if not self.settings["startup_notice"] or self.paused:
+            return
+        region = self.settings["hotkey_region"]
+        hint = (_("Captura un QR o pulsa {atajo} para escanear una zona.", atajo=hotkey_label(region)) if region
+                else _("Captura o copia un QR y aparecerá aquí."))
+        self.toast(_("ClipQR está activo") + "\n" + hint, seconds=3)
 
     def toggle_autostart(self):
         if PACKAGED:

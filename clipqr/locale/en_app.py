@@ -402,4 +402,12 @@ EN = {
         "Couldn't reach GitHub.\n{error}",
     'Tienes la última versión ({version}).':
         'You have the latest version ({version}).',
+    # aviso al iniciar
+    "Avisar al iniciar": "Show a notice at startup",
+    "Un aviso breve confirma que ClipQR está activo cuando se abre.":
+        "A short notice confirms ClipQR is running when it starts.",
+    "Captura un QR o pulsa {atajo} para escanear una zona.":
+        "Screenshot a QR code or press {atajo} to scan an area.",
+    "Captura o copia un QR y aparecerá aquí.": "Screenshot or copy a QR code and it will show up here.",
+    "ClipQR está activo": "ClipQR is running",
 }

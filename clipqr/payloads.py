@@ -1,5 +1,4 @@
 """Interpretación del texto de un código: tipo, datos y acciones (botones)."""
-import importlib
 import re
 import urllib.parse
 
@@ -76,7 +75,10 @@ def _contact_actions(items, card_text):
 def analyze(text):
     """Interpretación completa de un código: formatos estructurados (facturas, pagos…) y, si no, los tipos
     básicos. Devuelve un Result (tipo, título, datos, acciones, avisos, dato principal, subtítulo)."""
-    importlib.import_module("clipqr.formats")  # registra los formatos estructurados (una sola vez)
+    # Registra los formatos estructurados (una sola vez). Import normal dentro de la función: evita el import
+    # circular y PyInstaller lo ve (con importlib.import_module no lo incluía en el .exe).
+    from clipqr import formats
+    formats.load()
     r = detect(text.strip())
     if r is not None:
         return r
