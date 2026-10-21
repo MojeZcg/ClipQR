@@ -35,6 +35,26 @@ THEMES = {
 ACCENT, ACCENT_HOVER = "#4f8cff", "#3f74d8"
 
 
+def language_for(langid):
+    """«es» si el idioma de Windows es español (LANGID primario 0x0A, cualquier país); si no, «en»."""
+    return "es" if langid & 0x3FF == 0x0A else "en"
+
+
+def windows_language():
+    try:
+        return language_for(ctypes.windll.kernel32.GetUserDefaultUILanguage())
+    except Exception:
+        return "en"
+
+
+LANG = windows_language()
+
+
+def T(es, en):
+    """Texto visible en el idioma de Windows (el asistente no puede importar clipqr)."""
+    return es if LANG == "es" else en
+
+
 def resource(name):
     return os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__))), name)
 
@@ -56,9 +76,10 @@ def special_folder(csidl):
 
 def make_shortcut(lnk, target):
     q = lambda s: s.replace("'", "''")
+    desc = T("Lector de QR para el portapapeles", "Clipboard QR reader")
     ps = (f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{q(lnk)}');"
           f"$s.TargetPath='{q(target)}';$s.WorkingDirectory='{q(os.path.dirname(target))}';"
-          f"$s.IconLocation='{q(target)},0';$s.Description='Lector de QR para el portapapeles';$s.Save()")
+          f"$s.IconLocation='{q(target)},0';$s.Description='{q(desc)}';$s.Save()")
     subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
                    capture_output=True, creationflags=NO_WINDOW, check=True)
 
@@ -117,9 +138,19 @@ def parse_args(argv):
     flags = {a.lower().lstrip("/-") for a in argv}
     unknown = flags - {"silent", "noautostart", "desktop", "launch"}
     if unknown:
-        raise ValueError(f"Opción desconocida: {', '.join(sorted(unknown))}")
+        raise ValueError(T("Opción desconocida", "Unknown option") + f": {', '.join(sorted(unknown))}")
     return {"silent": "silent" in flags, "autostart": "noautostart" not in flags,
             "desktop": "desktop" in flags, "launch": "launch" in flags}
+
+
+def usage():
+    """Ayuda de las opciones, en el idioma de Windows (se muestra si hay una opción desconocida)."""
+    return parse_args.__doc__ if LANG == "es" else (
+        "Command-line options (case-insensitive; / or - prefix):\n"
+        "/silent      install with no windows (for winget and deployments)\n"
+        "/noautostart don't start with Windows (enabled by default)\n"
+        "/desktop     create a desktop shortcut\n"
+        "/launch      open ClipQR when done")
 
 
 def silent_install(opts):
@@ -150,7 +181,7 @@ class Wizard:
         self.c = THEMES[windows_theme()]
         c = self.c
         r = self.root
-        r.title(f"Instalar {APP}")
+        r.title(T(f"Instalar {APP}", f"Install {APP}"))
         r.configure(bg=c["bg"])
         r.resizable(False, False)
         try:
@@ -228,28 +259,33 @@ class Wizard:
     def page_options(self):
         c = self.c
         self.clear()
-        self.header(f"Instalar {APP}", f"Versión {VERSION} · lector de QR para el portapapeles")
-        self.text(self.body, "Detecta códigos QR y de barras en tus capturas e imágenes copiadas. "
-                             "Se instala solo para tu usuario, sin permisos de administrador.")
+        self.header(T(f"Instalar {APP}", f"Install {APP}"),
+                    T(f"Versión {VERSION} · lector de QR para el portapapeles",
+                      f"Version {VERSION} · clipboard QR reader"))
+        self.text(self.body, T("Detecta códigos QR y de barras en tus capturas e imágenes copiadas. "
+                               "Se instala solo para tu usuario, sin permisos de administrador.",
+                               "Detects QR codes and barcodes in your screenshots and copied images. "
+                               "Installs for your user only, no administrator rights needed."))
         self.autostart = tk.BooleanVar(value=True)
         self.desktop = tk.BooleanVar(value=False)
-        self.check(self.body, "  Iniciar ClipQR con Windows", self.autostart).pack(anchor="w", pady=self.px(2))
-        self.check(self.body, "  Crear acceso directo en el escritorio", self.desktop).pack(anchor="w", pady=self.px(2))
+        self.check(self.body, T("  Iniciar ClipQR con Windows", "  Start ClipQR with Windows"), self.autostart).pack(anchor="w", pady=self.px(2))
+        self.check(self.body, T("  Crear acceso directo en el escritorio", "  Create a desktop shortcut"),
+                   self.desktop).pack(anchor="w", pady=self.px(2))
         self.status = tk.Label(self.body, text="", bg=c["bg"], fg=c["muted"], font=self.font(9), justify="left")
         self.status.pack(anchor="w", pady=(self.px(10), 0))
         bar = tk.Frame(self.body, bg=c["bg"])
         bar.pack(fill="x", pady=(self.px(10), 0))
-        self.install_btn = self.button(bar, "Instalar", self.do_install, primary=True)
+        self.install_btn = self.button(bar, T("Instalar", "Install"), self.do_install, primary=True)
         self.install_btn.pack(side="right")
-        self.button(bar, "Cancelar", self.root.destroy).pack(side="right", padx=(0, self.px(8)))
+        self.button(bar, T("Cancelar", "Cancel"), self.root.destroy).pack(side="right", padx=(0, self.px(8)))
         self.install_btn.focus_set()
         self.root.bind("<Return>", lambda e: self.do_install())
 
     def do_install(self):
         if str(self.install_btn.cget("state")) == "disabled":
             return
-        self.install_btn.config(state="disabled", text="Instalando…")
-        self.status.config(text="Copiando archivos…", fg=self.c["muted"])
+        self.install_btn.config(state="disabled", text=T("Instalando…", "Installing…"))
+        self.status.config(text=T("Copiando archivos…", "Copying files…"), fg=self.c["muted"])
         result = {}
 
         def work():  # en segundo plano: la ventana sigue respondiendo mientras se copia
@@ -263,8 +299,9 @@ class Wizard:
             if not result.get("done"):
                 self.root.after(100, check)
             elif "error" in result:
-                self.install_btn.config(state="normal", text="Reintentar")
-                self.status.config(text=f"No se pudo instalar: {result['error']}", fg="#e5484d")
+                self.install_btn.config(state="normal", text=T("Reintentar", "Retry"))
+                self.status.config(text=T("No se pudo instalar", "Installation failed") + f": {result['error']}",
+                                   fg="#e5484d")
             else:
                 self.page_done()
 
@@ -274,15 +311,18 @@ class Wizard:
     def page_done(self):
         c = self.c
         self.clear()
-        self.header("ClipQR está instalado ✓", f"En {INSTALL_DIR}")
-        self.text(self.body, "Lo encontrarás en el menú Inicio. Cuando está abierto vive en la bandeja, junto al "
-                             "reloj: haz una captura de un QR y aparecerá el aviso.\n\n"
-                             "Para desinstalarlo: Configuración de Windows › Aplicaciones › ClipQR.")
+        self.header(T(f"{APP} está instalado ✓", f"{APP} is installed ✓"), T(f"En {INSTALL_DIR}", f"In {INSTALL_DIR}"))
+        self.text(self.body, T("Lo encontrarás en el menú Inicio. Cuando está abierto vive en la bandeja, junto al "
+                               "reloj: haz una captura de un QR y aparecerá el aviso.\n\n"
+                               "Para desinstalarlo: Configuración de Windows › Aplicaciones › ClipQR.",
+                               "You'll find it in the Start menu. While it's running, it lives in the system tray "
+                               "next to the clock: take a screenshot of a QR code and the notification pops up.\n\n"
+                               "To uninstall it: Windows Settings › Apps › ClipQR."))
         self.launch = tk.BooleanVar(value=True)
-        self.check(self.body, "  Abrir ClipQR ahora", self.launch).pack(anchor="w")
+        self.check(self.body, T("  Abrir ClipQR ahora", "  Open ClipQR now"), self.launch).pack(anchor="w")
         bar = tk.Frame(self.body, bg=c["bg"])
         bar.pack(fill="x", pady=(self.px(16), 0))
-        self.button(bar, "Finalizar", self.finish, primary=True).pack(side="right")
+        self.button(bar, T("Finalizar", "Finish"), self.finish, primary=True).pack(side="right")
         self.root.bind("<Return>", lambda e: self.finish())
         self.root.update_idletasks()
         self.root.geometry(f"{self.root.winfo_width()}x{self.root.winfo_reqheight()}")
@@ -300,7 +340,7 @@ if __name__ == "__main__":
     try:
         options = parse_args(sys.argv[1:])
     except ValueError as err:
-        sys.exit(f"{err}\n{parse_args.__doc__}")
+        sys.exit(f"{err}\n{usage()}")
     if options["silent"]:
         sys.exit(silent_install(options))
     Wizard().run()

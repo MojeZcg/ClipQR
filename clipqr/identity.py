@@ -5,10 +5,11 @@ Son datos personales: el Result va con private=True y no se guarda en el histori
 import re
 from datetime import date, timedelta
 
+from clipqr.i18n import N_, _
 from clipqr.structured import Result, register
 
-PRIVATE_NOTE = "Datos personales: no se guardan en el historial"
-SEX = {"M": "Masculino", "F": "Femenino", "X": "No binario"}
+PRIVATE_NOTE = N_("Datos personales: no se guardan en el historial")
+SEX = {"M": N_("Masculino"), "F": N_("Femenino"), "X": N_("No binario")}
 
 
 def _dni(number):
@@ -23,13 +24,15 @@ def _date(text):
 
 def _identity(nombre, apellido, dni, sexo, nacimiento, emision, ejemplar, tramite):
     full = " ".join(x.strip().title() for x in (nombre, apellido) if x.strip())
-    items = [("DNI", _dni(dni)), ("Apellido", apellido.strip().title()), ("Nombre", nombre.strip().title()),
-             ("Sexo", SEX.get(sexo.strip().upper(), sexo.strip())), ("Nacimiento", _date(nacimiento)),
-             ("Emisión", _date(emision)), ("Ejemplar", ejemplar.strip()), ("Número de trámite", tramite.strip())]
+    sex = sexo.strip().upper()
+    items = [("DNI", _dni(dni)), (_("Apellido"), apellido.strip().title()), (_("Nombre"), nombre.strip().title()),
+             (_("Sexo"), _(SEX[sex]) if sex in SEX else sexo.strip()), (_("Nacimiento"), _date(nacimiento)),
+             (_("Emisión"), _date(emision)), (_("Ejemplar"), ejemplar.strip()),
+             (_("Número de trámite"), tramite.strip())]
     items = [i for i in items if i[1]]
-    actions = [("Copiar DNI", "copy", re.sub(r"\D", "", dni)), ("Copiar nombre completo", "copy", full)]
-    return Result("identity", "DNI · Argentina", items, actions, [], ("Titular", full or _dni(dni)),
-                  PRIVATE_NOTE, private=True)
+    actions = [(_("Copiar DNI"), "copy", re.sub(r"\D", "", dni)), (_("Copiar nombre completo"), "copy", full)]
+    return Result("identity", "DNI · Argentina", items, actions, [], (_("Titular"), full or _dni(dni)),
+                  _(PRIVATE_NOTE), private=True)
 
 
 @register
@@ -51,8 +54,9 @@ def parse_dni_ar(text):
 
 # ---------------------------------------------------------------- tarjeta de embarque (IATA BCBP)
 
-COMPARTMENTS = {"F": "Primera", "A": "Primera", "J": "Business", "C": "Business", "D": "Business",
-                "W": "Turista premium", "Y": "Turista", "B": "Turista", "M": "Turista", "H": "Turista"}
+COMPARTMENTS = {"F": N_("Primera"), "A": N_("Primera"), "J": "Business", "C": "Business", "D": "Business",
+                "W": N_("Turista premium"), "Y": N_("Turista"), "B": N_("Turista"), "M": N_("Turista"),
+                "H": N_("Turista")}
 
 
 def julian_to_date(day, today=None):
@@ -82,24 +86,24 @@ def parse_bcbp(text, today=None):
             and re.fullmatch(r"[A-Z0-9]{2,3}", carrier)):
         return None
     when = julian_to_date(int(julian), today) if julian.isdigit() and 1 <= int(julian) <= 366 else None
-    surname, _, given = name.partition("/")
+    surname, _sep, given = name.partition("/")
     passenger = " ".join(x.title() for x in (given, surname) if x) or name
     flight_no = f"{carrier} {flight}"
-    items = [("Pasajero", passenger), ("Vuelo", flight_no), ("Origen", origin), ("Destino", dest)]
+    items = [(_("Pasajero"), passenger), (_("Vuelo"), flight_no), (_("Origen"), origin), (_("Destino"), dest)]
     if when:
-        items.append(("Fecha", when.strftime("%d/%m/%Y")))
+        items.append((_("Fecha"), when.strftime("%d/%m/%Y")))
     seat_shown = seat.lstrip("0")
     if seat_shown:
-        items.append(("Asiento", seat_shown))
-    items.append(("Reserva", pnr))
+        items.append((_("Asiento"), seat_shown))
+    items.append((_("Reserva"), pnr))
     if compartment.strip():
-        items.append(("Clase", COMPARTMENTS.get(compartment, compartment)))
+        items.append((_("Clase"), _(COMPARTMENTS[compartment]) if compartment in COMPARTMENTS else compartment))
     if seq.lstrip("0"):
-        items.append(("Secuencia", seq.lstrip("0")))
+        items.append((_("Secuencia"), seq.lstrip("0")))
     if t[1] != "1":
-        items.append(("Tramos", t[1]))
-    subtitle = f"{origin} → {dest}" + (f" · {when:%d/%m/%Y}" if when else "") + " · no va al historial"
-    actions = [("Copiar reserva", "copy", pnr),
-               ("Estado del vuelo ↗", "open", f"https://www.google.com/search?q={carrier}{flight}")]
-    return Result("boarding", "Tarjeta de embarque", items, actions, [], ("Vuelo", flight_no), subtitle,
+        items.append((_("Tramos"), t[1]))
+    subtitle = f"{origin} → {dest}" + (f" · {when:%d/%m/%Y}" if when else "") + " · " + _("no va al historial")
+    actions = [(_("Copiar reserva"), "copy", pnr),
+               (_("Estado del vuelo ↗"), "open", f"https://www.google.com/search?q={carrier}{flight}")]
+    return Result("boarding", _("Tarjeta de embarque"), items, actions, [], (_("Vuelo"), flight_no), subtitle,
                   private=True)

@@ -9,8 +9,9 @@ from clipqr.settings import (HOTKEY_CREATE_CHOICES, HOTKEY_FOCUS_CHOICES, HOTKEY
 from PIL import Image, ImageTk
 
 from clipqr import APP_NAME, DONATE_URL, VERSION
+from clipqr.i18n import LANGUAGES, _
 from clipqr.icons import make_icon
-from clipqr.ui.theme import THEMES
+from clipqr.ui.theme import KINDS, THEMES
 from clipqr.winplatform import PACKAGED, style_window
 
 
@@ -25,7 +26,7 @@ class SettingsWindowMixin:
         c, st = self.c, self.settings
         win = tk.Toplevel(self.root, bg=c["bg"])
         self.settings_win = win
-        win.title(f"{APP_NAME} · Configuración")
+        win.title(f"{APP_NAME} · {_('Configuración')}")
         win.geometry(f"{self.px(500)}x{self.px(680)}")
         win.minsize(self.px(420), self.px(360))
         try:
@@ -36,7 +37,8 @@ class SettingsWindowMixin:
             pass
         style_window(win, dark=self.theme_name() == "dark")
 
-        self._window_header(win, "Configuración", f"{APP_NAME} {VERSION} · los cambios se guardan al momento")
+        self._window_header(win, _("Configuración"), _("{app} {version} · los cambios se guardan al momento",
+                                                              app=APP_NAME, version=VERSION))
 
         wrap = tk.Frame(win, bg=c["bg"])
         wrap.pack(fill="both", expand=True)
@@ -80,121 +82,143 @@ class SettingsWindowMixin:
                 return f"{v} s"
             return f"{v // 60} min" if v % 60 == 0 else f"{v / 60:.1f} min"
 
-        card = section("AVISO")
-        row(card, "Tiempo visible", "Cuánto tarda en cerrarse solo.",
+        card = section(_("AVISO"))
+        row(card, _("Tiempo visible"), _("Cuánto tarda en cerrarse solo."),
             lambda p: self._stepper(p, [5, 10, 15, 20, 25, 30, 45, 60, 90, 120, 180, 300], st["seconds"],
                                     fmt_seconds, lambda v: save(seconds=v)))
-        row(card, "Cerrar solo", "Si lo desactivas, el aviso queda abierto hasta que lo cierres.",
+        row(card, _("Cerrar solo"), _("Si lo desactivas, el aviso queda abierto hasta que lo cierres."),
             lambda p: self._switch(p, st["autoclose"], lambda v: save(autoclose=v)))
-        row(card, "Pausar con el ratón encima", "La cuenta atrás se detiene mientras lo señalas.",
+        row(card, _("Pausar con el ratón encima"), _("La cuenta atrás se detiene mientras lo señalas."),
             lambda p: self._switch(p, st["pause_on_hover"], lambda v: save(pause_on_hover=v)))
-        row(card, "Animación de entrada", None,
+        row(card, _("Animación de entrada"), None,
             lambda p: self._switch(p, st["animation"], lambda v: save(animation=v)))
-        row(card, "Posición", "También puedes arrastrarlo desde su cabecera.",
-            lambda p: self._segmented(p, [("top-right", "Arriba dcha.", True), ("bottom-right", "Abajo dcha.", True),
-                                          ("center", "Centro", True),
-                                          ("custom", "Donde lo dejé", st.get("x") is not None)],
+        row(card, _("Posición"), _("También puedes arrastrarlo desde su cabecera."),
+            lambda p: self._segmented(p, [("top-right", _("Arriba dcha."), True),
+                                          ("bottom-right", _("Abajo dcha."), True),
+                                          ("center", _("Centro"), True),
+                                          ("custom", _("Donde lo dejé"), st.get("x") is not None)],
                                       st["position"], lambda v: save(position=v)), stacked=True)
-        row(card, "Probar", "Muestra un aviso de ejemplo con estos ajustes.",
-            lambda p: self._button(p, "Ver aviso de prueba", cmd=lambda: self.show_popup([{
+        row(card, _("Probar"), _("Muestra un aviso de ejemplo con estos ajustes."),
+            lambda p: self._button(p, _("Ver aviso de prueba"), cmd=lambda: self.show_popup([{
                 "format": "QRCode", "text": "https://github.com/zxing-cpp/zxing-cpp",
                 "thumb": Image.alpha_composite(Image.new("RGBA", (96, 96), "white"), make_icon(size=96)).convert("RGB"),
                 "time": time.time()}])))
 
-        card = section("APARIENCIA")
+        card = section(_("APARIENCIA"))
 
         def set_theme(v):
             save(theme=v)
             win.destroy()
             self.root.after(50, self.show_settings)  # se redibuja con el tema nuevo
 
-        row(card, "Tema", None,
-            lambda p: self._segmented(p, [("auto", "Como Windows", True), ("light", "Claro", True),
-                                          ("dark", "Oscuro", True)], st["theme"], set_theme), stacked=True)
+        row(card, _("Tema"), None,
+            lambda p: self._segmented(p, [("auto", _("Como Windows"), True), ("light", _("Claro"), True),
+                                          ("dark", _("Oscuro"), True)], st["theme"], set_theme), stacked=True)
 
-        card = section("DETECCIÓN")
-        row(card, "Solo códigos QR", "Desactivado: también lee códigos de barras (EAN, Code 128, DataMatrix…).",
+        card = section(_("DETECCIÓN"))
+        row(card, _("Solo códigos QR"), _("Desactivado: también lee códigos de barras (EAN, Code 128, DataMatrix…)."),
             lambda p: self._switch(p, st["qr_only"], lambda v: save(qr_only=v)))
-        row(card, "Leer archivos copiados", "Imágenes copiadas desde el Explorador de archivos.",
+        row(card, _("Leer archivos copiados"), _("Imágenes copiadas desde el Explorador de archivos."),
             lambda p: self._switch(p, st["explorer_files"], lambda v: save(explorer_files=v)))
-        row(card, "Borrar las capturas con QR",
-            "Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. "
-            "Si está desactivado, el aviso muestra un botón para hacerlo.",
+        row(card, _("Borrar las capturas con QR"),
+            _("Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. "
+              "Si está desactivado, el aviso muestra un botón para hacerlo."),
             lambda p: self._switch(p, st["delete_capture"], lambda v: save(delete_capture=v)))
-        row(card, "Mostrar contraseñas al momento", "Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. "
-            "Desactivado es más seguro si alguien mira tu pantalla.",
+        row(card, _("Mostrar contraseñas al momento"), _("Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. "
+            "Desactivado es más seguro si alguien mira tu pantalla."),
             lambda p: self._switch(p, st["show_passwords"], lambda v: save(show_passwords=v)))
-        row(card, "Sonido al detectar", None,
+        row(card, _("Sonido al detectar"), None,
             lambda p: self._switch(p, st["sound"], lambda v: save(sound=v)))
-        row(card, "Pausar la detección", "No se escanea el portapapeles hasta que lo reactives.",
+        row(card, _("Pausar la detección"), _("No se escanea el portapapeles hasta que lo reactives."),
             lambda p: self._switch(p, self.paused, lambda v: self.paused != v and self.toggle_pause()))
 
-        card = section("HISTORIAL")
+        card = section(_("HISTORIAL"))
 
         def set_max(v):
             save(history_max=v)
             del self.history[v:]
             self.tray.update_menu()
 
-        row(card, "Guardar hasta", "Escaneos que se recuerdan mientras ClipQR está abierto.",
+        row(card, _("Guardar hasta"), _("Escaneos que se recuerdan mientras ClipQR está abierto."),
             lambda p: self._stepper(p, [10, 25, 50, 100, 200], st["history_max"], str, set_max))
 
         def clear_button(p):
-            b = self._button(p, "Borrar historial")
+            b = self._button(p, _("Borrar historial"))
 
             def clear():
                 self.history.clear()
                 self.tray.update_menu()
                 if self.history_win is not None and self.history_win.winfo_exists():
                     self._fill_history()
-                self._flash(b, "✓ Borrado")
+                self._flash(b, _("✓ Borrado"))
 
             b.config(command=clear)
             return b
 
-        row(card, "Borrar todo el historial", None, clear_button)
+        row(card, _("Borrar todo el historial"), None, clear_button)
 
-        card = section("ATAJOS DE TECLADO")
+        card = section(_("ATAJOS DE TECLADO"))
 
         def set_hotkey(**kw):
             save(**kw)
             self.apply_hotkeys(retries=0)  # elegido a mano: avisar al momento si está ocupado
 
-        row(card, "Escanear una zona de la pantalla",
-            "Congela la pantalla y lees el código que rodees, sin capturas ni portapapeles.",
+        row(card, _("Escanear una zona de la pantalla"),
+            _("Congela la pantalla y lees el código que rodees, sin capturas ni portapapeles."),
             lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_REGION_CHOICES],
                                       st["hotkey_region"], lambda v: set_hotkey(hotkey_region=v)), stacked=True)
-        row(card, "Crear un QR", "Abre «Crear QR» con lo que tengas copiado.",
+        row(card, _("Crear un QR"), _("Abre «Crear QR» con lo que tengas copiado."),
             lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_CREATE_CHOICES],
                                       st["hotkey_create"], lambda v: set_hotkey(hotkey_create=v)), stacked=True)
-        row(card, "Usar el aviso con el teclado",
-            "Pasa el foco al aviso abierto. Luego: Enter = acción, 1–9 = copiar ese dato, Tab = moverse, Esc = cerrar.",
+        row(card, _("Usar el aviso con el teclado"),
+            _("Pasa el foco al aviso abierto. Luego: Enter = acción, 1–9 = copiar ese dato, Tab = moverse, Esc = cerrar."),
             lambda p: self._segmented(p, [(k, hotkey_label(k), True) for k in HOTKEY_FOCUS_CHOICES],
                                       st["hotkey_focus"], lambda v: set_hotkey(hotkey_focus=v)), stacked=True)
 
-        card = section("GENERAL")
-        row(card, "Iniciar con Windows", None,
+        card = section(_("GENERAL"))
+
+        def language_control(p):
+            box = tk.Frame(p, bg=p.cget("bg"))
+            restart = self._button(box, _("Reiniciar ahora"), color=KINDS["link"][2], cmd=self.restart)
+
+            def set_language(v):
+                save(language=v)
+                if v != self.started_language:
+                    restart.pack(side="top", anchor="w", pady=(self.px(6), 0))
+                else:
+                    restart.pack_forget()
+
+            options = [("auto", _("Automático (Windows)"), True)] + [(k, n, True) for k, n in LANGUAGES.items()]
+            self._segmented(box, options, st["language"], set_language).pack(side="top", anchor="w")
+            if st["language"] != self.started_language:
+                restart.pack(side="top", anchor="w", pady=(self.px(6), 0))
+            return box
+
+        # en los dos idiomas, para quien lo haya puesto por error en uno que no entiende
+        row(card, "Idioma · Language", _("El idioma nuevo se aplica al reiniciar ClipQR."), language_control,
+            stacked=True)
+        row(card, _("Iniciar con Windows"), None,
             lambda p: self._switch(p, self.autostart_enabled(),
                                    lambda v: self.autostart_enabled() != v and self.toggle_autostart()))
         def report_button(p):
-            b = self._button(p, "Copiar informe")
+            b = self._button(p, _("Copiar informe"))
             b.config(command=lambda: self.copy(error_report(VERSION), b))
             return b
 
-        row(card, "Informe de errores", "Copia la versión y los últimos errores para pegarlos en una incidencia "
-            "de GitHub. No incluye imágenes ni el contenido de tus códigos; no se envía nada.", report_button)
+        row(card, _("Informe de errores"), _("Copia la versión y los últimos errores para pegarlos en una incidencia "
+            "de GitHub. No incluye imágenes ni el contenido de tus códigos; no se envía nada."), report_button)
         if not PACKAGED:  # la versión de la Store la actualiza la Store
-            row(card, "Buscar actualizaciones",
-                "Una vez al día consulta las versiones publicadas en GitHub. Solo se instalan si las aceptas, "
-                "y antes se comprueba que el instalador no está alterado.",
+            row(card, _("Buscar actualizaciones"),
+                _("Una vez al día consulta las versiones publicadas en GitHub. Solo se instalan si las aceptas, "
+                  "y antes se comprueba que el instalador no está alterado."),
                 lambda p: self._switch(p, st["check_updates"], lambda v: save(check_updates=v)))
-            row(card, "Buscar ahora", f"Versión instalada: {VERSION}",
-                lambda p: self._button(p, "Buscar actualizaciones", cmd=lambda: self.check_updates(manual=True)))
+            row(card, _("Buscar ahora"), _("Versión instalada: {version}", version=VERSION),
+                lambda p: self._button(p, _("Buscar actualizaciones"), cmd=lambda: self.check_updates(manual=True)))
 
-        card = section("APOYAR CLIPQR")
-        row(card, "Invitar un cafecito ☕", "ClipQR es gratis y de código abierto. Si te sirve, puedes apoyarlo "
-            "con un cafecito en cafecito.app.",
-            lambda p: self._button(p, "Invitar un cafecito ↗", cmd=lambda: os.startfile(DONATE_URL)))
+        card = section(_("APOYAR CLIPQR"))
+        row(card, _("Invitar un cafecito ☕"), _("ClipQR es gratis y de código abierto. Si te sirve, puedes apoyarlo "
+            "con un cafecito en cafecito.app."),
+            lambda p: self._button(p, _("Invitar un cafecito ↗"), cmd=lambda: os.startfile(DONATE_URL)))
 
-        tk.Label(body, text="Los cambios se guardan al momento.", bg=c["bg"], fg=c["muted"],
+        tk.Label(body, text=_("Los cambios se guardan al momento."), bg=c["bg"], fg=c["muted"],
                  font=self.font(8)).pack(pady=self.px(14))

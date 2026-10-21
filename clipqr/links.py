@@ -3,6 +3,7 @@ calendarios .ics, pagos UPI y direcciones de criptomonedas (estas dos, solo para
 import re
 from urllib.parse import parse_qs, unquote, urlsplit
 
+from clipqr.i18n import N_, _
 from clipqr.linksafety import link_warnings
 from clipqr.structured import Result, format_money, register, to_decimal
 
@@ -17,7 +18,7 @@ NOT_PROFILE = {"p", "reel", "reels", "explore", "share", "sharer", "watch", "sta
                "search", "hashtag", "stories", "groups", "events", "pages", "settings", "tv", "shorts", "embed"}
 CRYPTO = {"bitcoin": "Bitcoin", "ethereum": "Ethereum", "litecoin": "Litecoin", "bitcoincash": "Bitcoin Cash",
           "dogecoin": "Dogecoin", "monero": "Monero", "solana": "Solana", "tron": "Tron", "lightning": "Lightning"}
-CRYPTO_WARNING = ("Los pagos con criptomonedas no se pueden revertir: comprueba la dirección completa "
+CRYPTO_WARNING = N_("Los pagos con criptomonedas no se pueden revertir: comprueba la dirección completa "
                   "antes de pagar")
 
 
@@ -37,8 +38,8 @@ def _phone(digits):
 def whatsapp(url, text):
     host, path, q = _host(url), url.path.strip("/"), parse_qs(url.query)
     if host == "chat.whatsapp.com" and path:
-        return _link("WhatsApp · grupo", text, [("Invitación", path)],
-                     [("Unirse al grupo en WhatsApp ↗", "open", text)], ("Invitación a un grupo", "WhatsApp"))
+        return _link(_("WhatsApp · grupo"), text, [(_("Invitación"), path)],
+                     [(_("Unirse al grupo en WhatsApp ↗"), "open", text)], (_("Invitación a un grupo"), "WhatsApp"))
     if host == "wa.me" and re.fullmatch(r"\d{6,15}", path):
         number = path
     elif host == "api.whatsapp.com" and path == "send":
@@ -46,14 +47,14 @@ def whatsapp(url, text):
     else:
         return None
     message = (q.get("text") or [""])[0]
-    items = [("Teléfono", _phone(number))] if number else []
+    items = [(_("Teléfono"), _phone(number))] if number else []
     if message:
-        items.append(("Mensaje", message))
-    actions = [("Abrir chat en WhatsApp ↗", "open", text)]
+        items.append((_("Mensaje"), message))
+    actions = [(_("Abrir chat en WhatsApp ↗"), "open", text)]
     if number:
-        actions.append(("Copiar número", "copy", _phone(number)))
+        actions.append((_("Copiar número"), "copy", _phone(number)))
     return _link("WhatsApp", text, items, actions, ("Chat", _phone(number) or "WhatsApp"),
-                 "Abre el chat; el mensaje no se envía hasta que lo mandes tú" if message else None)
+                 _("Abre el chat; el mensaje no se envía hasta que lo mandes tú") if message else None)
 
 
 def telegram(url, text):
@@ -62,49 +63,50 @@ def telegram(url, text):
         return None
     first = path.split("/")[0]
     if first.startswith("+") or first == "joinchat":
-        return _link("Telegram · grupo", text, [("Invitación", path)],
-                     [("Unirse en Telegram ↗", "open", text)], ("Invitación a un grupo", "Telegram"))
+        return _link(_("Telegram · grupo"), text, [(_("Invitación"), path)],
+                     [(_("Unirse en Telegram ↗"), "open", text)], (_("Invitación a un grupo"), "Telegram"))
     if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{3,31}", first):
         return None
-    return _link("Telegram", text, [("Usuario", "@" + first)],
-                 [("Abrir en Telegram ↗", "open", text), ("Copiar usuario", "copy", "@" + first)],
-                 ("Usuario", "@" + first))
+    return _link("Telegram", text, [(_("Usuario"), "@" + first)],
+                 [(_("Abrir en Telegram ↗"), "open", text), (_("Copiar usuario"), "copy", "@" + first)],
+                 (_("Usuario"), "@" + first))
 
 
 def social(url, text, network):
     host, parts = _host(url), [unquote(p) for p in url.path.split("/") if p]
     if host == "youtu.be" and parts:
-        return _link("YouTube · vídeo", text, [("Vídeo", parts[0])], [("Ver en YouTube ↗", "open", text)],
-                     ("Vídeo de YouTube", parts[0]))
+        return _link(_("YouTube · vídeo"), text, [(_("Vídeo"), parts[0])], [(_("Ver en YouTube ↗"), "open", text)],
+                     (_("Vídeo de YouTube"), parts[0]))
     if network == "YouTube" and parts[:1] == ["watch"]:
         video = (parse_qs(url.query).get("v") or [""])[0]
-        return _link("YouTube · vídeo", text, [("Vídeo", video)], [("Ver en YouTube ↗", "open", text)],
-                     ("Vídeo de YouTube", video))
+        return _link(_("YouTube · vídeo"), text, [(_("Vídeo"), video)], [(_("Ver en YouTube ↗"), "open", text)],
+                     (_("Vídeo de YouTube"), video))
     if not parts:
         return None
     if network == "LinkedIn":
         if len(parts) < 2 or parts[0] not in ("in", "company"):
             return None
-        user, label = parts[1], "Empresa" if parts[0] == "company" else "Perfil"
+        user, company = parts[1], parts[0] == "company"
     elif network == "Facebook" and parts[0] == "profile.php":
-        user, label = (parse_qs(url.query).get("id") or [""])[0], "Perfil"
+        user, company = (parse_qs(url.query).get("id") or [""])[0], False
     elif network == "GitHub" and len(parts) >= 2:
         repo = f"{parts[0]}/{parts[1]}"
-        return _link("GitHub · repositorio", text, [("Repositorio", repo)],
-                     [("Abrir en GitHub ↗", "open", text), ("Copiar «git clone»", "copy",
-                                                            f"git clone https://github.com/{repo}.git")],
-                     ("Repositorio", repo))
+        return _link(_("GitHub · repositorio"), text, [(_("Repositorio"), repo)],
+                     [(_("Abrir en GitHub ↗"), "open", text), (_("Copiar «git clone»"), "copy",
+                                                               f"git clone https://github.com/{repo}.git")],
+                     (_("Repositorio"), repo))
     else:
         if parts[0].lower() in NOT_PROFILE or len(parts) > 1 and network not in ("YouTube", "TikTok"):
-            return _link(f"{network} · publicación", text, [("Red", network)],
-                         [(f"Abrir en {network} ↗", "open", text)], ("Publicación", network))
-        user, label = parts[0], "Perfil"
+            return _link(_("{red} · publicación", red=network), text, [(_("Red"), network)],
+                         [(_("Abrir en {red} ↗", red=network), "open", text)], (_("Publicación"), network))
+        user, company = parts[0], False
     if not user:
         return None
     shown = user if user.startswith("@") or network in ("LinkedIn", "Facebook") else "@" + user
-    return _link(f"{network} · {label.lower()}", text, [("Usuario", shown), ("Red", network)],
-                 [(f"Abrir en {network} ↗", "open", text), ("Copiar usuario", "copy", shown)],
-                 ("Usuario", shown))
+    title = _("{red} · empresa", red=network) if company else _("{red} · perfil", red=network)
+    return _link(title, text, [(_("Usuario"), shown), (_("Red"), network)],
+                 [(_("Abrir en {red} ↗", red=network), "open", text), (_("Copiar usuario"), "copy", shown)],
+                 (_("Usuario"), shown))
 
 
 def app_store(url, text):
@@ -124,8 +126,8 @@ def app_store(url, text):
         app_id, name, store = parts[1], "", "Microsoft Store"
     else:
         return None
-    items = ([("App", name)] if name and name != "App" else []) + [("Tienda", store), ("Identificador", app_id)]
-    return _link(f"App · {store}", text, items, [(f"Abrir en {store} ↗", "open", text)],
+    items = ([("App", name)] if name and name != "App" else []) + [(_("Tienda"), store), (_("Identificador"), app_id)]
+    return _link(f"App · {store}", text, items, [(_("Abrir en {red} ↗", red=store), "open", text)],
                  ("App", name or app_id))
 
 
@@ -135,9 +137,9 @@ def parse_known_link(text):
     low = t.lower()
     if low.startswith("webcal://") or re.match(r"^https?://\S+\.ics(\?\S*)?$", low):
         url = "https://" + t[9:] if low.startswith("webcal://") else t
-        return Result("event", "Calendario", [("Calendario", _host(urlsplit(url)) or url)],
-                      [("Suscribirse al calendario ↗", "open", t), ("Copiar enlace", "copy", url)],
-                      link_warnings(url), ("Calendario", _host(urlsplit(url))))
+        return Result("event", _("Calendario"), [(_("Calendario"), _host(urlsplit(url)) or url)],
+                      [(_("Suscribirse al calendario ↗"), "open", t), (_("Copiar enlace"), "copy", url)],
+                      link_warnings(url), (_("Calendario"), _host(urlsplit(url))))
     if low.startswith("upi://pay"):
         return upi(t)
     scheme = low.split(":", 1)[0]
@@ -163,26 +165,27 @@ def upi(text):
     q = {k: v[0] for k, v in parse_qs(urlsplit(text).query).items()}
     vpa, name = q.get("pa", ""), q.get("pn", "")
     amount = to_decimal(q.get("am")) if q.get("am") else None
-    items = [i for i in (("Cobra", name), ("Dirección UPI", vpa), ("Concepto", q.get("tn", ""))) if i[1]]
-    warnings = [] if re.fullmatch(r"[\w.\-]+@[\w.\-]+", vpa) else ["La dirección UPI no tiene la forma usuario@banco"]
-    headline = ("Importe", format_money(amount, q.get("cu", "INR"), "US")) if amount is not None \
-        else ("Cobra", name or vpa)
-    return Result("payment", "Pago QR · UPI", items, [("Copiar dirección UPI", "copy", vpa)], warnings, headline,
-                  f"Para {name}" if name and amount is not None else None)
+    items = [i for i in ((_("Cobra"), name), (_("Dirección UPI"), vpa), (_("Concepto"), q.get("tn", ""))) if i[1]]
+    warnings = [] if re.fullmatch(r"[\w.\-]+@[\w.\-]+", vpa) else [
+        _("La dirección UPI no tiene la forma usuario@banco")]
+    headline = (_("Importe"), format_money(amount, q.get("cu", "INR"), "US")) if amount is not None \
+        else (_("Cobra"), name or vpa)
+    return Result("payment", _("Pago QR · UPI"), items, [(_("Copiar dirección UPI"), "copy", vpa)], warnings,
+                  headline, _("Para {nombre}", nombre=name) if name and amount is not None else None)
 
 
 def crypto(text, scheme):
     """bitcoin:<dirección>?amount=0.01&label=… (BIP 21) y equivalentes: solo se muestra y se copia."""
     rest = text.split(":", 1)[1].lstrip("/")
-    address, _, query = rest.partition("?")
+    address, _sep, query = rest.partition("?")
     q = {k: v[0] for k, v in parse_qs(query).items()}
     coin = CRYPTO[scheme]
     if not address:
         return None
-    items = [("Dirección", address), ("Red", coin)]
-    for key, label in (("label", "Destinatario"), ("message", "Mensaje"), ("amount", "Importe")):
+    items = [(_("Dirección"), address), (_("Red"), coin)]
+    for key, label in (("label", N_("Destinatario")), ("message", N_("Mensaje")), ("amount", N_("Importe"))):
         if q.get(key):
-            items.append((label, f"{q[key]} {coin}" if key == "amount" else q[key]))
-    headline = ("Importe", f"{q['amount']} {coin}") if q.get("amount") else ("Dirección", address)
-    return Result("payment", f"Cripto · {coin}", items, [("Copiar dirección", "copy", address)],
-                  [CRYPTO_WARNING], headline, q.get("label"))
+            items.append((_(label), f"{q[key]} {coin}" if key == "amount" else q[key]))
+    headline = (_("Importe"), f"{q['amount']} {coin}") if q.get("amount") else (_("Dirección"), address)
+    return Result("payment", _("Cripto · {moneda}", moneda=coin), items, [(_("Copiar dirección"), "copy", address)],
+                  [_(CRYPTO_WARNING)], headline, q.get("label"))

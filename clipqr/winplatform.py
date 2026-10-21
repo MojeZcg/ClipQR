@@ -6,6 +6,7 @@ from collections import namedtuple
 from ctypes import wintypes
 
 from clipqr import APP_NAME
+from clipqr.i18n import _
 
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
 UNINSTALL_KEY = r"Software\Microsoft\Windows\CurrentVersion\Uninstall\ClipQR"  # lo crea ClipQR-Setup.exe
@@ -101,7 +102,7 @@ def copy_image_to_clipboard(img):
     handle = kernel32.GlobalAlloc(0x2, len(data))  # GMEM_MOVEABLE
     ctypes.memmove(kernel32.GlobalLock(handle), data, len(data))
     kernel32.GlobalUnlock(handle)
-    for _ in range(10):  # otra app puede tener el portapapeles abierto un instante
+    for __ in range(10):  # otra app puede tener el portapapeles abierto un instante
         if user32.OpenClipboard(None):
             break
         import time
@@ -206,13 +207,13 @@ def msix_set_startup(enable):
             return True, ""
         state = _startup_task_call(lambda t: t.request_enable_async()).name.lower()
     except Exception as e:
-        return False, f"No se pudo cambiar el inicio con Windows.\n{e}"
+        return False, _("No se pudo cambiar el inicio con Windows.\n{error}", error=e)
     if state.startswith("enabled"):
         return True, ""
     if state == "disabled_by_user":
-        return False, ("Lo desactivaste desde Windows. Actívalo en\n"
-                       "Configuración de Windows › Aplicaciones › Inicio.")
-    return False, "Windows no permite el inicio automático (directiva del equipo)."
+        return False, _("Lo desactivaste desde Windows. Actívalo en\n"
+                         "Configuración de Windows › Aplicaciones › Inicio.")
+    return False, _("Windows no permite el inicio automático (directiva del equipo).")
 
 def screenshots_folder():
     """Carpeta donde Windows guarda las capturas (Recortes, Win+Impr Pant): Imágenes › Capturas de pantalla."""
@@ -240,9 +241,21 @@ def send_to_recycle_bin(path):
                          fFlags=FOF_SILENT | FOF_NOCONFIRMATION | FOF_ALLOWUNDO | FOF_NOERRORUI)
     return ctypes.windll.shell32.SHFileOperationW(ctypes.byref(op)) == 0 and not os.path.exists(path)
 
+_mutex = None
+
+
 def single_instance():
-    kernel32.CreateMutexW(None, False, "Local\\ClipQR_single_instance")
+    global _mutex
+    _mutex = kernel32.CreateMutexW(None, False, "Local\\ClipQR_single_instance")
     return kernel32.GetLastError() != 183  # ERROR_ALREADY_EXISTS
+
+
+def release_single_instance():
+    """Suelta el mutex de instancia única (al reiniciar, para que la nueva instancia pueda arrancar)."""
+    global _mutex
+    if _mutex:
+        kernel32.CloseHandle(_mutex)
+        _mutex = None
 
 def installed_by_setup():
     import winreg

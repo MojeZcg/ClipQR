@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 from clipqr.fiscal import Comprobante, invoice_result
 from clipqr.fiscal.comun_latam import AVISO_INCOMPLETO, importe
 from clipqr.fiscal.ids_latam import cnpj_valid, cpf_valid, format_cnpj, format_cpf
+from clipqr.i18n import N_, _
 from clipqr.structured import register
 
 UF = {
@@ -24,9 +25,9 @@ UF = {
     "33": "RJ", "35": "SP", "41": "PR", "42": "SC", "43": "RS", "50": "MS", "51": "MT", "52": "GO", "53": "DF",
 }
 MODELOS = {"55": "NF-e", "65": "NFC-e"}
-TP_EMIS = {"1": "normal", "2": "contingencia FS-IA", "3": "contingencia SCAN", "4": "contingencia EPEC",
-           "5": "contingencia FS-DA", "6": "contingencia SVC-AN", "7": "contingencia SVC-RS",
-           "9": "contingencia offline"}
+TP_EMIS = {"1": N_("normal"), "2": N_("contingencia FS-IA"), "3": N_("contingencia SCAN"),
+           "4": N_("contingencia EPEC"), "5": N_("contingencia FS-DA"), "6": N_("contingencia SVC-AN"),
+           "7": N_("contingencia SVC-RS"), "9": N_("contingencia offline")}
 _CHAVE = re.compile(r"^[0-9]{6}[0-9A-Z]{12}[0-9]{26}$")  # el CNPJ puede ser alfanumérico desde 2026
 
 
@@ -45,12 +46,13 @@ def chave_valida(chave):
 
 
 def _emitente(doc):
-    """La clave guarda 14 posiciones: un CNPJ, o un CPF (productor rural) con tres ceros delante."""
+    """La clave guarda 14 posiciones: un CNPJ, o un CPF (productor rural) con tres ceros delante.
+    Devuelve (tipo de documento, documento formateado, válido)."""
     if cnpj_valid(doc):
-        return "CNPJ emisor", format_cnpj(doc), True
+        return "CNPJ", format_cnpj(doc), True
     if doc.startswith("000") and cpf_valid(doc[3:]):
-        return "CPF emisor", format_cpf(doc[3:]), True
-    return "CNPJ emisor", format_cnpj(doc), False
+        return "CPF", format_cpf(doc[3:]), True
+    return "CNPJ", format_cnpj(doc), False
 
 
 def _comprobante(chave, url="", tp_amb="", dia="", valor_txt="", avisos=None):
@@ -58,33 +60,43 @@ def _comprobante(chave, url="", tp_amb="", dia="", valor_txt="", avisos=None):
     cuf, aamm, doc, modelo, serie, numero, tp_emis = (chave[:2], chave[2:6], chave[6:20], chave[20:22],
                                                      chave[22:25], chave[25:34], chave[34])
     if not chave_valida(chave):
-        avisos.append("La clave de acceso no supera el dígito verificador: el QR puede estar modificado")
-    label, emisor, doc_ok = _emitente(doc)
+        avisos.append(_("La clave de acceso no supera el dígito verificador: el QR puede estar modificado"))
+    tipo_doc, emisor, doc_ok = _emitente(doc)
+    label = _("CPF emisor") if tipo_doc == "CPF" else _("CNPJ emisor")
     if not doc_ok:
-        avisos.append(f"El {label.split()[0]} del emisor ({emisor}) no es válido: el QR puede estar modificado")
+        avisos.append(_("El {doc} del emisor ({numero}) no es válido: el QR puede estar modificado",
+                        doc=tipo_doc, numero=emisor))
     if tp_amb == "2":
-        avisos.append("Emitida en ambiente de homologación (pruebas): sin valor fiscal")
+        avisos.append(_("Emitida en ambiente de homologación (pruebas): sin valor fiscal"))
     valor = importe(valor_txt)
     if valor_txt and valor is None:
-        avisos.append(f"El valor total «{valor_txt}» no es válido")
+        avisos.append(_("El valor total «{total}» no es válido", total=valor_txt))
 
     mes, anio = aamm[2:], "20" + aamm[:2]
     fecha = ""
     if dia.isdigit() and 1 <= int(dia) <= 31:
         fecha = f"{int(dia):02d}/{mes}/{anio}"
-    extra = [("Serie", str(int(serie)) if serie.isdigit() else serie), ("Estado", UF.get(cuf, cuf))]
+    extra = [(_("Serie"), str(int(serie)) if serie.isdigit() else serie), (_("Estado"), UF.get(cuf, cuf))]
     if not fecha:
-        extra.append(("Mes de emisión", f"{mes}/{anio}"))
+        extra.append((_("Mes de emisión"), f"{mes}/{anio}"))
     if tp_emis != "1":
-        extra.append(("Emisión", TP_EMIS.get(tp_emis, f"tipo {tp_emis}")))
+        extra.append((_("Emisión"), _(TP_EMIS[tp_emis]) if tp_emis in TP_EMIS
+                      else _("tipo {tipo}", tipo=tp_emis)))
 
     num = f"{numero[:3]}.{numero[3:6]}.{numero[6:]}" if numero.isdigit() else numero
     clave_txt = " ".join(chave[i:i + 4] for i in range(0, len(chave), 4))
+    sefaz = f"SEFAZ-{UF[cuf]}" if cuf in UF else "SEFAZ"
     return invoice_result(Comprobante(
-        "BR", f"SEFAZ-{UF[cuf]}" if cuf in UF else "SEFAZ", MODELOS.get(modelo, f"Nota fiscal (modelo {modelo})"),
+        "BR", sefaz, MODELOS.get(modelo) or _("Nota fiscal (modelo {modelo})", modelo=modelo),
         num, fecha, emisor=emisor, emisor_label=label, importe=valor, moneda="BRL", autorizacion=clave_txt,
-        autorizacion_label="Clave de acceso", url_verificacion=url, organismo=f"la SEFAZ-{UF.get(cuf, '')}".rstrip("-"),
-        extra=extra, avisos=avisos, acciones=[("Copiar clave", "copy", chave)]))
+        autorizacion_label=_("Clave de acceso"), url_verificacion=url, organismo=_("la {sefaz}", sefaz=sefaz),
+        extra=extra, avisos=avisos, acciones=[(_("Copiar clave"), "copy", chave)]))
+
+
+def _incompleto(url):
+    """URL de la SEFAZ con una clave que no tiene 44 posiciones."""
+    return invoice_result(Comprobante("BR", "SEFAZ", "NFC-e", url_verificacion=url,
+                                      organismo=_("la {sefaz}", sefaz="SEFAZ"), avisos=[_(AVISO_INCOMPLETO)]))
 
 
 @register
@@ -109,12 +121,11 @@ def parse_br_nfe(text):
         chave = campos[0].strip().upper()
         if not re.fullmatch(r"[0-9A-Z]{44}", chave):
             if re.fullmatch(r"[0-9A-Z]{20,50}", chave):
-                return invoice_result(Comprobante("BR", "SEFAZ", "NFC-e", url_verificacion=s, organismo="la SEFAZ",
-                                                  avisos=[AVISO_INCOMPLETO]))
+                return _incompleto(s)
             return None
         campos += [""] * 8
         version, tp_amb = campos[1], campos[2]
-        avisos = [] if version in ("2", "3") else [AVISO_INCOMPLETO]
+        avisos = [] if version in ("2", "3") else [_(AVISO_INCOMPLETO)]
         offline = len([c for c in campos if c]) > (5 if version == "2" else 3)
         dia, valor = (campos[3], campos[4]) if offline else ("", "")
         return _comprobante(chave, s, tp_amb, dia, valor, avisos)
@@ -123,7 +134,6 @@ def parse_br_nfe(text):
     if "chnfe" in q:  # versión 1
         chave = q["chnfe"].strip().upper()
         if not re.fullmatch(r"[0-9A-Z]{44}", chave):
-            return invoice_result(Comprobante("BR", "SEFAZ", "NFC-e", url_verificacion=s, organismo="la SEFAZ",
-                                              avisos=[AVISO_INCOMPLETO]))
+            return _incompleto(s)
         return _comprobante(chave, s, q.get("tpamb", ""), "", q.get("vnf", ""))
     return None

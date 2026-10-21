@@ -4,6 +4,16 @@ import pytest
 import zxingcpp
 from PIL import Image, ImageFilter
 
+from clipqr import i18n
+
+
+@pytest.fixture(autouse=True)
+def spanish():
+    """Los tests comprueban los textos en español salvo que pidan otro idioma."""
+    i18n.set_language("es")
+    yield
+    i18n.set_language("es")
+
 
 def code_image(text, fmt="QRCode", scale=6, ec_level=None):
     """Imagen RGB con el código `text` (formato zxing por nombre: QRCode, EAN13, DataMatrix…)."""

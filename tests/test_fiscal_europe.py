@@ -212,7 +212,7 @@ def test_ticketbai_ignora_otros_textos(text):
 
 def test_atcud_fatura_simplificada():
     r = parse_atcud(PT_FS)
-    assert r.title == "Factura · AT Portugal"
+    assert r.title == "Factura simplificada · AT Portugal"
     assert r.headline == ("Importe", "0,80 €")
     assert r.subtitle == "Factura simplificada · FS CDVF/12345 · 12/08/2019"
     d = items(r)
@@ -262,7 +262,7 @@ def test_atcud_ignora_otros_textos(text):
 # ---------------------------------------------------------------- registro
 
 @pytest.mark.parametrize("text, title", [
-    (VF_PROD, "Factura · VeriFactu"), (TBAI, "Factura · TicketBAI"), (PT_FS, "Factura · AT Portugal"),
+    (VF_PROD, "Factura · VeriFactu"), (TBAI, "Factura · TicketBAI"), (PT_FS, "Factura simplificada · AT Portugal"),
 ])
 def test_analyze_reconoce_los_formatos(text, title):
     assert analyze(text).title == title

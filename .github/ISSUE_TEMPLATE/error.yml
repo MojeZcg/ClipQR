@@ -1,27 +1,35 @@
-name: Algo no funciona
-description: Un error, un QR que no se lee bien o algo que no hace lo que debería.
+name: Algo no funciona / Something isn't working
+description: "Un error, un QR que no se lee bien o algo que no hace lo que debería. · A bug, a QR code that isn't read correctly, or something that doesn't work as it should."
 labels: [error]
 body:
   - type: textarea
     id: que_paso
     attributes:
-      label: ¿Qué pasó?
-      description: Qué hiciste, qué esperabas y qué ocurrió.
+      label: ¿Qué pasó? / What happened?
+      description: "Qué hiciste, qué esperabas y qué ocurrió. · What you did, what you expected and what happened instead."
     validations:
       required: true
   - type: textarea
     id: informe
     attributes:
-      label: Informe de errores
-      description: En ClipQR › Configuración › General › Informe de errores › «Copiar informe», y pégalo aquí. No incluye imágenes ni el contenido de tus códigos.
+      label: Informe de errores / Error report
+      description: >-
+        En ClipQR › Configuración › General › Informe de errores › «Copiar informe», y pégalo aquí.
+        No incluye imágenes ni el contenido de tus códigos.
+        · In ClipQR › Settings › General › Error report › "Copy report", then paste it here.
+        It doesn't include images or the content of your codes.
       render: text
   - type: textarea
     id: qr
     attributes:
-      label: QR de ejemplo (opcional)
-      description: Si un QR concreto no se lee bien, adjunta una imagen. Asegúrate de que no contiene datos personales (contraseñas, facturas con nombres, documentos…).
+      label: QR de ejemplo (opcional) / Sample QR code (optional)
+      description: >-
+        Si un QR concreto no se lee bien, adjunta una imagen. Asegúrate de que no contiene datos personales
+        (contraseñas, facturas con nombres, documentos…).
+        · If a specific QR code isn't read correctly, attach an image. Make sure it contains no personal data
+        (passwords, invoices with names, ID documents…).
   - type: input
     id: version
     attributes:
-      label: Versión de ClipQR
+      label: Versión de ClipQR / ClipQR version
       placeholder: "1.1.0"

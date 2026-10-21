@@ -5,6 +5,7 @@ import tkinter as tk
 from PIL import ImageTk
 
 from clipqr import APP_NAME
+from clipqr.i18n import _
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze
 from clipqr.ui.theme import KINDS, THEMES
@@ -22,7 +23,7 @@ class HistoryMixin:
         c = self.c
         win = tk.Toplevel(self.root, bg=c["bg"])
         self.history_win = win
-        win.title(f"{APP_NAME} · Historial")
+        win.title(f"{APP_NAME} · {_('Historial')}")
         win.geometry(f"{self.px(520)}x{self.px(600)}")
         win.minsize(self.px(380), self.px(300))
         try:
@@ -36,8 +37,8 @@ class HistoryMixin:
         top = tk.Frame(win, bg=c["bg"])
         top.pack(fill="x", padx=self.px(14), pady=(self.px(14), self.px(8)))
         tk.Label(top, image=self._logo(28), bg=c["bg"], bd=0).pack(side="left", padx=(0, self.px(10)))
-        tk.Label(top, text="Historial", bg=c["bg"], fg=c["fg"], font=self.font(14, "bold")).pack(side="left")
-        self._button(top, "Escanear ahora", cmd=lambda: self.scan(force=True)).pack(side="right")
+        tk.Label(top, text=_("Historial"), bg=c["bg"], fg=c["fg"], font=self.font(14, "bold")).pack(side="left")
+        self._button(top, _("Escanear ahora"), cmd=lambda: self.scan(force=True)).pack(side="right")
 
         sbox = tk.Frame(win, bg=c["card"], highlightthickness=1, highlightbackground=c["border"])
         sbox.pack(fill="x", padx=self.px(14), pady=(0, self.px(8)))
@@ -69,8 +70,8 @@ class HistoryMixin:
         q = self.search_var.get().strip().lower()
         entries = [code for scan in self.history for code in scan if not q or q in code["text"].lower()]
         if not entries:
-            tk.Label(self.hist_list, text="Sin resultados." if q else "Aún no se ha detectado ningún código.\n"
-                     "Haz una captura de un QR (Win+Shift+S o Impr Pant).", bg=c["bg"], fg=c["muted"],
+            tk.Label(self.hist_list, text=_("Sin resultados.") if q else _("Aún no se ha detectado ningún código.\n"
+                     "Haz una captura de un QR (Win+Shift+S o Impr Pant)."), bg=c["bg"], fg=c["muted"],
                      font=self.font(10), justify="center").pack(pady=self.px(40))
             return
         for code in entries:
@@ -80,7 +81,7 @@ class HistoryMixin:
                            cursor="hand2")
             row.pack(fill="x", pady=(0, self.px(6)))
             # el botón se coloca primero para que un texto largo no lo saque de la fila
-            b = self._button(row, "Copiar")
+            b = self._button(row, _("Copiar"))
             b.config(command=lambda t=code["text"], b=b: self.copy(t, b))
             b.pack(side="right", padx=self.px(8))
             if code.get("thumb") is not None:
@@ -95,7 +96,7 @@ class HistoryMixin:
             tk.Label(line, text="  " + time.strftime("%H:%M", time.localtime(code["time"])), bg=c["card"],
                      fg=c["muted"], font=self.font(8)).pack(side="left")
             # resumen legible (Ana Pérez · +34 600…) en vez del texto crudo de vCard / Wi-Fi
-            summary = [v for l, v in items if l not in ("Contraseña", "Secreto", "Dominio")][:3]
+            summary = [v for l, v in items if l not in (_("Contraseña"), _("Secreto"), _("Dominio"))][:3]
             if r.headline:  # facturas, pagos…: «$ 12.345,67 · Factura B · 0003-00001234»
                 preview = " · ".join(x for x in (r.headline[1], r.subtitle) if x)
             elif kind not in ("link", "text", "product") and summary:
