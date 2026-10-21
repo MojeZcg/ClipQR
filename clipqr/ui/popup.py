@@ -59,7 +59,7 @@ class PopupMixin:
         # avisos (enlaces sospechosos, datos que no cuadran…) justo antes de los botones
         warnings = r.warnings + code.get("warnings", [])
         if warnings:
-            self._warning_strip(inner, warnings)
+            self._warning_strip(inner, warnings, r.warning_level)
 
         # acción principal en grande, las demás al lado
         if actions:
