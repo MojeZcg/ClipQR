@@ -2,6 +2,7 @@
 import ctypes
 import os
 import sys
+from collections import namedtuple
 from ctypes import wintypes
 
 from clipqr import APP_NAME
@@ -55,11 +56,57 @@ def style_window(win, border=None, dark=None):
         pass
 
 
-def work_area():
-    """Área de trabajo de la pantalla principal (sin la barra de tareas)."""
-    rect = wintypes.RECT()
-    user32.SystemParametersInfoW(0x30, 0, ctypes.byref(rect), 0)  # SPI_GETWORKAREA
-    return rect
+Area = namedtuple("Area", "left top right bottom")
+
+
+class _MONITORINFO(ctypes.Structure):
+    _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT), ("rcWork", wintypes.RECT),
+                ("dwFlags", wintypes.DWORD)]
+
+
+def _work_of(hmonitor):
+    info = _MONITORINFO(cbSize=ctypes.sizeof(_MONITORINFO))
+    user32.GetMonitorInfoW(hmonitor, ctypes.byref(info))
+    r = info.rcWork
+    return Area(r.left, r.top, r.right, r.bottom)
+
+
+def cursor_pos():
+    p = wintypes.POINT()
+    user32.GetCursorPos(ctypes.byref(p))
+    return p.x, p.y
+
+
+def work_area(point=None):
+    """Área de trabajo (sin la barra de tareas) del monitor donde está `point`; por defecto, el del ratón."""
+    x, y = point if point is not None else cursor_pos()
+    user32.MonitorFromPoint.restype = wintypes.HMONITOR
+    hmon = user32.MonitorFromPoint(wintypes.POINT(int(x), int(y)), 2)  # MONITOR_DEFAULTTONEAREST
+    return _work_of(hmon)
+
+
+def work_areas():
+    """Áreas de trabajo de todos los monitores conectados."""
+    areas = []
+    proc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HMONITOR, wintypes.HDC, ctypes.POINTER(wintypes.RECT),
+                              wintypes.LPARAM)
+
+    def cb(hmon, hdc, rect, data):
+        areas.append(_work_of(hmon))
+        return True
+
+    user32.EnumDisplayMonitors(None, None, proc(cb), 0)
+    return areas
+
+
+def area_containing(x, y, areas):
+    """El área que contiene el punto, o None (por ejemplo, si se desconectó ese monitor)."""
+    return next((a for a in areas if a.left <= x < a.right and a.top <= y < a.bottom), None)
+
+
+def clamp_to_area(x, y, w, h, area):
+    """Mueve (x, y) lo justo para que una ventana w×h quede dentro del área."""
+    return min(max(x, area.left), area.right - w), min(max(y, area.top), area.bottom - h)
 
 
 FROZEN = getattr(sys, "frozen", False)  # empaquetado con PyInstaller

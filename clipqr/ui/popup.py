@@ -6,7 +6,8 @@ import tkinter as tk
 from clipqr.icons import make_icon
 from clipqr.payloads import format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.winplatform import send_to_recycle_bin, style_window, work_area
+from clipqr.winplatform import (area_containing, clamp_to_area, send_to_recycle_bin, style_window, work_area,
+                                work_areas)
 
 MAX_CARDS = 4
 
@@ -143,7 +144,7 @@ class PopupMixin:
         if win is None or not win.winfo_exists():
             return
         win.update_idletasks()
-        rect = self._work_area()
+        rect = work_area((win.winfo_x() + 10, win.winfo_y() + 10))  # el monitor donde está el aviso
         h = min(win.winfo_reqheight(), rect.bottom - rect.top - self.px(24))
         x, y = win.winfo_x(), win.winfo_y()
         if y + h > rect.bottom:
@@ -160,7 +161,14 @@ class PopupMixin:
                 win.after_cancel(job)  # cancelar con el mismo widget que lo programó
             win.destroy()
 
-    def _work_area(self):
+    def _placement_area(self):
+        """Monitor donde va el aviso: el de la posición guardada («Donde lo dejé») si ese monitor sigue
+        conectado; si no, el monitor donde está el ratón."""
+        st = self.settings
+        if st["position"] == "custom" and st.get("x") is not None:
+            area = area_containing(st["x"], st["y"], work_areas())
+            if area is not None:
+                return area
         return work_area()
 
     def _new_popup(self):
@@ -173,15 +181,14 @@ class PopupMixin:
         win.attributes("-alpha", 0.0)
         return win
 
-    def _popup_xy(self, w, h):
-        """Posición según ajustes. Por defecto arriba a la derecha: abajo es donde salen
-        las notificaciones de Windows (p. ej. la de Recortes) y lo taparían."""
-        rect, m = self._work_area(), self.px(16)
+    def _popup_xy(self, w, h, rect):
+        """Posición según ajustes, dentro del área `rect`. Por defecto arriba a la derecha: abajo es
+        donde salen las notificaciones de Windows (p. ej. la de Recortes) y lo taparían."""
+        m = self.px(16)
         pos = self.settings["position"]
-        if pos == "custom" and self.settings.get("x") is not None:
-            x = min(max(self.settings["x"], rect.left), rect.right - w)
-            y = min(max(self.settings["y"], rect.top), rect.bottom - h)
-            return x, y, 0
+        x0, y0 = self.settings.get("x"), self.settings.get("y")
+        if pos == "custom" and x0 is not None and area_containing(x0, y0, [rect]):
+            return (*clamp_to_area(x0, y0, w, h, rect), 0)
         if pos == "bottom-right":
             return rect.right - w - m, rect.bottom - h - m, self.px(36)
         if pos == "center":
@@ -191,10 +198,10 @@ class PopupMixin:
     def _show_animated(self, win, seconds, can_stay_open=False):
         """Coloca el popup, entra deslizando + fundido, y cuenta atrás con barra."""
         win.update_idletasks()
-        rect = self._work_area()
+        rect = self._placement_area()
         w = win.winfo_reqwidth()
         h = min(win.winfo_reqheight(), rect.bottom - rect.top - self.px(24))
-        x, y, dy = self._popup_xy(w, h)
+        x, y, dy = self._popup_xy(w, h, rect)
         style_window(win, border=self.c["border"])
         steps = 8 if self.settings["animation"] else 0
         win._pinned = can_stay_open and not self.settings["autoclose"]
