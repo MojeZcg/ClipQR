@@ -21,6 +21,7 @@ from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_l
                              log_exception, save_state)
 from clipqr.ui.history import HistoryMixin
 from clipqr.ui.popup import PopupMixin
+from clipqr.ui.region import RegionMixin
 from clipqr.ui.settings_window import SettingsWindowMixin
 from clipqr.ui.theme import THEMES
 from clipqr.ui.widgets import WidgetsMixin
@@ -31,7 +32,7 @@ from clipqr.winplatform import (FROZEN, PACKAGED, RUN_KEY, UNINSTALL_KEY, instal
 POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a menudo
 
 
-class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
+class ClipQR(PopupMixin, RegionMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
     def __init__(self, autostart=False):
         self.autostart_launch = autostart  # abierto por el inicio de Windows (no a mano)
         self.root = tk.Tk()
@@ -69,6 +70,8 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
         actions = {}
         if self.settings["hotkey_focus"]:
             actions[self.settings["hotkey_focus"]] = on_tk(self.focus_popup)
+        if self.settings["hotkey_region"]:
+            actions[self.settings["hotkey_region"]] = on_tk(self.scan_region)
         return actions
 
     def apply_hotkeys(self, retries=4):
@@ -108,6 +111,9 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
                              enabled=lambda item: bool(self.history)),
             pystray.MenuItem("Abrir historial", ui(self.show_history), default=True),
             pystray.MenuItem("Escanear portapapeles ahora", ui(lambda: self.scan(force=True))),
+            pystray.MenuItem(lambda item: "Escanear zona de la pantalla" + (
+                f"  ({hotkey_label(self.settings['hotkey_region'])})" if self.settings["hotkey_region"] else ""),
+                ui(self.scan_region)),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Configuración…", ui(self.show_settings)),
             pystray.MenuItem("Pausar", ui(self.toggle_pause), checked=lambda item: self.paused),
@@ -237,7 +243,13 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
         if h == self.last_hash and not force:
             return
         self.last_hash = h
+        # una captura de pantalla (no un archivo copiado) puede tener su archivo en la carpeta de capturas
+        is_capture = len(imgs) == 1 and not getattr(imgs[0], "filename", None)
+        self.decode_and_show(imgs, force, capture_since=self.clip_time if is_capture else None)
 
+    def decode_and_show(self, imgs, force=False, capture_since=None):
+        """Lee los códigos de las imágenes en segundo plano y muestra el aviso. Con capture_since, busca
+        después el archivo que Windows guardó de esa captura (para ofrecer borrarlo)."""
         def work():
             codes, texts = [], set()
             for img in imgs:
@@ -247,13 +259,11 @@ class ClipQR(PopupMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
                         codes.append({"format": c["format"], "text": c["text"],
                                       "thumb": make_thumb(img, c["box"]), "time": time.time()})
             self.root.after(0, lambda: self._on_result(codes, force))
-            # captura de pantalla (no un archivo copiado): buscar el archivo que guarda Windows
-            if codes and len(imgs) == 1 and not getattr(imgs[0], "filename", None):
-                path = find_saved_capture(imgs[0], since)
+            if codes and capture_since is not None:
+                path = find_saved_capture(imgs[0], capture_since)
                 if path:
                     self.root.after(0, lambda: self._on_capture(codes, path))
 
-        since = self.clip_time
         threading.Thread(target=work, daemon=True).start()
 
     def _on_capture(self, codes, path):

@@ -112,7 +112,7 @@ No cambia nada visible para el usuario, pero todo lo demás depende de esto.
 **Objetivo:** usar el aviso sin ratón.
 
 **Cambios**
-- **Foco:** el aviso no roba el foco al aparecer. Lo toma con `Ctrl+Alt+Espacio` (configurable) o al hacer clic en él.
+- **Foco:** el aviso no roba el foco al aparecer. Lo toma con `Ctrl+Shift+Espacio` (configurable) o al hacer clic en él.
 - **Atajos con el foco en el aviso:**
 
   | Tecla | Acción |
@@ -131,7 +131,7 @@ No cambia nada visible para el usuario, pero todo lo demás depende de esto.
 **Objetivo:** leer un QR que está en pantalla sin pasar por Recortes ni guardar ningún archivo.
 
 **Cambios**
-- `RegisterHotKey` con `Ctrl+Alt+Q` por defecto (configurable en Configuración; avisa si el atajo está ocupado).
+- `RegisterHotKey` con `Win+Shift+Q` por defecto, junto al `Win+Shift+S` de las capturas (configurable en Configuración; avisa si el atajo está ocupado). Nunca `Ctrl+Alt+letra`: en teclados español y latinoamericano es `AltGr` (`Ctrl+Alt+Q` escribe @).
 - Selector propio: congela la pantalla en todos los monitores, la oscurece y deja arrastrar un rectángulo. Escanea la zona al soltar; `Esc` cancela. Si se hace clic sin arrastrar, escanea toda la pantalla de ese monitor.
 - La imagen no se copia al portapapeles ni se guarda en disco.
 - Bandeja: «Escanear zona de la pantalla».
@@ -198,7 +198,7 @@ Ningún formato se da por terminado solo con ejemplos inventados.
 **Objetivo:** hoy ClipQR solo lee; crear QR lo convierte en la herramienta completa de QR.
 
 **Cambios**
-- **Bandeja:** «Crear QR del portapapeles» (`Ctrl+Alt+G`, configurable). Abre la ventana **Crear QR** con el texto copiado.
+- **Bandeja:** «Crear QR del portapapeles» (`Win+Shift+G`, configurable). Abre la ventana **Crear QR** con el texto copiado.
 - **Ventana Crear QR:**
   - **Tipo:** Texto/enlace, Wi‑Fi (red, contraseña, seguridad, oculta), Contacto (nombre, teléfono, email, empresa, web), Email, Teléfono, SMS, Ubicación o WhatsApp. Cada tipo con su formulario, y el contenido se arma con la función inversa de `payloads.py`.
   - **Vista previa en vivo.**
