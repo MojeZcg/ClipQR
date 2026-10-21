@@ -46,3 +46,8 @@ def test_textos_con_variables_en_ingles(english, tmp_path, monkeypatch):
     assert _("Tienes la última versión ({version}).", version="9.9") == "You have the latest version (9.9)."
     monkeypatch.setattr(settings, "ERROR_LOG", str(tmp_path / "no-existe.log"))
     assert "(no errors logged)" in settings.error_report("1.0.0")
+
+
+def test_aviso_al_iniciar_activado_por_defecto():
+    from clipqr.settings import DEFAULT_SETTINGS
+    assert DEFAULT_SETTINGS["startup_notice"] is True
