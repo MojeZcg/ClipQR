@@ -23,7 +23,11 @@ class PopupMixin:
         accent = KINDS[kind][2]
         text = code["text"]
         head_label, head_value = r.headline or headline(kind, items, text)
+        if kind == "link" and not r.headline:  # el enlace entero, no solo el dominio (que va en los datos)
+            head_label, head_value = _("Enlace"), text
         rows = [(l, v) for l, v in items if (l, v) != (head_label, head_value)]
+        if head_value != text and head_value not in (v for _l, v in rows):
+            rows.insert(0, (head_label, head_value))  # el dato principal también se puede copiar solo
 
         card = tk.Frame(parent, bg=c["card"], highlightthickness=1, highlightbackground=c["border"])
         card.pack(fill="x", padx=self.px(12), pady=(0, self.px(8)))
@@ -36,10 +40,10 @@ class PopupMixin:
         if code.get("thumb") is not None:
             tk.Label(top, image=self._photo(code["thumb"], self.px(46)), bg=c["card"], bd=0).pack(
                 side="left", anchor="n", padx=(0, self.px(12)))
-        b_head = self._button(top, _("Copiar"))
-        b_head.config(command=lambda: self.copy(head_value, b_head))
+        b_head = self._button(top, _("Copiar todo"), color=accent)
+        b_head.config(command=lambda: self.copy(text, b_head))
         b_head.pack(side="right", anchor="n")
-        copy_buttons = [b_head]  # para los atajos 1–9: el dato principal y luego el resto, en orden
+        copy_buttons = [b_head]  # para los atajos 1–9: el QR entero y luego cada dato, en orden
         head = tk.Frame(top, bg=c["card"])
         head.pack(side="left", fill="x", expand=True)
         meta = tk.Frame(head, bg=c["card"])
@@ -50,12 +54,16 @@ class PopupMixin:
         if " · " not in title:  # «Factura · ARCA» ya ocupa la línea: el tipo de código sobra
             tk.Label(meta, text=f"  ·  {format_name(code['format'])}", bg=c["card"], fg=c["muted"],
                      font=self.font(8)).pack(side="left")
-        tk.Label(head, text=shorten(head_value, 70), bg=c["card"], fg=c["fg"], font=self.font(15, "bold"),
-                 anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
-        subtitle = r.subtitle or (shorten(text, 90, middle=True) if kind == "link" else None)
-        if subtitle:  # p. ej. la URL completa de un enlace o «Factura B · 0003-00001234 · fecha»
+        if head_value != text:  # si el dato principal es el QR entero, ya se ve abajo en grande
+            tk.Label(head, text=shorten(head_value, 70), bg=c["card"], fg=c["fg"], font=self.font(15, "bold"),
+                     anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
+        subtitle = r.subtitle
+        if subtitle:  # p. ej. «Factura B · 0003-00001234 · fecha»
             tk.Label(head, text=subtitle, bg=c["card"], fg=c["muted"], font=self.font(9),
                      anchor="w", justify="left", wraplength=self.px(300)).pack(anchor="w", fill="x")
+
+        # el contenido entero del QR, a la vista y seleccionable para copiar solo una parte
+        self._full_text(inner, text, accent, large=head_value == text)
 
         # avisos (enlaces sospechosos, datos que no cuadran…) justo antes de los botones
         warnings = r.warnings + code.get("warnings", [])
@@ -84,55 +92,76 @@ class PopupMixin:
         if getattr(self, "_kbd_copy", None) is not None:
             self._kbd_copy.extend(copy_buttons)
 
-        # texto completo plegado (en «Texto» se ve desde el principio si es largo)
-        foot = tk.Frame(inner, bg=c["card"])
-        foot.pack(fill="x", pady=(self.px(8), 0))
-        raw = tk.Frame(inner, bg=c["card"])
-        toggle = tk.Label(foot, bg=c["card"], fg=c["muted"], font=self.font(9), cursor="hand2")
-        toggle.pack(side="left")
-        b_all = self._button(foot, _("Copiar todo"))
-        b_all.config(command=lambda: self.copy(text, b_all))
-        b_all.pack(side="right")
-        state = {"open": False, "built": False}
 
-        def build_raw():
-            lines = min(max(text.count("\n") + 1, len(text) // 50 + 1), 6)
-            txt = tk.Text(raw, height=lines, width=50, wrap="word", bg=c["textbg"], fg=c["fg"], relief="flat",
-                          font=("Consolas", 9), padx=self.px(6), pady=self.px(4), selectbackground=accent,
-                          selectforeground="white", highlightthickness=0, bd=0, cursor="xterm")
-            txt.insert("1.0", text)
-            txt.config(state="disabled")
-            txt.pack(fill="x", pady=(self.px(6), self.px(4)))
-            b_sel = self._button(raw, _("Copiar selección"))
+    def _full_text(self, parent, text, accent, large=False):
+        """Todo el contenido del QR, visible y seleccionable: arrastrar, doble clic (palabra), triple clic
+        (línea) o Ctrl+A. Ctrl+C o «Copiar selección» copian lo seleccionado; Ctrl+C sin selección, todo."""
+        c = self.c
+        if not getattr(self, "_word_chars_set", False):
+            # doble clic = una palabra entre símbolos (el número de «wa.me/549…?text=», un parámetro de una URL),
+            # no todo lo que haya entre espacios, que en un enlace es el enlace entero
+            self.root.tk.eval("catch {tcl_endOfWord}; set tcl_wordchars {\\w}; set tcl_nonwordchars {\\W}")
+            self._word_chars_set = True
+        frame = tk.Frame(parent, bg=c["card"])
+        frame.pack(fill="x", pady=(self.px(8), 0))
+        per_line = 38 if large else 46  # el QR entero como dato principal va más grande
+        lines = min(max(text.count("\n") + 1, len(text) // per_line + 1), 4)
+        txt = tk.Text(frame, height=lines, width=per_line, wrap="word" if " " in text else "char", bg=c["textbg"],
+                      fg=c["fg"], relief="flat", font=("Consolas", 12 if large else 10), padx=self.px(6),
+                      pady=self.px(4),
+                      selectbackground=accent, selectforeground="white", inactiveselectbackground=accent,
+                      highlightthickness=0, bd=0, cursor="xterm")
+        txt.insert("1.0", text)
+        txt.config(state="disabled")  # solo lectura; seleccionar y copiar siguen funcionando
+        txt.pack(fill="x")
+        bar = tk.Frame(frame, bg=c["card"])
+        bar.pack(fill="x", pady=(self.px(3), 0))
+        tk.Label(bar, text=_("Selecciona una parte con el ratón y pulsa Ctrl+C"), bg=c["card"], fg=c["muted"],
+                 font=self.font(8)).pack(side="left")
+        b_sel = self._button(bar, _("Copiar selección"))
+        b_sel.pack(side="right")
 
-            def copy_sel():
-                try:
-                    self.copy(txt.get("sel.first", "sel.last"), b_sel)
-                except tk.TclError:
-                    self._flash(b_sel, _("Selecciona texto arriba"), ok=False)
-
-            b_sel.config(command=copy_sel)
-            b_sel.pack(anchor="e")
-
-        def flip(e=None):
-            state["open"] = not state["open"]
-            if state["open"]:
-                if not state["built"]:
-                    build_raw()
-                    state["built"] = True
-                raw.pack(fill="x", after=foot)
+        def copy_sel(e=None):
+            try:
+                part = txt.get("sel.first", "sel.last")
+            except tk.TclError:
+                part = ""
+            if part:
+                self.copy(part, b_sel)
+            elif e is not None:
+                self.copy(text, b_sel)
             else:
-                raw.pack_forget()
-            toggle.config(text=(_("▾ Ocultar texto completo") if state["open"] else _("▸ Ver texto completo")))
-            if e is not None and self.popup is not None:
-                self._refit_popup()
+                self._flash(b_sel, _("Selecciona texto arriba"), ok=False)
+            return "break"
 
-        toggle.config(text=_("▸ Ver texto completo"))
-        toggle.bind("<Button-1>", flip)
-        toggle.bind("<Enter>", lambda e: toggle.config(fg=c["fg"]))
-        toggle.bind("<Leave>", lambda e: toggle.config(fg=c["muted"]))
-        if kind == "text" and (len(text) > 70 or "\n" in text):
-            flip()
+        def activate(e):
+            win = txt.winfo_toplevel()
+            win._pinned = True  # no se cierra solo mientras eliges qué copiar
+            self._take_focus(win)
+            txt.focus_set()
+
+        def select_all(e):
+            txt.tag_add("sel", "1.0", "end-1c")
+            return "break"
+
+        b_sel.config(command=copy_sel)
+        txt._copy_selection = copy_sel  # Ctrl+C en cualquier parte del aviso copia primero lo seleccionado
+        top = parent.winfo_toplevel()
+        top._full_texts = getattr(top, "_full_texts", []) + [txt]
+        txt.bind("<ButtonPress-1>", activate, add="+")
+        for seq in ("<Control-c>", "<Control-C>", "<Control-Insert>"):
+            txt.bind(seq, copy_sel)
+        txt.bind("<Control-a>", select_all)
+        txt.bind("<Control-A>", select_all)
+        return txt
+
+    def _take_focus(self, win):
+        """Da el foco de teclado al aviso. Windows no deja que una ventana sin barra de título lo tome solo
+        con un clic: hace falta traerla al frente como con el atajo."""
+        if win is not None and win.winfo_exists():
+            force_foreground(user32.GetParent(win.winfo_id()))
+            if not self._popup_has_focus(win):  # sin quitarle el foco al cuadro de texto donde se hizo clic
+                win.focus_force()
 
     def _warning_strip(self, parent, warnings, level="warn"):
         """Franja de avisos: ámbar (warn) o roja (bad). Informa; no bloquea nada."""
@@ -386,6 +415,9 @@ class PopupMixin:
                 win._kbd_primary[0].invoke()
 
         def copy_main(e):
+            for txt in getattr(win, "_full_texts", []):
+                if txt.winfo_exists() and txt.tag_ranges("sel"):
+                    return txt._copy_selection(e)
             if not in_button_or_text() and win._kbd_copy:
                 win._kbd_copy[0].invoke()
 
@@ -401,7 +433,7 @@ class PopupMixin:
         win.bind("<FocusIn>", lambda e: self._kbd_mode(win, True))
         win.bind("<FocusOut>", lambda e: win.after(30, lambda: win.winfo_exists() and self._kbd_mode(
             win, self._popup_has_focus(win))))
-        win.bind("<ButtonPress-1>", lambda e: win.focus_force(), add="+")
+        win.bind("<ButtonPress-1>", lambda e: self._take_focus(win), add="+")
 
     def _popup_has_focus(self, win):
         f = win.focus_get()

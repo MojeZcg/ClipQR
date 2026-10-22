@@ -220,12 +220,8 @@ EN = {
         'Copy all',
     'Copiar selección':
         'Copy selection',
-    '▸ Ver texto completo':
-        '▸ Show full text',
     'Buscando la captura guardada…':
         'Looking for the saved screenshot…',
-    '▾ Ocultar texto completo':
-        '▾ Hide full text',
     'Captura enviada a la Papelera':
         'Screenshot moved to the Recycle Bin',
     'Borrar siempre':
@@ -410,4 +406,5 @@ EN = {
         "Screenshot a QR code or press {atajo} to scan an area.",
     "Captura o copia un QR y aparecerá aquí.": "Screenshot or copy a QR code and it will show up here.",
     "ClipQR está activo": "ClipQR is running",
+    "Selecciona una parte con el ratón y pulsa Ctrl+C": "Select part of it with the mouse and press Ctrl+C",
 }
