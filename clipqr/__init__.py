@@ -5,5 +5,5 @@ Ejecutar sin consola:  pythonw main.py
 Probar una imagen:     py main.py imagen.png
 """
 APP_NAME = "ClipQR"
-VERSION = "1.3.1"
+VERSION = "1.3.2"
 DONATE_URL = "https://cafecito.app/mojezcg"  # para apoyar el proyecto con un cafecito
