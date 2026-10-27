@@ -132,6 +132,10 @@ jobs:
           for f in ClipQR.exe ClipQR-Setup.exe ClipQR-macOS.zip ClipQR-Linux-x86_64.tar.gz; do
             grep -q "  $f\$" SHA256SUMS.txt || { echo "::error::Falta $f"; exit 1; }
           done
+          # con las variables de la Store configuradas, el MSIX también es obligatorio
+          if [ -n "${{ vars.MSIX_IDENTITY_NAME }}" ]; then
+            ls *.msix > /dev/null 2>&1 || { echo "::error::Falta el .msix"; exit 1; }
+          fi
       - name: Guardar como artefacto
         uses: actions/upload-artifact@v4
         with:
@@ -188,3 +192,42 @@ jobs:
           if (-not $env:WINGET_TOKEN) { Write-Host "WINGET_TOKEN no configurado: no se envía a winget"; exit 0 }
           Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
           ./wingetcreate.exe submit --token $env:WINGET_TOKEN "dist/winget/manifests/m/MojeZcg/ClipQR/${{ needs.windows.outputs.version }}"
+
+  # Envío a la Microsoft Store (docs/DISTRIBUCION.md §5): sube el .msix de la release como una nueva entrega.
+  # Se activa con la variable MSSTORE_PRODUCT_ID (el ID de la Store, p. ej. 9N…) y los secrets MSSTORE_TENANT_ID,
+  # MSSTORE_SELLER_ID, MSSTORE_CLIENT_ID y MSSTORE_CLIENT_SECRET (la app de Microsoft Entra asociada a Partner Center).
+  # La primera entrega se hace a mano en Partner Center; esta solo actualiza las siguientes.
+  store:
+    needs: [windows, publish]
+    if: ${{ github.ref_type == 'tag' && needs.publish.outputs.published == 'true' && vars.MSSTORE_PRODUCT_ID != '' }}
+    runs-on: windows-latest
+    steps:
+      - name: Paquete MSIX
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: dist
+      - name: Comprobar credenciales
+        id: creds
+        shell: pwsh
+        env:
+          TENANT: ${{ secrets.MSSTORE_TENANT_ID }}
+          SELLER: ${{ secrets.MSSTORE_SELLER_ID }}
+          CLIENT: ${{ secrets.MSSTORE_CLIENT_ID }}
+          SECRET: ${{ secrets.MSSTORE_CLIENT_SECRET }}
+        run: |
+          $ok = $env:TENANT -and $env:SELLER -and $env:CLIENT -and $env:SECRET
+          if (-not $ok) { Write-Host "::warning::Faltan secrets MSSTORE_*: no se envía a la Store" }
+          "ok=$($ok -as [string])".ToLower() >> $env:GITHUB_OUTPUT
+      - name: Instalar la CLI de la Microsoft Store
+        if: ${{ steps.creds.outputs.ok == 'true' }}
+        uses: microsoft/setup-msstore-cli@v1
+      - name: Enviar a la Microsoft Store
+        if: ${{ steps.creds.outputs.ok == 'true' }}
+        shell: pwsh
+        run: |
+          msstore reconfigure --tenantId "${{ secrets.MSSTORE_TENANT_ID }}" --sellerId "${{ secrets.MSSTORE_SELLER_ID }}" `
+            --clientId "${{ secrets.MSSTORE_CLIENT_ID }}" --clientSecret "${{ secrets.MSSTORE_CLIENT_SECRET }}"
+          $msix = Get-ChildItem dist -Filter *.msix | Select-Object -First 1
+          if (-not $msix) { throw "No hay .msix en la release" }
+          msstore publish $msix.FullName -id "${{ vars.MSSTORE_PRODUCT_ID }}"

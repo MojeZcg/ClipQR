@@ -171,4 +171,31 @@ Todo lo técnico está hecho: `build_msix.ps1`, el manifiesto en `msix/` y los t
    - **Capacidad restringida `runFullTrust`:** pega la justificación de store-listing.md.
 7. Envía a certificación. Si lo rechazan, el informe dice exactamente qué corregir.
 
-**Versiones siguientes:** en el mismo producto, *Nuevo envío* con el `.msix` nuevo. La versión del MSIX tiene que ser mayor que la anterior (`build_msix.ps1` la toma de `VERSION`).
+**El `.msix` en cada release:** con las variables `MSIX_IDENTITY_NAME` y `MSIX_PUBLISHER` del repositorio (ya configuradas), cada etiqueta `vX.Y.Z` compila el `.msix` y lo adjunta a la release. Si falta, la release falla.
+
+**Versiones siguientes, automáticas.** Después de la primera entrega manual, el workflow puede enviar cada versión a la Store:
+1. En Partner Center: *Configuración de la cuenta › Administración de usuarios › Aplicaciones de Microsoft Entra*. Crea o asocia una aplicación con el rol **Administrador** y genera una **clave** (client secret).
+2. Apunta cuatro valores:
+   - el **ID de inquilino** (tenant ID);
+   - el **ID de cliente** de esa aplicación (client ID);
+   - la **clave** (client secret);
+   - el **ID de vendedor** (*Configuración de la cuenta › Información legal › Seller ID*).
+3. Guárdalos como secrets, y el ID de la app en la Store (*Identidad del producto › ID de la Store*, p. ej. `9N…`) como variable:
+   ```bash
+   gh secret set MSSTORE_TENANT_ID
+   ```
+   ```bash
+   gh secret set MSSTORE_SELLER_ID
+   ```
+   ```bash
+   gh secret set MSSTORE_CLIENT_ID
+   ```
+   ```bash
+   gh secret set MSSTORE_CLIENT_SECRET
+   ```
+   ```bash
+   gh variable set MSSTORE_PRODUCT_ID --body "9N…"
+   ```
+4. Desde entonces, el trabajo `store` de `release.yml` sube el `.msix` de cada release como una entrega nueva, con la [CLI de la Microsoft Store](https://learn.microsoft.com/windows/apps/publish/msstore-dev-cli/overview) (`msstore publish`). La certificación de Microsoft sigue siendo manual por su parte (suele tardar de horas a unos días). Si cambias la ficha o las capturas, hazlo en Partner Center.
+
+La versión del MSIX tiene que ser mayor que la anterior (`build_msix.ps1` la toma de `VERSION`).
