@@ -319,7 +319,7 @@ TEXTS = {
     'Rusia':
         '俄罗斯',
     'Taiwán':
-        '中国台湾',
+        '台湾',
     'Filipinas':
         '菲律宾',
     'Reino Unido':
