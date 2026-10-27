@@ -14,6 +14,8 @@ import time
 import tkinter as tk
 import winreg
 
+import texts_de, texts_fr, texts_it, texts_ja, texts_ko, texts_pt, texts_ru, texts_zh
+
 try:
     from _version import VERSION  # lo genera build_setup.bat
 except ImportError:
@@ -35,9 +37,17 @@ THEMES = {
 ACCENT, ACCENT_HOVER = "#4f8cff", "#3f74d8"
 
 
+# LANGID primario de Windows -> idioma del asistente (los mismos que la app)
+LANGIDS = {0x0A: "es", 0x09: "en", 0x16: "pt", 0x0C: "fr", 0x07: "de", 0x10: "it", 0x04: "zh", 0x11: "ja",
+           0x19: "ru", 0x12: "ko"}
+# texto en inglés -> traducción; importados uno a uno para que PyInstaller los incluya
+TRANSLATIONS = {"pt": texts_pt.TEXTS, "fr": texts_fr.TEXTS, "de": texts_de.TEXTS, "it": texts_it.TEXTS,
+                "zh": texts_zh.TEXTS, "ja": texts_ja.TEXTS, "ru": texts_ru.TEXTS, "ko": texts_ko.TEXTS}
+
+
 def language_for(langid):
-    """«es» si el idioma de Windows es español (LANGID primario 0x0A, cualquier país); si no, «en»."""
-    return "es" if langid & 0x3FF == 0x0A else "en"
+    """Idioma del asistente según el LANGID de Windows (cualquier país); si no está, «en»."""
+    return LANGIDS.get(langid & 0x3FF, "en")
 
 
 def windows_language():
@@ -51,8 +61,11 @@ LANG = windows_language()
 
 
 def T(es, en):
-    """Texto visible en el idioma de Windows (el asistente no puede importar clipqr)."""
-    return es if LANG == "es" else en
+    """Texto visible en el idioma de Windows (el asistente no puede importar clipqr): español, inglés o la
+    traducción del texto inglés, si la hay."""
+    if LANG == "es":
+        return es
+    return TRANSLATIONS.get(LANG, {}).get(en, en)
 
 
 def resource(name):

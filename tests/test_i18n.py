@@ -25,21 +25,44 @@ def fields(text):
     return sorted(f for _, f, _, _ in string.Formatter().parse(text) if f)
 
 
-def test_todo_tiene_traduccion():
-    en = CATALOGS["en"]
-    missing = [f"{where}: {text!r}" for where, text in marked_texts() if text not in en]
-    assert not missing, "Sin traducción al inglés:\n" + "\n".join(missing)
+TRANSLATED = [code for code in CATALOGS if CATALOGS[code]]  # un catálogo vacío = idioma aún sin traducir
 
 
-def test_mismas_llaves_en_ingles():
-    wrong = [k for k, v in CATALOGS["en"].items() if fields(k) != fields(v)]
+@pytest.mark.parametrize("code", TRANSLATED)
+def test_todo_tiene_traduccion(code):
+    catalog = CATALOGS[code]
+    missing = [f"{where}: {text!r}" for where, text in marked_texts() if text not in catalog]
+    assert not missing, f"Sin traducción ({code}):\n" + "\n".join(missing)
+
+
+@pytest.mark.parametrize("code", TRANSLATED)
+def test_mismas_llaves(code):
+    wrong = [k for k, v in CATALOGS[code].items() if fields(k) != fields(v)]
     assert not wrong, wrong
 
 
-def test_sin_traducciones_sobrantes():
+@pytest.mark.parametrize("code", TRANSLATED)
+def test_sin_traducciones_sobrantes(code):
     used = {text for _, text in marked_texts()}
-    unused = [k for k in CATALOGS["en"] if k not in used]
+    unused = [k for k in CATALOGS[code] if k not in used]
     assert not unused, unused
+
+
+def test_todos_los_idiomas_tienen_catalogo():
+    assert set(CATALOGS) | {"es"} == set(i18n.LANGUAGES)
+
+
+@pytest.mark.parametrize("name, code", [("pt_BR.UTF-8", "pt"), ("fr-FR", "fr"), ("zh_CN", "zh"), ("ja_JP", "ja"),
+                                        ("es_AR.UTF-8", "es"), ("nl_NL", "en"), ("", "en"), (None, "en")])
+def test_idioma_por_configuracion_regional(name, code):
+    assert i18n.language_for_locale(name) == code
+
+
+@pytest.mark.parametrize("langid, code", [(0x2C0A, "es"), (0x0409, "en"), (0x0416, "pt"), (0x040C, "fr"),
+                                          (0x0407, "de"), (0x0804, "zh"), (0x0411, "ja"), (0x0419, "ru"),
+                                          (0x0412, "ko"), (0x0413, "en")])
+def test_idioma_por_langid_de_windows(langid, code):
+    assert i18n.language_for_langid(langid) == code
 
 
 def test_cambio_de_idioma():
@@ -50,7 +73,7 @@ def test_cambio_de_idioma():
     assert _("Vence en {n} días", n=3) == "Vence en 3 días"
 
 
-@pytest.mark.parametrize("code, expected", [("es", "es"), ("en", "en"), ("xx", "es")])
+@pytest.mark.parametrize("code, expected", [("es", "es"), ("en", "en"), ("ja", "ja"), ("xx", "es")])
 def test_set_language(code, expected):
     assert i18n.set_language(code) == expected
     assert i18n.set_language("auto") in ("es", "en")

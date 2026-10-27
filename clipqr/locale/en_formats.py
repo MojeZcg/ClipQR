@@ -1,5 +1,5 @@
 """Catálogo inglés: texto en español -> texto en inglés."""
-EN = {
+TEXTS = {
     # ---------------------------------------------------------------- tipos básicos (payloads.py)
     "Código QR": "QR code",
     "Nombre": "Name",

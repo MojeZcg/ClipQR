@@ -188,8 +188,8 @@ class SettingsWindowMixin:
                 else:
                     restart.pack_forget()
 
-            options = [("auto", _("Automático (Windows)"), True)] + [(k, n, True) for k, n in LANGUAGES.items()]
-            self._segmented(box, options, st["language"], set_language).pack(side="top", anchor="w")
+            options = [("auto", _("Automático (idioma del sistema)"))] + list(LANGUAGES.items())
+            self._dropdown(box, options, st["language"], set_language).pack(side="top", anchor="w")
             if st["language"] != self.started_language:
                 restart.pack(side="top", anchor="w", pady=(self.px(6), 0))
             return box

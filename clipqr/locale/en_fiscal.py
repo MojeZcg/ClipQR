@@ -1,5 +1,5 @@
 """Catálogo inglés: texto en español -> texto en inglés."""
-EN = {
+TEXTS = {
     # Comunes
     "QR de factura incompleto o modificado": "Invoice QR is incomplete or has been modified",
     "Comprobante": "Tax document",
