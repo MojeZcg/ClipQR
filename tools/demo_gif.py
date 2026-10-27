@@ -162,7 +162,8 @@ def social_preview(shots):
     scale = min(560 / p.height, 600 / p.width)
     p = p.resize((int(p.width * scale), int(p.height * scale)), Image.LANCZOS)
     img.paste(p, (1280 - p.width - 50, (640 - p.height) // 2))
-    path = os.path.join(ROOT, "docs", "social-preview.png")
+    path = os.path.join(ROOT, "build", "social-preview.png")  # se sube a mano en GitHub › Settings
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     img.save(path)
     return path
 
