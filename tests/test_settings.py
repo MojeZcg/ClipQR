@@ -1,4 +1,6 @@
 """Ajustes e informe de errores."""
+import platform
+
 from clipqr import settings
 
 
@@ -7,7 +9,7 @@ def test_error_report_includes_version_and_last_errors(tmp_path, monkeypatch):
     log.write_text("\n".join(f"línea {i}" for i in range(100)), encoding="utf-8")
     monkeypatch.setattr(settings, "ERROR_LOG", str(log))
     report = settings.error_report("9.9.9", limit=5)
-    assert report.startswith("ClipQR 9.9.9 · Windows")
+    assert report.startswith(f"ClipQR 9.9.9 · {platform.platform()}")
     assert "línea 99" in report and "línea 94" not in report
 
 

@@ -1,5 +1,4 @@
 """Ventana de configuración."""
-import os
 import time
 import tkinter as tk
 
@@ -11,8 +10,10 @@ from PIL import Image, ImageTk
 from clipqr import APP_NAME, DONATE_URL, VERSION
 from clipqr.i18n import LANGUAGES, _
 from clipqr.icons import make_icon
+from clipqr.platform import PACKAGED, open_path, style_window
+from clipqr.ui.system_texts import (autostart_label, copied_files_hint, delete_capture_hint, hotkeys_problem,
+                                    theme_auto_label)
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.winplatform import PACKAGED, style_window
 
 
 class SettingsWindowMixin:
@@ -48,7 +49,7 @@ class SettingsWindowMixin:
         wid = canvas.create_window((0, 0), window=body, anchor="nw")
         body.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.bind("<Configure>", lambda e: canvas.itemconfigure(wid, width=e.width))
-        win.bind("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
+        self._bind_wheel(win, canvas)
         win.bind("<Escape>", lambda e: win.destroy())
 
         def section(title):
@@ -112,17 +113,15 @@ class SettingsWindowMixin:
             self.root.after(50, self.show_settings)  # se redibuja con el tema nuevo
 
         row(card, _("Tema"), None,
-            lambda p: self._segmented(p, [("auto", _("Como Windows"), True), ("light", _("Claro"), True),
+            lambda p: self._segmented(p, [("auto", theme_auto_label(), True), ("light", _("Claro"), True),
                                           ("dark", _("Oscuro"), True)], st["theme"], set_theme), stacked=True)
 
         card = section(_("DETECCIÓN"))
         row(card, _("Solo códigos QR"), _("Desactivado: también lee códigos de barras (EAN, Code 128, DataMatrix…)."),
             lambda p: self._switch(p, st["qr_only"], lambda v: save(qr_only=v)))
-        row(card, _("Leer archivos copiados"), _("Imágenes copiadas desde el Explorador de archivos."),
+        row(card, _("Leer archivos copiados"), copied_files_hint(),
             lambda p: self._switch(p, st["explorer_files"], lambda v: save(explorer_files=v)))
-        row(card, _("Borrar las capturas con QR"),
-            _("Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. "
-              "Si está desactivado, el aviso muestra un botón para hacerlo."),
+        row(card, _("Borrar las capturas con QR"), delete_capture_hint(),
             lambda p: self._switch(p, st["delete_capture"], lambda v: save(delete_capture=v)))
         row(card, _("Mostrar contraseñas al momento"), _("Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. "
             "Desactivado es más seguro si alguien mira tu pantalla."),
@@ -158,6 +157,10 @@ class SettingsWindowMixin:
         row(card, _("Borrar todo el historial"), None, clear_button)
 
         card = section(_("ATAJOS DE TECLADO"))
+        problem = hotkeys_problem(getattr(self.hotkeys, "reason", None))
+        if problem:  # macOS sin permiso de Accesibilidad, Wayland, sin pynput
+            tk.Label(card, text=problem, bg=c["warn_bg"], fg=c["warn_fg"], font=self.font(9), anchor="w",
+                     justify="left", wraplength=self.px(420)).pack(fill="x", ipadx=self.px(10), ipady=self.px(6))
 
         def set_hotkey(**kw):
             save(**kw)
@@ -197,7 +200,7 @@ class SettingsWindowMixin:
         # en los dos idiomas, para quien lo haya puesto por error en uno que no entiende
         row(card, "Idioma · Language", _("El idioma nuevo se aplica al reiniciar ClipQR."), language_control,
             stacked=True)
-        row(card, _("Iniciar con Windows"), None,
+        row(card, autostart_label(), None,
             lambda p: self._switch(p, self.autostart_enabled(),
                                    lambda v: self.autostart_enabled() != v and self.toggle_autostart()))
         row(card, _("Avisar al iniciar"), _("Un aviso breve confirma que ClipQR está activo cuando se abre."),
@@ -220,7 +223,7 @@ class SettingsWindowMixin:
         card = section(_("APOYAR CLIPQR"))
         row(card, _("Invitar un cafecito ☕"), _("ClipQR es gratis y de código abierto. Si te sirve, puedes apoyarlo "
             "con un cafecito en cafecito.app."),
-            lambda p: self._button(p, _("Invitar un cafecito ↗"), cmd=lambda: os.startfile(DONATE_URL)))
+            lambda p: self._button(p, _("Invitar un cafecito ↗"), cmd=lambda: open_path(DONATE_URL)))
 
         tk.Label(body, text=_("Los cambios se guardan al momento."), bg=c["bg"], fg=c["muted"],
                  font=self.font(8)).pack(pady=self.px(14))

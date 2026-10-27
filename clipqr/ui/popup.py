@@ -7,8 +7,8 @@ from clipqr.i18n import N_, _
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze, format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.winplatform import (area_containing, clamp_to_area, force_foreground, send_to_recycle_bin,
-                                style_window, user32, work_area, work_areas)
+from clipqr.platform import (SYSTEM, area_containing, bring_to_front, clamp_to_area, send_to_trash,
+                             style_window, work_area, work_areas)
 
 MAX_CARDS = 4
 
@@ -107,7 +107,7 @@ class PopupMixin:
         per_line = 38 if large else 46  # el QR entero como dato principal va más grande
         lines = min(max(text.count("\n") + 1, len(text) // per_line + 1), 4)
         txt = tk.Text(frame, height=lines, width=per_line, wrap="word" if " " in text else "char", bg=c["textbg"],
-                      fg=c["fg"], relief="flat", font=("Consolas", 12 if large else 10), padx=self.px(6),
+                      fg=c["fg"], relief="flat", font=self.mono(12 if large else 10), padx=self.px(6),
                       pady=self.px(4),
                       selectbackground=accent, selectforeground="white", inactiveselectbackground=accent,
                       highlightthickness=0, bd=0, cursor="xterm")
@@ -149,7 +149,10 @@ class PopupMixin:
         top = parent.winfo_toplevel()
         top._full_texts = getattr(top, "_full_texts", []) + [txt]
         txt.bind("<ButtonPress-1>", activate, add="+")
-        for seq in ("<Control-c>", "<Control-C>", "<Control-Insert>"):
+        copy_keys = ("<Control-c>", "<Control-C>", "<Control-Insert>")
+        if SYSTEM == "macos":
+            copy_keys += ("<Command-c>", "<Command-C>")
+        for seq in copy_keys:
             txt.bind(seq, copy_sel)
         txt.bind("<Control-a>", select_all)
         txt.bind("<Control-A>", select_all)
@@ -159,7 +162,7 @@ class PopupMixin:
         """Da el foco de teclado al aviso. Windows no deja que una ventana sin barra de título lo tome solo
         con un clic: hace falta traerla al frente como con el atajo."""
         if win is not None and win.winfo_exists():
-            force_foreground(user32.GetParent(win.winfo_id()))
+            bring_to_front(win)
             if not self._popup_has_focus(win):  # sin quitarle el foco al cuadro de texto donde se hizo clic
                 win.focus_force()
 
@@ -455,7 +458,7 @@ class PopupMixin:
         if win is None or not win.winfo_exists() or not hasattr(win, "_kbd_copy"):
             return
         win._pinned = True  # mientras se usa con el teclado no se cierra solo
-        force_foreground(user32.GetParent(win.winfo_id()))
+        bring_to_front(win)
         win.focus_force()
 
     def notice(self, title, text, buttons, seconds=60):
@@ -529,7 +532,7 @@ class PopupMixin:
             def delete(always=False):
                 if always:  # a partir de ahora, solas
                     self.set_setting(delete_capture=True)
-                ok = send_to_recycle_bin(path)
+                ok = send_to_trash(path)
                 for code in codes:
                     code["capture_deleted"] = ok
                 if ok:

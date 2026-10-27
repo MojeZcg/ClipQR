@@ -19,13 +19,13 @@ def test_idioma_por_defecto_automatico():
 
 
 def test_atajos_en_ingles(english):
-    assert settings.hotkey_label("Ctrl+Shift+Space") == "Ctrl+Shift+Space"
+    assert settings.hotkey_label("Ctrl+Shift+Space", "windows") == "Ctrl+Shift+Space"
     assert settings.hotkey_label("") == "Off"
     assert [_(label) for _key, label in settings.POSITIONS][0] == "Top right"
 
 
 def test_atajos_en_espanol():
-    assert settings.hotkey_label("Ctrl+Shift+Space") == "Ctrl+Shift+Espacio"
+    assert settings.hotkey_label("Ctrl+Shift+Space", "windows") == "Ctrl+Shift+Espacio"
     assert settings.hotkey_label("") == "Desactivado"
 
 

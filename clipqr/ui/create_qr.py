@@ -12,7 +12,8 @@ from clipqr.i18n import N_, _
 from clipqr.icons import make_icon
 from clipqr.settings import save_state
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.winplatform import copy_image_to_clipboard, style_window, user32
+from clipqr.platform import clipboard_token, copy_image_to_clipboard, style_window
+from clipqr.ui.system_texts import read_wifi_question
 
 TYPES = (("text", N_("Texto o enlace")), ("wifi", "Wi‑Fi"), ("contact", N_("Contacto")), ("email", "Email"),
          ("phone", N_("Teléfono")), ("sms", "SMS"), ("whatsapp", "WhatsApp"), ("geo", N_("Ubicación")))
@@ -161,8 +162,7 @@ class CreateQRMixin:
                 first.focus_set()
 
         def fill_current_wifi():
-            if not messagebox.askyesno(_("Usar mi Wi‑Fi actual"), _("Se leerá de Windows la red a la que estás conectado "
-                                       "y su contraseña, y se mostrarán aquí. ¿Continuar?"), parent=win):
+            if not messagebox.askyesno(_("Usar mi Wi‑Fi actual"), read_wifi_question(), parent=win):
                 return
 
             def work():
@@ -259,7 +259,7 @@ class CreateQRMixin:
             ok = copy_image_to_clipboard(g.make_qr(st["payload"], ec_level=st["ec"], module=10, fg=st["fg"],
                                                    logo=make_icon(size=256) if st["logo"] else None))
             # no volver a escanear nuestro propio QR al copiarlo
-            self.last_seq = user32.GetClipboardSequenceNumber()
+            self.last_seq = clipboard_token()
             save_state(clip_seq=self.last_seq)
             self._flash(b_copy, _("✓ Copiada") if ok else _("No se pudo copiar"), ok=ok)
 

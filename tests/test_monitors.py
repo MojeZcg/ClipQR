@@ -1,5 +1,11 @@
 """Colocación del aviso con varios monitores."""
-from clipqr.winplatform import Area, area_containing, clamp_to_area, work_area, work_areas
+import sys
+
+import pytest
+
+windows_only = pytest.mark.skipif(sys.platform != "win32", reason="usa la API de Windows")
+
+from clipqr.platform import Area, area_containing, clamp_to_area, work_area, work_areas  # noqa: E402
 
 LEFT = Area(-1920, 0, 0, 1040)    # monitor a la izquierda del principal
 MAIN = Area(0, 0, 2560, 1400)
@@ -20,6 +26,7 @@ def test_clamp_keeps_window_inside_its_monitor():
     assert clamp_to_area(500, 500, 400, 300, MAIN) == (500, 500)
 
 
+@windows_only  # en macOS y Linux los monitores se preguntan a Tk (hace falta una ventana)
 def test_real_monitors_are_detected():
     areas = work_areas()
     assert areas and all(a.right > a.left and a.bottom > a.top for a in areas)
