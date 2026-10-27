@@ -22,7 +22,7 @@
   <a href="https://cafecito.app/mojezcg"><img src="https://img.shields.io/badge/Cafecito-buy%20me%20a%20coffee-6f4e37?logo=buymeacoffee&logoColor=white" alt="Buy me a coffee on cafecito.app"></a>
 </p>
 
-![ClipQR](docs/screenshots/hero.png)
+![Demo: screenshot a QR code and ClipQR reads it instantly](docs/screenshots/demo-en.gif)
 
 ## How it works
 
@@ -147,6 +147,11 @@ It produces `dist\ClipQR-<version>.msix`. When installed from the Store, start w
 
 - [Roadmap](docs/ROADMAP.md): what's coming up to 1.4, PR by PR (in Spanish).
 - [Distribution](docs/DISTRIBUCION.md): automated releases, code signing, winget and the Microsoft Store (in Spanish).
+
+
+## Contributing
+
+Want to add a language, your country's invoice format or fix something? Read the [contributing guide](CONTRIBUTING.md) and check the [good first issues](https://github.com/MojeZcg/ClipQR/labels/good%20first%20issue). Every bit helps, including reporting a QR code that isn't read correctly.
 
 ## Support the project
 
