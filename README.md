@@ -17,6 +17,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows" alt="Windows 10 | 11">
+  <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple" alt="macOS 11+">
+  <img src="https://img.shields.io/badge/Linux-x86__64-FCC624?logo=linux&logoColor=black" alt="Linux x86_64">
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/licencia-MIT-22a06b" alt="Licencia MIT">
   <a href="https://cafecito.app/mojezcg"><img src="https://img.shields.io/badge/Cafecito-invitame%20un%20caf%C3%A9-6f4e37?logo=buymeacoffee&logoColor=white" alt="Invitame un café en cafecito.app"></a>
@@ -70,6 +72,8 @@ También lee DataMatrix, Aztec, PDF417, Code 128, Code 39 y otros formatos, grac
 
 ## Instalación
 
+### Windows
+
 1. Descarga **`ClipQR-Setup.exe`** desde [Releases](../../releases) y ábrelo.
 2. Elige si quieres que se inicie con Windows (y si quieres un acceso directo en el escritorio) y pulsa **Instalar**.
 
@@ -80,6 +84,24 @@ La interfaz de ClipQR está en 10 idiomas: español, inglés, portugués, franc�
 ¿Prefieres no instalar nada? Descarga **`ClipQR.exe`** (versión portátil) y ábrelo directamente.
 
 > Si aparece Windows SmartScreen («Windows protegió su PC»), pulsa **Más información → Ejecutar de todas formas**. Aparece porque los `.exe` no están firmados digitalmente.
+
+### macOS (11 o posterior, Apple Silicon)
+
+1. Descarga **`ClipQR-macOS.zip`** desde [Releases](../../releases), descomprímelo y mueve **ClipQR** a *Aplicaciones*.
+2. La primera vez, haz clic derecho › **Abrir** (o *Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente*). La app aún no está firmada por Apple.
+3. ClipQR vive en la barra de menús. Para los atajos de teclado, permítelo en *Privacidad y seguridad › Accesibilidad*, y para escanear una zona, en *Grabación de pantalla*.
+
+Atajos por defecto: ⌃⌥⌘Q escanear una zona, ⌃⌥⌘G crear un QR y ⌃⌥⌘Espacio usar el aviso con el teclado.
+
+### Linux (x86_64)
+
+```bash
+tar xzf ClipQR-Linux-x86_64.tar.gz && cd ClipQR-Linux-x86_64 && ./install.sh
+```
+
+Se instala para tu usuario en `~/.local/share/ClipQR`, con lanzador en el menú de aplicaciones. Para leer el portapapeles hace falta **xclip** (X11) o **wl-clipboard** (Wayland). En Wayland no hay atajos globales ni escaneo de zona, y en GNOME sin extensión de bandeja ClipQR se abre como ventana. Para desinstalar: `./uninstall.sh`.
+
+**Esta es la primera versión para macOS y Linux:** la de Linux está probada; la de macOS, solo con tests automáticos. Si algo falla, [abre una incidencia](https://github.com/MojeZcg/ClipQR/issues/new/choose).
 
 ## Configuración
 
