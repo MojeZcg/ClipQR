@@ -8,15 +8,16 @@ from clipqr import VERSION
 from clipqr.i18n import _
 from clipqr.settings import load_state, save_state
 from clipqr.updates import CHECK_EVERY, download_verified, fetch_latest, is_newer, setup_args
-from clipqr.winplatform import FROZEN, PACKAGED, installed_by_setup, shortcut_paths
+from clipqr.platform import FROZEN, PACKAGED, SYSTEM, installed_by_setup, open_path, shortcut_paths
 
 
 class UpdateMixin:
     update_info = None
 
     def can_self_update(self):
-        """Solo la instalación hecha con el asistente se actualiza sola; la portátil y la de la Store no."""
-        return FROZEN and not PACKAGED and installed_by_setup()
+        """Solo la instalación hecha con el asistente se actualiza sola; la portátil, la de la Store, la de
+        macOS y la de Linux no (en esas el aviso abre la página de la versión para descargarla)."""
+        return SYSTEM == "windows" and FROZEN and not PACKAGED and installed_by_setup()
 
     def check_updates(self, manual=False):
         """Automático: como mucho una vez al día y si está activado. Manual: siempre, y dice el resultado."""
@@ -55,7 +56,7 @@ class UpdateMixin:
         info = self.update_info
         if not info:
             return
-        page = lambda b: (os.startfile(info["page"]), self._close_popup())
+        page = lambda b: (open_path(info["page"]), self._close_popup())
         skip = lambda b: (save_state(skipped_version=info["version"]), self._close_popup())
         if self.can_self_update():
             buttons = [(_("Instalar"), self.install_update, True), (_("Ver novedades ↗"), page, False),

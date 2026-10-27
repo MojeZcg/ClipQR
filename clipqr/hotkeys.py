@@ -1,99 +1,116 @@
-"""Atajos de teclado globales (funcionan aunque ClipQR no tenga el foco), con RegisterHotKey.
+"""Atajos de teclado globales (funcionan aunque ClipQR no tenga el foco).
 
-Windows entrega WM_HOTKEY al hilo que registró el atajo, así que un hilo propio registra los atajos y
-espera mensajes; al pulsarse uno, llama a su función (que debe pasar el trabajo al hilo de Tk).
+Los atajos se guardan como texto («Win+Shift+Q»). En Windows los registra RegisterHotKey
+(clipqr/platform/windows.py); en macOS y Linux, pynput si está instalado: en macOS «Win» es ⌘ y hace
+falta el permiso de Accesibilidad; en Linux funciona con X11, no con Wayland.
 """
-import ctypes
 import threading
-from ctypes import wintypes
-
-user32 = ctypes.windll.user32
-kernel32 = ctypes.windll.kernel32
 
 MODS = {"ctrl": 0x2, "control": 0x2, "alt": 0x1, "shift": 0x4, "win": 0x8}
 MOD_NOREPEAT = 0x4000
 KEYS = {"espacio": 0x20, "space": 0x20, "enter": 0x0D, "tab": 0x09, "esc": 0x1B, "insert": 0x2D,
         "imprpant": 0x2C, "printscreen": 0x2C, "pausa": 0x13}
 KEYS.update({f"f{i}": 0x6F + i for i in range(1, 13)})
-WM_HOTKEY, WM_QUIT, WM_APP = 0x0312, 0x0012, 0x8000
+
+# nombres de pynput (https://pynput.readthedocs.io): «Win» es ⌘ en macOS y Súper en Linux
+PYNPUT_MODS = {"ctrl": "<ctrl>", "control": "<ctrl>", "alt": "<alt>", "shift": "<shift>", "win": "<cmd>"}
+PYNPUT_KEYS = {"espacio": "<space>", "space": "<space>", "enter": "<enter>", "tab": "<tab>", "esc": "<esc>",
+               "insert": "<insert>", "imprpant": "<print_screen>", "printscreen": "<print_screen>",
+               "pausa": "<pause>"}
+PYNPUT_KEYS.update({f"f{i}": f"<f{i}>" for i in range(1, 13)})
 
 
-def parse_hotkey(text):
-    """«Ctrl+Alt+Q» -> (modificadores, código de tecla). Exige al menos un modificador."""
+def _split(text):
     parts = [p.strip().lower() for p in text.split("+") if p.strip()]
     if len(parts) < 2:
         raise ValueError(f"Atajo incompleto: {text!r}")
     *mods, key = parts
-    flags = 0
     for m in mods:
         if m not in MODS:
             raise ValueError(f"Modificador desconocido: {m!r}")
-        flags |= MODS[m]
-    if key in KEYS:
-        vk = KEYS[key]
-    elif len(key) == 1 and key.isalnum():
-        vk = ord(key.upper())
-    else:
+    if key not in KEYS and not (len(key) == 1 and key.isalnum()):
         raise ValueError(f"Tecla desconocida: {key!r}")
+    return mods, key
+
+
+def parse_hotkey(text):
+    """«Ctrl+Alt+Q» -> (modificadores, código de tecla). Exige al menos un modificador."""
+    mods, key = _split(text)
+    flags = 0
+    for m in mods:
+        flags |= MODS[m]
+    vk = KEYS[key] if key in KEYS else ord(key.upper())
     return flags | MOD_NOREPEAT, vk
 
 
-class HotkeyManager:
-    """Registra atajos en un hilo propio. set() reemplaza todos los atajos; devuelve los que fallaron
-    (por ejemplo, porque otra aplicación ya usa esa combinación)."""
+def to_pynput(text):
+    """«Win+Shift+Q» -> «<cmd>+<shift>+q» (formato de pynput.keyboard.GlobalHotKeys)."""
+    mods, key = _split(text)
+    seen = []
+    for m in mods:
+        if PYNPUT_MODS[m] not in seen:
+            seen.append(PYNPUT_MODS[m])
+    return "+".join(seen + [PYNPUT_KEYS.get(key, key)])
 
-    def __init__(self):
-        self._thread_id = None
-        self._ready = threading.Event()
-        self._pending = None
-        self._result = None
-        self._done = threading.Event()
-        self._callbacks = {}
-        threading.Thread(target=self._loop, daemon=True).start()
-        self._ready.wait(2)
+
+class PynputHotkeyManager:
+    """Atajos globales con pynput (macOS y Linux X11). Misma interfaz que el de Windows: set() reemplaza
+    todos los atajos y devuelve los que no se pudieron activar. Si pynput no está, `available` es False y
+    set() no hace nada."""
+
+    def __init__(self, unavailable_reason=None, trusted=None):
+        self._listener = None
+        self._trusted = trusted  # macOS: función que dice si hay permiso de Accesibilidad
+        self._lock = threading.Lock()
+        self.reason = unavailable_reason
+        self.available = unavailable_reason is None
+        if self.available:
+            try:
+                from pynput import keyboard
+                self._keyboard = keyboard
+            except Exception:  # sin pynput, o sin servidor X al que conectarse
+                self.available = False
+                self.reason = "missing"
 
     def set(self, hotkeys):
-        """hotkeys: {texto del atajo: función}. Devuelve la lista de atajos que no se pudieron registrar."""
-        self._pending = dict(hotkeys)
-        self._done.clear()
-        user32.PostThreadMessageW(self._thread_id, WM_APP, 0, 0)
-        self._done.wait(2)
-        return self._result or []
-
-    def stop(self):
-        if self._thread_id:
-            user32.PostThreadMessageW(self._thread_id, WM_QUIT, 0, 0)
-
-    def _apply(self):
-        for hid in list(self._callbacks):
-            user32.UnregisterHotKey(None, hid)
-        self._callbacks.clear()
-        failed = []
-        for hid, (text, fn) in enumerate(self._pending.items(), start=1):
+        """hotkeys: {texto del atajo: función}. Devuelve la lista de atajos que no se pudieron activar."""
+        self.stop()
+        if not self.available:
+            return []
+        mapping, failed = {}, []
+        for text, fn in hotkeys.items():
             try:
-                mods, vk = parse_hotkey(text)
+                mapping[to_pynput(text)] = self._safe(fn)
             except ValueError:
                 failed.append(text)
-                continue
-            if user32.RegisterHotKey(None, hid, mods, vk):
-                self._callbacks[hid] = fn
-            else:
-                failed.append(text)
-        self._result = failed
-        self._done.set()
-
-    def _loop(self):
-        self._thread_id = kernel32.GetCurrentThreadId()
-        msg = wintypes.MSG()
-        user32.PeekMessageW(ctypes.byref(msg), None, 0, 0, 0)  # crea la cola de mensajes del hilo
-        self._ready.set()
-        while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:
-            if msg.message == WM_APP:
-                self._apply()
-            elif msg.message == WM_HOTKEY and msg.wParam in self._callbacks:
+        if mapping:
+            with self._lock:
                 try:
-                    self._callbacks[msg.wParam]()
+                    self._listener = self._keyboard.GlobalHotKeys(mapping)
+                    self._listener.daemon = True
+                    self._listener.start()
+                except Exception:
+                    self._listener = None
+                    return list(hotkeys)
+            # macOS: sin el permiso de Accesibilidad el listener arranca pero no recibe ninguna tecla
+            if self._trusted is not None and not self._trusted():
+                self.reason = "accessibility"
+        return failed
+
+    @staticmethod
+    def _safe(fn):
+        def call():
+            try:
+                fn()
+            except Exception:
+                pass
+        return call
+
+    def stop(self):
+        with self._lock:
+            if self._listener is not None:
+                try:
+                    self._listener.stop()
                 except Exception:
                     pass
-        for hid in list(self._callbacks):
-            user32.UnregisterHotKey(None, hid)
+                self._listener = None

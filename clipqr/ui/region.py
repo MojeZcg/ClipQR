@@ -2,11 +2,11 @@
 dentro. No pasa por el portapapeles ni guarda ningún archivo."""
 import tkinter as tk
 
-from PIL import ImageEnhance, ImageGrab, ImageTk
+from PIL import Image, ImageEnhance, ImageTk
 
 from clipqr.i18n import _
+from clipqr.platform import SYSTEM, bring_to_front, grab_screen, monitor_area, virtual_screen, work_area
 from clipqr.ui.theme import KINDS
-from clipqr.winplatform import force_foreground, monitor_area, user32, virtual_screen, work_area
 
 MIN_DRAG = 8  # px: menos que esto es un clic (escanea el monitor entero)
 
@@ -20,10 +20,12 @@ def selection_box(x0, y0, x1, y1, min_size=MIN_DRAG):
     return left, top, right, bottom
 
 
-def to_image_box(box, origin):
-    """Coordenadas de pantalla -> coordenadas de la imagen de todo el escritorio (que empieza en origin)."""
+def to_image_box(box, origin, scale=1):
+    """Coordenadas de pantalla -> coordenadas de la imagen de todo el escritorio (que empieza en origin).
+    `scale`: píxeles de la captura por punto de pantalla (2 en una pantalla Retina de macOS)."""
     ox, oy = origin
-    return box[0] - ox, box[1] - oy, box[2] - ox, box[3] - oy
+    box = box[0] - ox, box[1] - oy, box[2] - ox, box[3] - oy
+    return box if scale == 1 else tuple(round(v * scale) for v in box)
 
 
 class RegionMixin:
@@ -32,8 +34,22 @@ class RegionMixin:
             return
         self._close_popup()
         vs = virtual_screen()
-        shot = ImageGrab.grab(all_screens=True)
+        try:
+            shot = grab_screen()
+        except Exception as e:
+            if SYSTEM == "linux":
+                self.toast(_("No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: "
+                             "haz una captura con la herramienta del sistema y cópiala."), seconds=8)
+            else:
+                self.toast(_("No se pudo capturar la pantalla.\n{error}", error=e), seconds=8)
+            return
         dim = ImageEnhance.Brightness(shot).enhance(0.45)
+        # en macOS la captura viene en píxeles y Tk trabaja en puntos (Retina: 2 píxeles por punto)
+        scale = shot.width / max(1, vs.right - vs.left)
+        if abs(scale - 1) > 0.01:
+            dim = dim.resize((vs.right - vs.left, vs.bottom - vs.top), Image.LANCZOS)
+        else:
+            scale = 1
 
         win = tk.Toplevel(self.root)
         self._region_win = win
@@ -76,7 +92,9 @@ class RegionMixin:
             box = selection_box(drag["x"], drag["y"], e.x, e.y)
             if box is None:  # clic: el monitor entero
                 m = monitor_area((e.x + vs.left, e.y + vs.top))
-                box = to_image_box(m, (vs.left, vs.top))
+                box = to_image_box(m, (vs.left, vs.top), scale)
+            elif scale != 1:
+                box = tuple(round(v * scale) for v in box)
             close()
             self.decode_and_show([shot.crop(box)], force=True)
 
@@ -90,5 +108,5 @@ class RegionMixin:
         cv.bind("<ButtonPress-3>", close)
         win.bind("<Escape>", close)
         win.update_idletasks()
-        force_foreground(user32.GetParent(win.winfo_id()))
+        bring_to_front(win)
         win.focus_force()

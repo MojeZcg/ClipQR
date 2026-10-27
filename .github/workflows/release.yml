@@ -1,9 +1,10 @@
 name: Release
 
-# Al subir una etiqueta vX.Y.Z: tests, compilar exe portátil + instalador (+ MSIX si están las
-# variables de la Store), sumas SHA-256 y release en GitHub.
-# A mano (Actions › Release › Run workflow) hace un ensayo: compila y deja los archivos como
-# artefacto, sin publicar nada.
+# Al subir una etiqueta vX.Y.Z: tests y compilación en cada sistema —Windows (exe portátil + instalador, + MSIX
+# si están las variables de la Store), macOS (ClipQR-macOS.zip) y Linux (ClipQR-Linux-x86_64.tar.gz)—; un
+# último trabajo junta todos los archivos, calcula SHA256SUMS.txt y publica una sola release en GitHub.
+# A mano (Actions › Release › Run workflow) hace un ensayo: compila y deja los archivos como artefacto, sin
+# publicar nada.
 on:
   push:
     tags: ["v*"]
@@ -16,8 +17,10 @@ env:
   PY: python
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -53,21 +56,91 @@ jobs:
         run: |
           Write-Host "SignPath configurado: añadir aquí signpath/github-action-submit-signing-request"
           Write-Host "para firmar dist/ClipQR.exe, build/app-dist/ClipQR/ClipQR.exe (antes de empaquetar) y dist/ClipQR-Setup.exe."
-      - name: Sumas SHA-256
-        shell: pwsh
-        run: |
-          $files = Get-ChildItem dist -File | Where-Object { $_.Extension -in ".exe", ".msix" }
-          $files | Get-FileHash -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } | Set-Content dist/SHA256SUMS.txt -Encoding ascii
-          Get-Content dist/SHA256SUMS.txt
       - name: Manifiestos de winget
         run: python tools/winget_manifest.py ${{ steps.version.outputs.version }} dist/ClipQR-Setup.exe dist/winget
       - name: Guardar como artefacto
         uses: actions/upload-artifact@v4
         with:
-          name: ClipQR-${{ steps.version.outputs.version }}
+          name: windows
           path: |
             dist/*.exe
             dist/*.msix
+            dist/winget/**
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Dependencias
+        run: python -m pip install -r requirements-dev.txt
+      - name: Tests
+        run: python -m pytest -q
+      - name: Compilar ClipQR.app (ClipQR-macOS.zip)
+        run: bash build_macos.sh
+      - name: Guardar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: dist/ClipQR-macOS.zip
+
+  linux:
+    # la distribución más antigua disponible: el ejecutable funciona en las que tengan una glibc igual o posterior
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Paquetes del sistema
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xclip linux-libc-dev
+      - name: Dependencias
+        run: python -m pip install -r requirements-dev.txt
+      - name: Tests
+        run: python -m pytest -q
+      - name: Compilar (ClipQR-Linux-x86_64.tar.gz)
+        run: bash build_linux.sh
+      - name: Guardar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/ClipQR-Linux-x86_64.tar.gz
+
+  publish:
+    needs: [windows, macos, linux]
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.publish.outputs.published }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Juntar los archivos de los tres sistemas
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Sumas SHA-256
+        shell: bash
+        run: |
+          shopt -s nullglob
+          cd dist
+          sha256sum *.exe *.msix *.zip *.tar.gz > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+          for f in ClipQR.exe ClipQR-Setup.exe ClipQR-macOS.zip ClipQR-Linux-x86_64.tar.gz; do
+            grep -q "  $f\$" SHA256SUMS.txt || { echo "::error::Falta $f"; exit 1; }
+          done
+      - name: Guardar como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipQR-${{ needs.windows.outputs.version }}
+          path: |
+            dist/*.exe
+            dist/*.msix
+            dist/*.zip
+            dist/*.tar.gz
             dist/SHA256SUMS.txt
             dist/winget/**
       - name: Publicar release
@@ -75,32 +148,43 @@ jobs:
         if: ${{ github.ref_type == 'tag' }}
         env:
           GH_TOKEN: ${{ github.token }}
-        shell: pwsh
+        shell: bash
         run: |
           # Si la release ya existe (p. ej. GitHub entregó tarde el evento de la etiqueta y otra ejecución ya
           # la publicó) no se toca: cambiar los archivos publicados rompería las sumas que ya bajó la gente.
-          gh release view "${{ github.ref_name }}" *> $null
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "::notice::La release ${{ github.ref_name }} ya existe: no se vuelve a publicar"
-            "published=false" >> $env:GITHUB_OUTPUT
+          if gh release view "${{ github.ref_name }}" > /dev/null 2>&1; then
+            echo "::notice::La release ${{ github.ref_name }} ya existe: no se vuelve a publicar"
+            echo "published=false" >> "$GITHUB_OUTPUT"
             exit 0
-          }
-          "published=true" >> $env:GITHUB_OUTPUT
-          $notes = "docs/release-notes/${{ github.ref_name }}.md"
-          $assets = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in ".exe", ".msix", ".txt" } | ForEach-Object { $_.FullName })
-          if (Test-Path $notes) {
-            gh release create "${{ github.ref_name }}" @assets --title "ClipQR ${{ steps.version.outputs.version }}" --notes-file $notes
-          } else {
-            gh release create "${{ github.ref_name }}" @assets --title "ClipQR ${{ steps.version.outputs.version }}" --generate-notes
-          }
-      # Envío a winget (docs/DISTRIBUCION.md §4): abre un PR en microsoft/winget-pkgs con los manifiestos.
-      # Se activa al crear el secret WINGET_TOKEN (token clásico de GitHub con permiso public_repo).
+          fi
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          shopt -s nullglob
+          assets=(dist/*.exe dist/*.msix dist/*.zip dist/*.tar.gz dist/SHA256SUMS.txt)
+          notes="docs/release-notes/${{ github.ref_name }}.md"
+          title="ClipQR ${{ needs.windows.outputs.version }}"
+          if [ -f "$notes" ]; then
+            gh release create "${{ github.ref_name }}" "${assets[@]}" --title "$title" --notes-file "$notes"
+          else
+            gh release create "${{ github.ref_name }}" "${assets[@]}" --title "$title" --generate-notes
+          fi
+
+  # Envío a winget (docs/DISTRIBUCION.md §4): abre un PR en microsoft/winget-pkgs con los manifiestos.
+  # Se activa al crear el secret WINGET_TOKEN (token clásico de GitHub con permiso public_repo).
+  winget:
+    needs: [windows, publish]
+    if: ${{ github.ref_type == 'tag' && needs.publish.outputs.published == 'true' }}
+    runs-on: windows-latest
+    steps:
+      - name: Manifiestos de winget
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: dist
       - name: Enviar a winget
-        if: ${{ github.ref_type == 'tag' && steps.publish.outputs.published == 'true' }}
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         shell: pwsh
         run: |
           if (-not $env:WINGET_TOKEN) { Write-Host "WINGET_TOKEN no configurado: no se envía a winget"; exit 0 }
           Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
-          ./wingetcreate.exe submit --token $env:WINGET_TOKEN "dist/winget/manifests/m/MojeZcg/ClipQR/${{ steps.version.outputs.version }}"
+          ./wingetcreate.exe submit --token $env:WINGET_TOKEN "dist/winget/manifests/m/MojeZcg/ClipQR/${{ needs.windows.outputs.version }}"

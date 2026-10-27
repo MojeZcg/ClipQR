@@ -2,7 +2,11 @@ pillow
 pystray
 zxing-cpp
 # inicio con Windows cuando se instala desde la Microsoft Store (MSIX)
-winrt-runtime
-winrt-Windows.ApplicationModel
-winrt-Windows.Foundation
+winrt-runtime; sys_platform == "win32"
+winrt-Windows.ApplicationModel; sys_platform == "win32"
+winrt-Windows.Foundation; sys_platform == "win32"
+# macOS: portapapeles, barra de menús y Papelera con AppKit
+pyobjc-framework-Cocoa; sys_platform == "darwin"
+# macOS: atajos de teclado globales (en Linux es opcional: ver requirements-dev.txt)
+pynput; sys_platform == "darwin"
 numpy  # solo para tools/screenshots.py

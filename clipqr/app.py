@@ -1,5 +1,4 @@
 """Aplicación: bandeja del sistema, vigilancia del portapapeles y acciones."""
-import ctypes
 import hashlib
 import os
 import sys
@@ -8,7 +7,6 @@ import time
 import tkinter as tk
 import tkinter.font as tkfont
 
-import pystray
 from PIL import Image
 
 from clipqr import APP_NAME, DONATE_URL
@@ -16,7 +14,6 @@ from clipqr.actions import connect_wifi, find_saved_capture, open_with_default_a
 from clipqr.decode import decode_image, grab_clipboard_images, make_thumb
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze, parse_payload
-from clipqr.hotkeys import HotkeyManager
 from clipqr.i18n import _, set_language
 from clipqr.settings import (CONFIG_DIR, FIRST_RUN_MARK, SETTINGS_FILE, hotkey_label, load_settings, load_state,
                              log_exception, save_state)
@@ -27,12 +24,31 @@ from clipqr.ui.region import RegionMixin
 from clipqr.ui.update_flow import UpdateMixin
 from clipqr.ui.settings_window import SettingsWindowMixin
 from clipqr.ui.theme import THEMES
+from clipqr.ui.system_texts import autostart_label, first_run_text, hotkeys_problem
 from clipqr.ui.widgets import WidgetsMixin
-from clipqr.winplatform import (FROZEN, PACKAGED, RUN_KEY, UNINSTALL_KEY, installed_by_setup, msix_set_startup,
-                                msix_startup_state, send_to_recycle_bin, release_single_instance,
-                                shortcut_paths, single_instance, taskbar_is_dark, user32, windows_theme)
+from clipqr.platform import (CLIPBOARD_POLL_MS, FROZEN, PACKAGED, SYSTEM, HotkeyManager, autostart_current,
+                             autostart_entry, autostart_remove, autostart_set, beep, bind_tk, clipboard_token,
+                             clipboard_tools_missing, enable_dpi_awareness, gui_python, installed_by_setup,
+                             msix_set_startup, msix_startup_state, open_path, pick_fonts, prepare_app,
+                             release_single_instance, screen_scale, send_to_trash, single_instance, start_tray,
+                             system_theme, tray_is_dark, tray_options, uninstall_program, uninstall_registration)
 
-POLL_MS = 150  # GetClipboardSequenceNumber es casi gratis: se puede mirar a menudo
+POLL_MS = CLIPBOARD_POLL_MS  # Windows: GetClipboardSequenceNumber es casi gratis, se puede mirar a menudo
+FALLBACK_POLL_MS = 1000  # sin forma de saber si cambió el portapapeles: se lee la imagen y se compara
+
+
+class NullTray:
+    """Sustituto del icono cuando no hay bandeja del sistema (o no se pudo crear): ClipQR sigue funcionando
+    y se maneja desde la ventana del historial."""
+    HAS_MENU = False
+    icon = title = None
+    visible = False
+
+    def update_menu(self):
+        pass
+
+    def stop(self):
+        pass
 
 
 class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, SettingsWindowMixin, WidgetsMixin):
@@ -42,16 +58,20 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.root.withdraw()
         self.root.title(APP_NAME)
         self.root.report_callback_exception = log_exception
-        self.dpi = self.root.winfo_fpixels("1i") / 96
+        bind_tk(self.root)
+        prepare_app(self.root)
+        self.dpi = screen_scale(self.root)
         families = set(tkfont.families(self.root))
-        self.icon_font = next((f for f in ("Segoe Fluent Icons", "Segoe MDL2 Assets") if f in families), None)
-        self.ui_font = "Segoe UI Variable Text" if "Segoe UI Variable Text" in families else "Segoe UI"
+        self.ui_font, self.icon_font, self.mono_font = pick_fonts(families)
+        if self.ui_font.startswith("Tk") or self.mono_font.startswith("Tk"):  # sin las fuentes habituales:
+            self.ui_font, self.mono_font = (tkfont.nametofont(f).actual("family") if f.startswith("Tk") else f
+                                            for f in (self.ui_font, self.mono_font))  # las de Tk por defecto
         self.paused = False
         self.settings = load_settings()
         set_language(self.settings["language"])
         self.started_language = self.settings["language"]  # el idioma cambia al reiniciar
         self.c = THEMES[self.theme_name()]
-        self.last_seq = user32.GetClipboardSequenceNumber()
+        self.last_seq = clipboard_token()
         self.last_hash = None
         self.clip_time = time.time()
         self.history = []  # lista de escaneos; cada uno es una lista de dicts {format, text, thumb, time}
@@ -60,8 +80,8 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.history_win = None
         self.settings_win = None
         self._photos = []  # referencias a PhotoImage para que Tk no las libere
-        self.tray = self._build_tray()
-        self.tray.run_detached()
+        self.tray_has_menu = True
+        self.tray = self._start_tray()
         self.root.after(POLL_MS, self._poll)
         self.hotkeys = HotkeyManager()
         self.root.after(300, self._warm_up)
@@ -88,6 +108,13 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
 
     def apply_hotkeys(self, retries=4):
         failed = self.hotkeys.set(self.hotkey_actions())
+        problem = hotkeys_problem(getattr(self.hotkeys, "reason", None))
+        if problem and self.hotkey_actions():
+            # una vez por motivo: la Configuración lo sigue mostrando en la sección de atajos
+            if load_state().get("hotkeys_warned") != self.hotkeys.reason:
+                save_state(hotkeys_warned=self.hotkeys.reason)
+                self.toast(problem, seconds=10)
+            return
         if failed and retries:
             # al reiniciar o actualizar, la instancia anterior puede tardar un momento en soltar el atajo
             self.root.after(1500, lambda: self.apply_hotkeys(retries - 1))
@@ -107,9 +134,39 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             self.scan()
 
     def _icon_image(self, paused=False):
-        return make_icon(paused, dark_bg=taskbar_is_dark())
+        return make_icon(paused, dark_bg=tray_is_dark())
 
-    def _build_tray(self):
+    def _start_tray(self):
+        """Icono en la bandeja (Windows, Linux) o en la barra de menús (macOS). Si no se puede crear, ClipQR
+        sigue funcionando y abre el historial como ventana principal."""
+        try:
+            import pystray  # en Linux sin servidor gráfico falla ya al importarlo
+            tray = self._build_tray(pystray)
+            start_tray(tray, on_error=lambda e: self.root.after(0, lambda: self._tray_failed(e)))
+        except Exception as e:
+            log_exception(type(e), e, e.__traceback__)
+            self.root.after(600, lambda: self._tray_failed(None))
+            return NullTray()
+        self.tray_has_menu = getattr(tray, "HAS_MENU", True)
+        return tray
+
+    def _tray_failed(self, error=None):
+        if getattr(self, "_tray_fallback", False):
+            return
+        self._tray_fallback = True
+        if error is not None:
+            log_exception(type(error), error, error.__traceback__)
+        try:
+            self.tray.stop()
+        except Exception:
+            pass
+        self.tray = NullTray()
+        self.tray_has_menu = False
+        self.show_history()
+        self.toast(_("No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\n"
+                     "ClipQR sigue activo: usa la ventana del historial."), seconds=10)
+
+    def _build_tray(self, pystray):
         def ui(fn):
             return lambda icon, item: self.root.after(0, fn)
 
@@ -135,13 +192,13 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
                              if self.update_info
                              else "", ui(self.show_update_notice), visible=lambda item: bool(self.update_info)),
             pystray.MenuItem(_("Configuración…"), ui(self.show_settings)),
-            pystray.MenuItem(_("Invitar un cafecito ☕"), lambda: os.startfile(DONATE_URL)),
+            pystray.MenuItem(_("Invitar un cafecito ☕"), lambda: open_path(DONATE_URL)),
             pystray.MenuItem(_("Pausar"), ui(self.toggle_pause), checked=lambda item: self.paused),
-            pystray.MenuItem(_("Iniciar con Windows"), ui(self.toggle_autostart), checked=lambda item: self.autostart_enabled()),
+            pystray.MenuItem(autostart_label(), ui(self.toggle_autostart), checked=lambda item: self.autostart_enabled()),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem(_("Salir"), ui(self.quit)),
         )
-        return pystray.Icon(APP_NAME, self._icon_image(), self._tray_title(), menu)
+        return pystray.Icon(APP_NAME, self._icon_image(), self._tray_title(), menu, **tray_options())
 
     def _tray_title(self):
         return _("{app} - en pausa", app=APP_NAME) if self.paused else _("{app} - vigilando portapapeles",
@@ -163,7 +220,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
 
     def theme_name(self):
         t = self.settings["theme"]
-        return t if t in THEMES else windows_theme()
+        return t if t in THEMES else system_theme()
 
     def toggle_pause(self):
         self.paused = not self.paused
@@ -171,33 +228,20 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.tray.title = self._tray_title()
         self.tray.update_menu()
 
-    def _autostart_cmd(self):
+    def _autostart_argv(self):
+        """Orden con la que se abre ClipQR al iniciar sesión (con --autostart)."""
         if FROZEN:
-            return f'"{sys.executable}" --autostart'
-        exe = sys.executable
-        pyw = os.path.join(os.path.dirname(exe), "pythonw.exe")
-        if os.path.exists(pyw):
-            exe = pyw
+            return [sys.executable, "--autostart"]
         launcher = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "main.py")
-        return f'"{exe}" "{launcher}" --autostart'
-
-    def _autostart_value(self):
-        import winreg
-        try:
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY) as k:
-                return winreg.QueryValueEx(k, APP_NAME)[0]
-        except OSError:
-            return None
+        return [gui_python(), launcher, "--autostart"]
 
     def autostart_enabled(self):
         if PACKAGED:
             return msix_startup_state() in ("enabled", "enabled_by_policy")
-        return self._autostart_value() is not None
+        return autostart_current() is not None
 
     def _set_autostart(self):
-        import winreg
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
-            winreg.SetValueEx(k, APP_NAME, 0, winreg.REG_SZ, self._autostart_cmd())
+        autostart_set(self._autostart_argv())
 
     def first_run(self):
         """Primer arranque: activar inicio con Windows y avisar de que está en la bandeja.
@@ -217,13 +261,14 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
                 return
             self._set_autostart()
             self.tray.update_menu()
-            self.toast(_("ClipQR está activo en la bandeja (junto al reloj).\n"
-                         "Haz una captura de un QR y aparecerá aquí.\n"
-                         "Se iniciará solo con Windows."), seconds=8)
+            self.toast(first_run_text(), seconds=8)
         else:
-            if not PACKAGED and self.autostart_enabled() and self._autostart_value() != self._autostart_cmd():
+            if not PACKAGED and self.autostart_enabled() and \
+                    autostart_current() != autostart_entry(self._autostart_argv()):
                 self._set_autostart()
             self.startup_notice()
+        if clipboard_tools_missing():
+            self.toast(_("Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland)."), seconds=10)
 
     def startup_notice(self):
         """Aviso breve de que ClipQR arrancó (en la bandeja no siempre se ve: Windows oculta los iconos nuevos).
@@ -242,17 +287,18 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
                 self.toast(msg, seconds=8)
             self.tray.update_menu()
             return
-        import winreg
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
-            if self.autostart_enabled():
-                winreg.DeleteValue(k, APP_NAME)
-            else:
-                winreg.SetValueEx(k, APP_NAME, 0, winreg.REG_SZ, self._autostart_cmd())
+        if self.autostart_enabled():
+            autostart_remove()
+        else:
+            self._set_autostart()
         self.tray.update_menu()
 
     def quit(self):
         self.hotkeys.stop()
-        self.tray.stop()
+        try:
+            self.tray.stop()
+        except Exception:
+            pass
         self.root.destroy()
 
     def restart(self):
@@ -276,10 +322,35 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             return
         self.quit()
 
+    def _off_tk(self, work, done):
+        """Ejecuta work() y luego done(resultado) en el hilo de Tk. En Linux work va en otro hilo: leer el
+        portapapeles cuando lo último copiado es nuestro le pide los datos a esta misma app, y si Tk estuviera
+        esperando no podría responder (se bloquearía). En Windows y macOS, directamente."""
+        if SYSTEM != "linux":
+            done(work())
+            return
+
+        def thread():
+            result = work()
+            try:
+                self.root.after(0, lambda: done(result))
+            except RuntimeError:  # la app ya se cerró
+                pass
+
+        threading.Thread(target=thread, daemon=True).start()
+
     def _poll(self):
+        self._off_tk(clipboard_token, self._on_clipboard_token)
+
+    def _on_clipboard_token(self, seq):
+        delay = POLL_MS
         try:
-            seq = user32.GetClipboardSequenceNumber()
-            if seq != self.last_seq:
+            if seq is None:
+                # sin contador de cambios (macOS sin pyobjc, Linux sin xclip): se compara la imagen
+                delay = max(POLL_MS, FALLBACK_POLL_MS)
+                if not self.paused:
+                    self.scan(polling=True)
+            elif seq != self.last_seq:
                 self.last_seq = seq
                 self.clip_time = time.time()
                 save_state(clip_seq=seq)
@@ -288,10 +359,13 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
                     # reintento: algunas herramientas de captura escriben la imagen con retraso
                     self.root.after(800, lambda s=seq: s == self.last_seq and self.scan())
         finally:
-            self.root.after(POLL_MS, self._poll)
+            self.root.after(delay, self._poll)
 
-    def scan(self, force=False):
-        imgs = grab_clipboard_images(self.settings["explorer_files"])
+    def scan(self, force=False, polling=False):
+        include_files = self.settings["explorer_files"]
+        self._off_tk(lambda: grab_clipboard_images(include_files), lambda imgs: self._scan_images(imgs, force, polling))
+
+    def _scan_images(self, imgs, force=False, polling=False):
         if not imgs:
             if force:
                 self.toast(_("No hay ninguna imagen en el portapapeles."))
@@ -299,6 +373,8 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         h = hashlib.md5(b"".join(i.convert("RGB").tobytes()[:2_000_000] for i in imgs)).hexdigest()
         if h == self.last_hash and not force:
             return
+        if polling:
+            self.clip_time = time.time()
         self.last_hash = h
         # una captura de pantalla (no un archivo copiado) puede tener su archivo en la carpeta de capturas
         is_capture = len(imgs) == 1 and not getattr(imgs[0], "filename", None)
@@ -339,7 +415,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             self._paint_capture_slot(codes)  # no se guardó archivo: quitar «Buscando…»
             return
         if self.settings["delete_capture"]:
-            deleted = send_to_recycle_bin(path)
+            deleted = send_to_trash(path)
             for c in codes:
                 c["capture_deleted"] = deleted
         self._paint_capture_slot(codes)
@@ -355,8 +431,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             self.history.insert(0, keep)
             del self.history[self.settings["history_max"]:]
         if self.settings["sound"]:
-            import winsound
-            winsound.MessageBeep(winsound.MB_ICONASTERISK)
+            beep(self.root)
         self.tray.update_menu()
         self.show_popup(codes)
         if self.history_win is not None and self.history_win.winfo_exists():
@@ -366,7 +441,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.root.clipboard_clear()
         self.root.clipboard_append(text)
         self.root.update()
-        self.last_seq = user32.GetClipboardSequenceNumber()  # no re-escanear lo que copiamos
+        self._off_tk(clipboard_token, lambda seq: setattr(self, "last_seq", seq))  # no re-escanear lo que copiamos
         if btn is not None:
             self._flash(btn, _("✓ Copiado"))
 
@@ -376,7 +451,7 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             if kind == "copy":
                 self.copy(arg, btn)
             elif kind == "open":
-                os.startfile(arg)
+                open_path(arg)
                 self._close_popup()
             elif kind == "file":
                 open_with_default_app(*arg)
@@ -399,10 +474,9 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
 def uninstall(silent=False):
     """Desinstalación (instalado con ClipQR-Setup.exe): cierra ClipQR, quita accesos directos,
     inicio con Windows, la entrada de «Aplicaciones instaladas», los ajustes y el propio programa.
-    Con silent no pregunta ni muestra nada (QuietUninstallString, winget)."""
+    Con silent no pregunta ni muestra nada (QuietUninstallString, winget). En macOS y Linux quita el inicio
+    al iniciar sesión y los ajustes."""
     import shutil
-    import subprocess
-    import winreg
     from tkinter import messagebox
 
     root = None
@@ -411,36 +485,12 @@ def uninstall(silent=False):
         root.withdraw()
         if not messagebox.askyesno(_("Desinstalar ClipQR"), _("¿Quieres desinstalar ClipQR de este equipo?")):
             return
-    no_window = 0x08000000
-    subprocess.run(["taskkill", "/F", "/IM", "ClipQR.exe", "/FI", f"PID ne {os.getpid()}",
-                    "/FI", f"PID ne {os.getppid()}"], capture_output=True, creationflags=no_window)
-    try:
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, RUN_KEY, 0, winreg.KEY_SET_VALUE) as k:
-            winreg.DeleteValue(k, APP_NAME)
-    except OSError:
-        pass
-    try:
-        winreg.DeleteKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY)
-    except OSError:
-        pass
-    for lnk in shortcut_paths():
-        try:
-            os.remove(lnk)
-        except OSError:
-            pass
+    uninstall_registration()
     shutil.rmtree(CONFIG_DIR, ignore_errors=True)
     if root is not None:
         messagebox.showinfo("ClipQR", _("ClipQR se ha desinstalado."))
         root.destroy()
-    if FROZEN:  # el programa no puede borrarse a sí mismo mientras se ejecuta: cmd lo reintenta al salir
-        exe, folder = sys.executable, os.path.dirname(sys.executable)
-        setup_dir = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", APP_NAME)
-        if os.path.normcase(folder) == os.path.normcase(setup_dir):  # carpeta del asistente: entera
-            remove = f'rmdir /s /q "{folder}" 2>nul & if not exist "{folder}" exit'
-        else:  # en cualquier otro sitio solo el propio .exe (y la carpeta si queda vacía)
-            remove = f'del /f /q "{exe}" 2>nul & if not exist "{exe}" (rmdir "{folder}" 2>nul & exit)'
-        subprocess.Popen(f'cmd /c for /l %i in (1,1,30) do (ping -n 2 127.0.0.1 >nul & {remove})',
-                         creationflags=no_window)
+    uninstall_program()
 
 def parse_cli(argv):
     """Qué hacer según la línea de órdenes:
@@ -456,10 +506,7 @@ def parse_cli(argv):
 
 
 def main():
-    try:
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
-    except Exception:
-        pass
+    enable_dpi_awareness()
     mode, arg = parse_cli(sys.argv[1:])
     if mode == "uninstall":
         set_language(load_settings()["language"])

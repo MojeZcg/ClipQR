@@ -1,7 +1,12 @@
 """Atajos de teclado globales."""
+import sys
+
 import pytest
 
-from clipqr.hotkeys import MOD_NOREPEAT, HotkeyManager, parse_hotkey
+from clipqr.hotkeys import MOD_NOREPEAT, parse_hotkey
+from clipqr.platform import HotkeyManager
+
+windows_only = pytest.mark.skipif(sys.platform != "win32", reason="RegisterHotKey es de Windows")
 
 
 @pytest.mark.parametrize("text, expected", [
@@ -20,6 +25,7 @@ def test_invalid_hotkeys(text):
         parse_hotkey(text)
 
 
+@windows_only
 def test_register_and_release_a_real_hotkey():
     m = HotkeyManager()
     try:
@@ -31,6 +37,7 @@ def test_register_and_release_a_real_hotkey():
         m.stop()
 
 
+@windows_only
 def test_hotkey_taken_by_another_registration_is_reported():
     a, b = HotkeyManager(), HotkeyManager()
     try:

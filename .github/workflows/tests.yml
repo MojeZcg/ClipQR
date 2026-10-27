@@ -7,13 +7,21 @@ on:
 
 jobs:
   tests:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
           cache: pip
+      # Tk y xclip para la app; las cabeceras del kernel para compilar evdev (dependencia de pynput en Linux)
+      - name: Paquetes del sistema (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xclip linux-libc-dev
       - name: Dependencias
         run: python -m pip install -r requirements-dev.txt
       - name: Pyflakes

@@ -422,4 +422,41 @@ TEXTS = {
         'Screenshot sent to the Recycle Bin (auto-delete)',
     'Borrado automático activo · esta imagen no es una captura guardada':
         "Auto-delete on · this image isn't a saved screenshot",
+    # macOS y Linux
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        "Couldn't show the ClipQR icon in the system tray.\nClipQR is still running: use the history window.",
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        'To read the clipboard, install xclip (X11) or wl-clipboard (Wayland).',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        'NetworkManager (nmcli) is needed to connect to Wi‑Fi.',
+    'No se encontró la interfaz Wi‑Fi.':
+        "Couldn't find the Wi‑Fi interface.",
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        "Couldn't capture the screen.\nOn Wayland apps can't capture it: take a screenshot with the system tool and copy it.",
+    'No se pudo capturar la pantalla.\n{error}':
+        "Couldn't capture the screen.\n{error}",
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        "The network you're connected to and its password will be read from the system and shown here. Continue?",
+    'Iniciar al iniciar sesión':
+        'Start at login',
+    'Como el sistema':
+        'Like the system',
+    'Imágenes copiadas desde el gestor de archivos.':
+        'Images copied from the file manager.',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        'No codes detected yet.\nTake a screenshot of a QR code with ⌃⇧⌘4 (it copies it to the clipboard).',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        'No codes detected yet.\nTake a screenshot of a QR code (Print Screen) and copy it.',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR is running in the menu bar.\nTake a screenshot of a QR code and it will show up here.\nIt will start automatically when you log in.',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR is running in the system tray.\nTake a screenshot of a QR code and it will show up here.\nIt will start automatically when you log in.',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        "On Wayland apps can't use global keyboard shortcuts.\nUse the ClipQR menu in the system tray.",
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        'To use the keyboard shortcuts, allow ClipQR in\nSystem Settings › Privacy & Security › Accessibility.',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        'Global keyboard shortcuts are not available: the pynput module is missing.',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        "When a screenshot contains a QR code or barcode, it's moved to the Trash (you can restore it) so the screenshots folder doesn't fill up. Every notification shows that it's on.",
 }

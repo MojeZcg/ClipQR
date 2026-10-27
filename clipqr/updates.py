@@ -18,6 +18,9 @@ REPO = "MojeZcg/ClipQR"
 API_LATEST = f"https://api.github.com/repos/{REPO}/releases/latest"
 SETUP_NAME = "ClipQR-Setup.exe"
 SUMS_NAME = "SHA256SUMS.txt"
+# macOS y Linux no se actualizan solos: el aviso abre la página de la versión, donde están estos archivos
+MAC_NAME = "ClipQR-macOS.zip"  # ClipQR.app comprimida con ditto
+LINUX_NAME = "ClipQR-Linux-x86_64.tar.gz"  # carpeta de PyInstaller + install.sh / uninstall.sh
 CHECK_EVERY = 24 * 3600  # segundos
 
 

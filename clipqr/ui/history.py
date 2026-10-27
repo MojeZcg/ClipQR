@@ -8,8 +8,9 @@ from clipqr import APP_NAME
 from clipqr.i18n import _
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze
+from clipqr.platform import style_window
+from clipqr.ui.system_texts import empty_history_text
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.winplatform import style_window
 
 
 class HistoryMixin:
@@ -39,6 +40,11 @@ class HistoryMixin:
         tk.Label(top, image=self._logo(28), bg=c["bg"], bd=0).pack(side="left", padx=(0, self.px(10)))
         tk.Label(top, text=_("Historial"), bg=c["bg"], fg=c["fg"], font=self.font(14, "bold")).pack(side="left")
         self._button(top, _("Escanear ahora"), cmd=lambda: self.scan(force=True)).pack(side="right")
+        if not self.tray_has_menu:
+            # sin menú en la bandeja (o sin bandeja), esta ventana hace de ventana principal
+            self._button(top, _("Salir"), cmd=self.quit).pack(side="right", padx=(0, self.px(6)))
+            self._button(top, _("Configuración…"), cmd=self.show_settings).pack(side="right", padx=(0, self.px(6)))
+            win.protocol("WM_DELETE_WINDOW", win.iconify)  # cerrarla no debe dejar ClipQR inalcanzable
 
         sbox = tk.Frame(win, bg=c["card"], highlightthickness=1, highlightbackground=c["border"])
         sbox.pack(fill="x", padx=self.px(14), pady=(0, self.px(8)))
@@ -58,8 +64,8 @@ class HistoryMixin:
         wid = canvas.create_window((0, 0), window=self.hist_list, anchor="nw")
         self.hist_list.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas.bind("<Configure>", lambda e: canvas.itemconfigure(wid, width=e.width - self.px(10)))
-        win.bind("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
-        win.bind("<Escape>", lambda e: win.destroy())
+        self._bind_wheel(win, canvas)
+        win.bind("<Escape>", lambda e: win.destroy() if self.tray_has_menu else win.iconify())
         self._fill_history()
         entry.focus_set()
 
@@ -70,8 +76,7 @@ class HistoryMixin:
         q = self.search_var.get().strip().lower()
         entries = [code for scan in self.history for code in scan if not q or q in code["text"].lower()]
         if not entries:
-            tk.Label(self.hist_list, text=_("Sin resultados.") if q else _("Aún no se ha detectado ningún código.\n"
-                     "Haz una captura de un QR (Win+Shift+S o Impr Pant)."), bg=c["bg"], fg=c["muted"],
+            tk.Label(self.hist_list, text=_("Sin resultados.") if q else empty_history_text(), bg=c["bg"], fg=c["muted"],
                      font=self.font(10), justify="center").pack(pady=self.px(40))
             return
         for code in entries:
