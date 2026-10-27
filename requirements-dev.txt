@@ -2,3 +2,6 @@
 pytest
 pyflakes
 pyinstaller
+# Linux: atajos de teclado globales (X11). Opcional para usar ClipQR: compila evdev, que necesita gcc y las
+# cabeceras del kernel (linux-libc-dev); sin pynput, ClipQR funciona sin atajos.
+pynput; sys_platform == "linux"
