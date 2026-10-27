@@ -48,7 +48,7 @@ jobs:
         if: ${{ vars.MSIX_IDENTITY_NAME != '' && vars.MSIX_PUBLISHER != '' }}
         shell: pwsh
         run: ./build_msix.ps1 -IdentityName "${{ vars.MSIX_IDENTITY_NAME }}" -Publisher "${{ vars.MSIX_PUBLISHER }}" -PublisherDisplayName "MojeZcg"
-      # Firma de código (docs/DISTRIBUCION.md §3). Se activa al crear el secret SIGNPATH_API_TOKEN y las
+      # Firma de código. Se activa al crear el secret SIGNPATH_API_TOKEN y las
       # variables SIGNPATH_ORGANIZATION_ID y SIGNPATH_PROJECT_SLUG; hasta entonces los .exe salen sin firmar.
       - name: Firma (pendiente de configurar)
         if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
@@ -164,7 +164,7 @@ jobs:
           echo "published=true" >> "$GITHUB_OUTPUT"
           shopt -s nullglob
           assets=(dist/*.exe dist/*.msix dist/*.zip dist/*.tar.gz dist/SHA256SUMS.txt)
-          notes="docs/release-notes/${{ github.ref_name }}.md"
+          notes=".github/release-notes/${{ github.ref_name }}.md"
           title="ClipQR ${{ needs.windows.outputs.version }}"
           if [ -f "$notes" ]; then
             gh release create "${{ github.ref_name }}" "${assets[@]}" --title "$title" --notes-file "$notes"
@@ -172,7 +172,7 @@ jobs:
             gh release create "${{ github.ref_name }}" "${assets[@]}" --title "$title" --generate-notes
           fi
 
-  # Envío a winget (docs/DISTRIBUCION.md §4): abre un PR en microsoft/winget-pkgs con los manifiestos.
+  # Envío a winget: abre un PR en microsoft/winget-pkgs con los manifiestos.
   # Se activa al crear el secret WINGET_TOKEN (token clásico de GitHub con permiso public_repo).
   winget:
     needs: [windows, publish]
@@ -193,7 +193,7 @@ jobs:
           Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
           ./wingetcreate.exe submit --token $env:WINGET_TOKEN "dist/winget/manifests/m/MojeZcg/ClipQR/${{ needs.windows.outputs.version }}"
 
-  # Envío a la Microsoft Store (docs/DISTRIBUCION.md §5): sube el .msix de la release como una nueva entrega.
+  # Envío a la Microsoft Store: sube el .msix de la release como una nueva entrega.
   # Se activa con la variable MSSTORE_PRODUCT_ID (el ID de la Store, p. ej. 9N…) y los secrets MSSTORE_TENANT_ID,
   # MSSTORE_SELLER_ID, MSSTORE_CLIENT_ID y MSSTORE_CLIENT_SECRET (la app de Microsoft Entra asociada a Partner Center).
   # La primera entrega se hace a mano en Partner Center; esta solo actualiza las siguientes.

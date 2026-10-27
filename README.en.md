@@ -122,55 +122,6 @@ Settings are stored in `%APPDATA%\ClipQR\settings.json`.
 
 Everything is processed on your computer. ClipQR doesn't send images or data to any server. On its own, it only checks once a day whether there's a new version on GitHub (this can be turned off). Otherwise, it only uses the network when you press a button that needs it, such as opening a link or searching for a product. The history is kept in memory only and is cleared when the app closes. Full details in the [privacy policy](PRIVACY.en.md).
 
-## From source
-
-```bash
-py -m pip install -r requirements.txt
-pythonw main.py                     # run without a console
-py main.py image.png                # decode an image and print the result
-py -m pip install -r requirements-dev.txt
-py -m pytest                        # tests
-build.bat                           # build dist\ClipQR.exe with PyInstaller
-build_setup.bat                     # build dist\ClipQR-Setup.exe (setup wizard)
-py tools\make_logo.py               # regenerate assets\logo.png (real QR code linking to the repository)
-py tools\screenshots.py             # regenerate the screenshots in docs/screenshots
-```
-
-| File | Contents |
-|---|---|
-| `main.py` | Entry point (the one PyInstaller uses) |
-| `clipqr/` | The app: `decode` (reading), `payloads` (parsing each type), `actions`, `settings`, `winplatform` (Windows), `app` (tray and clipboard) and `ui/` (windows) |
-| `tests/` | Automated tests (pytest) |
-| `tools/screenshots.py` | Builds scenes with sample data and generates the README screenshots |
-| `assets/` | Logo (`logo.png`, generated from `logo-source.jpg`). Its QR code links to this repository |
-| `tools/make_logo.py` | Cleans up the original image and puts a real, verified QR code in the logo |
-| `installer/setup.py` | Setup wizard (installs, shortcuts, start with Windows, uninstaller) |
-| `build.bat` | Builds the single-file `.exe` |
-| `build_setup.bat` | Builds `ClipQR-Setup.exe` with `ClipQR.exe` inside |
-| `build_msix.ps1`, `msix/` | MSIX package for the Microsoft Store (manifest and icons) |
-| `PRIVACY.md`, `PRIVACY.en.md` | Privacy policy (Spanish and English) |
-| `docs/store-listing.md` | Listing text (Spanish and English) and steps to publish on the Microsoft Store |
-
-### Microsoft Store package
-
-Requires the [Windows SDK](https://developer.microsoft.com/windows/downloads/windows-sdk/) (it includes `makeappx` and `makepri`).
-
-```powershell
-# with the values from Partner Center › Product identity
-.\build_msix.ps1 -IdentityName "<Name>" -Publisher "<Publisher>" -PublisherDisplayName "<PublisherDisplayName>"
-
-# try it on this computer without a certificate (requires Developer Mode)
-.\build_msix.ps1 -Register
-```
-
-It produces `dist\ClipQR-<version>.msix`. When installed from the Store, start with Windows uses a *StartupTask* in the package: it's off by default and can be turned on from ClipQR's Settings. The publishing steps are in [docs/store-listing.md](docs/store-listing.md).
-
-## Upcoming versions
-
-- [Roadmap](docs/ROADMAP.md): what's coming up to 1.4, PR by PR (in Spanish).
-- [Distribution](docs/DISTRIBUCION.md): automated releases, code signing, winget and the Microsoft Store (in Spanish).
-
-
 ## Contributing
 
 Want to add a language, your country's invoice format or fix something? Read the [contributing guide](CONTRIBUTING.md) and check the [good first issues](https://github.com/MojeZcg/ClipQR/labels/good%20first%20issue). Every bit helps, including reporting a QR code that isn't read correctly.
