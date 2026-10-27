@@ -288,10 +288,6 @@ TEXTS = {
         'Lire les fichiers copiés',
     'Imágenes copiadas desde el Explorador de archivos.':
         "Images copiées depuis l'Explorateur de fichiers.",
-    'Borrar las capturas con QR':
-        'Supprimer les captures avec QR code',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        "Envoie à la Corbeille la capture que Windows enregistre dans Images › Captures d'écran. Si désactivé, la notification affiche un bouton pour le faire.",
     'Mostrar contraseñas al momento':
         'Afficher les mots de passe immédiatement',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -410,4 +406,20 @@ TEXTS = {
         'ClipQR est actif',
     'Selecciona una parte con el ratón y pulsa Ctrl+C':
         'Sélectionnez-en une partie avec la souris et appuyez sur Ctrl+C',
+    'CAPTURAS':
+        "CAPTURES D'ÉCRAN",
+    'Borrar la captura al detectar un código':
+        'Supprimer la capture quand un code est détecté',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        "Quand une capture d'écran contient un QR code ou un code-barres, elle est envoyée à la Corbeille (récupérable) pour ne pas encombrer Images › Captures d'écran. Chaque notification indique que l'option est active.",
+    'Borrado automático desactivado':
+        'Suppression automatique désactivée',
+    'Desactivar':
+        'Désactiver',
+    'Borrado automático activo · buscando la captura…':
+        'Suppression automatique active · recherche de la capture…',
+    'Captura enviada a la Papelera (borrado automático)':
+        'Capture envoyée à la Corbeille (suppression automatique)',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        "Suppression automatique active · cette image n'est pas une capture enregistrée",
 }

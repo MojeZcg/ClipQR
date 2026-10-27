@@ -288,10 +288,6 @@ TEXTS = {
         '读取复制的文件',
     'Imágenes copiadas desde el Explorador de archivos.':
         '从文件资源管理器复制的图片。',
-    'Borrar las capturas con QR':
-        '删除含二维码的截图',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        '将 Windows 保存在“图片 › 屏幕截图”中的截图移到回收站。关闭时，通知中会显示一个按钮来执行此操作。',
     'Mostrar contraseñas al momento':
         '直接显示密码',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -410,4 +406,20 @@ TEXTS = {
         'ClipQR 正在运行',
     'Selecciona una parte con el ratón y pulsa Ctrl+C':
         '用鼠标选择其中一部分，然后按 Ctrl+C',
+    'CAPTURAS':
+        '屏幕截图',
+    'Borrar la captura al detectar un código':
+        '检测到代码时删除截图',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        '当屏幕截图中有二维码或条形码时，将其移到回收站（可以还原），以免“图片 › 屏幕截图”文件夹越来越满。每条通知都会显示此功能已开启。',
+    'Borrado automático desactivado':
+        '已关闭自动删除',
+    'Desactivar':
+        '关闭',
+    'Borrado automático activo · buscando la captura…':
+        '自动删除已开启 · 正在查找截图…',
+    'Captura enviada a la Papelera (borrado automático)':
+        '截图已移到回收站（自动删除）',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        '自动删除已开启 · 此图片不是已保存的截图',
 }

@@ -82,6 +82,12 @@ class SettingsWindowMixin:
                 return f"{v} s"
             return f"{v // 60} min" if v % 60 == 0 else f"{v / 60:.1f} min"
 
+        card = section(_("CAPTURAS"))
+        row(card, _("Borrar la captura al detectar un código"),
+            _("Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede "
+              "recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo."),
+            lambda p: self._switch(p, st["delete_capture"], lambda v: save(delete_capture=v)))
+
         card = section(_("AVISO"))
         row(card, _("Tiempo visible"), _("Cuánto tarda en cerrarse solo."),
             lambda p: self._stepper(p, [5, 10, 15, 20, 25, 30, 45, 60, 90, 120, 180, 300], st["seconds"],
@@ -120,10 +126,6 @@ class SettingsWindowMixin:
             lambda p: self._switch(p, st["qr_only"], lambda v: save(qr_only=v)))
         row(card, _("Leer archivos copiados"), _("Imágenes copiadas desde el Explorador de archivos."),
             lambda p: self._switch(p, st["explorer_files"], lambda v: save(explorer_files=v)))
-        row(card, _("Borrar las capturas con QR"),
-            _("Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. "
-              "Si está desactivado, el aviso muestra un botón para hacerlo."),
-            lambda p: self._switch(p, st["delete_capture"], lambda v: save(delete_capture=v)))
         row(card, _("Mostrar contraseñas al momento"), _("Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. "
             "Desactivado es más seguro si alguien mira tu pantalla."),
             lambda p: self._switch(p, st["show_passwords"], lambda v: save(show_passwords=v)))

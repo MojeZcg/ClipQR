@@ -16,7 +16,8 @@ DEFAULT_SETTINGS = {
     "position": "top-right", "x": None, "y": None,
     "autoclose": True, "seconds": 25, "pause_on_hover": True,
     "theme": "auto", "animation": True, "sound": False,
-    "qr_only": False, "explorer_files": True, "history_max": 50, "delete_capture": False,
+    "qr_only": False, "explorer_files": True, "history_max": 50,
+    "delete_capture": True,  # al detectar un código en una captura, se envía a la Papelera
     # "" = desactivado. Nada de Ctrl+Alt+letra: en teclados español/latinoamericano Ctrl+Alt es AltGr
     # (Ctrl+Alt+Q escribe @) y el atajo impediría escribir esos caracteres.
     "hotkey_focus": "Ctrl+Shift+Space",

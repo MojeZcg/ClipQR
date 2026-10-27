@@ -89,7 +89,7 @@ Desde el icono ⚙ del aviso o desde **Configuración…** en el menú de la ban
 - **Apariencia:** tema claro, oscuro o el mismo que Windows.
 - **Idioma:** español, inglés, portugués, francés, alemán, italiano, chino simplificado, japonés, ruso o coreano. Por defecto, el de Windows (si no está entre estos, inglés).
 - **Detección:** solo QR o también códigos de barras, leer archivos copiados desde el Explorador, sonido al detectar y pausar la detección.
-- **Borrar las capturas con QR:** Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR, el aviso ofrece **Borrar captura**, o lo hace solo si activas esta opción. Va a la Papelera (se puede recuperar) y solo se borra el archivo idéntico a la captura.
+- **Borrar la captura al detectar un código** (lo primero de la Configuración, activado por defecto): Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR o un código de barras, ClipQR la envía a la Papelera (se puede recuperar) y cada aviso lo indica, con un botón **Desactivar**. Solo se borra el archivo idéntico a la captura. Si lo desactivas, el aviso ofrece **Borrar captura**.
 - **Historial:** cuántos escaneos se guardan y borrar el historial.
 - **Atajos de teclado:** escanear una zona de la pantalla (`Win`+`Shift`+`Q`), crear un QR (`Win`+`Shift`+`G`) y usar el aviso con el teclado (`Ctrl`+`Shift`+`Espacio`). Se pueden cambiar o desactivar. Nunca son `Ctrl`+`Alt`+letra, porque en teclados español y latinoamericano eso es `AltGr` y te impediría escribir @, #, €…
 - **General:** iniciar con Windows, buscar actualizaciones (una vez al día; se instalan solo si aceptas y tras comprobar el instalador) e informe de errores para pegar en una incidencia.

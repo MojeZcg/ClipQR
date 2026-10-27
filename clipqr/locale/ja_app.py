@@ -288,10 +288,6 @@ TEXTS = {
         'コピーしたファイルを読み取る',
     'Imágenes copiadas desde el Explorador de archivos.':
         'エクスプローラーからコピーした画像。',
-    'Borrar las capturas con QR':
-        'QR コードを含むスクリーンショットを削除',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        'Windows が［ピクチャ › スクリーンショット］に保存したスクリーンショットをごみ箱に移動します。オフのときは、通知に削除用のボタンが表示されます。',
     'Mostrar contraseñas al momento':
         'パスワードをすぐに表示',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -410,4 +406,20 @@ TEXTS = {
         'ClipQR が動作しています',
     'Selecciona una parte con el ratón y pulsa Ctrl+C':
         'マウスで一部を選択して Ctrl+C を押してください',
+    'CAPTURAS':
+        'スクリーンショット',
+    'Borrar la captura al detectar un código':
+        'コードを検出したらスクリーンショットを削除',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        'スクリーンショットに QR コードやバーコードが含まれていると、ごみ箱に移動します（元に戻せます）。［ピクチャ › スクリーンショット］がいっぱいになるのを防ぎます。オンのときは通知ごとに表示されます。',
+    'Borrado automático desactivado':
+        '自動削除をオフにしました',
+    'Desactivar':
+        'オフにする',
+    'Borrado automático activo · buscando la captura…':
+        '自動削除オン · スクリーンショットを検索しています…',
+    'Captura enviada a la Papelera (borrado automático)':
+        'スクリーンショットをごみ箱に移動しました（自動削除）',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        '自動削除オン · この画像は保存されたスクリーンショットではありません',
 }

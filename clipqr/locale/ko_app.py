@@ -288,10 +288,6 @@ TEXTS = {
         '복사한 파일 읽기',
     'Imágenes copiadas desde el Explorador de archivos.':
         '파일 탐색기에서 복사한 이미지입니다.',
-    'Borrar las capturas con QR':
-        'QR 코드가 있는 스크린샷 삭제',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        'Windows가 사진 › 스크린샷에 저장한 스크린샷을 휴지통으로 이동합니다. 끄면 알림에 삭제 버튼이 표시됩니다.',
     'Mostrar contraseñas al momento':
         '암호 바로 표시',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -410,4 +406,20 @@ TEXTS = {
         'ClipQR 실행 중',
     'Selecciona una parte con el ratón y pulsa Ctrl+C':
         '마우스로 일부를 선택하고 Ctrl+C를 누르세요',
+    'CAPTURAS':
+        '스크린샷',
+    'Borrar la captura al detectar un código':
+        '코드를 감지하면 스크린샷 삭제',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        '스크린샷에 QR 코드나 바코드가 있으면 휴지통으로 옮깁니다(복원 가능). 사진 › 스크린샷 폴더가 가득 차지 않게 해 줍니다. 켜져 있으면 알림마다 표시됩니다.',
+    'Borrado automático desactivado':
+        '자동 삭제를 껐습니다',
+    'Desactivar':
+        '끄기',
+    'Borrado automático activo · buscando la captura…':
+        '자동 삭제 켜짐 · 스크린샷을 찾는 중…',
+    'Captura enviada a la Papelera (borrado automático)':
+        '스크린샷을 휴지통으로 옮겼습니다(자동 삭제)',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        '자동 삭제 켜짐 · 이 이미지는 저장된 스크린샷이 아닙니다',
 }

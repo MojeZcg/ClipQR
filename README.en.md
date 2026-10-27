@@ -89,7 +89,7 @@ From the ⚙ icon on the notification or from **Settings…** in the tray menu:
 - **Appearance:** light theme, dark theme or the same as Windows.
 - **Language:** English or Spanish; defaults to the Windows language.
 - **Detection:** QR codes only or barcodes too, read files copied in File Explorer, play a sound on detection, and pause detection.
-- **Delete screenshots with QR codes:** Windows saves every screenshot in *Pictures › Screenshots*. When one contains a QR code, the notification offers **Delete screenshot**, or does it automatically if you turn this option on. The file goes to the Recycle Bin (so it can be restored), and only the file identical to the screenshot is deleted.
+- **Delete the screenshot when a code is detected** (first in Settings, on by default): Windows saves every screenshot in *Pictures › Screenshots*. When one contains a QR code or barcode, ClipQR sends it to the Recycle Bin (so it can be restored), and every notification says so, with a **Turn off** button. Only the file identical to the screenshot is deleted. If you turn it off, the notification offers **Delete screenshot**.
 - **History:** how many scans are kept, and clear the history.
 - **Keyboard shortcuts:** scan an area of the screen (`Win`+`Shift`+`Q`), create a QR code (`Win`+`Shift`+`G`) and use the notification from the keyboard (`Ctrl`+`Shift`+`Space`). They can be changed or turned off. They are never `Ctrl`+`Alt`+letter, because on Spanish and Latin American keyboards that's `AltGr`, and it would stop you from typing @, #, €…
 - **General:** start with Windows, check for updates (once a day; they're only installed if you accept, and after the installer has been verified) and an error report to paste into an issue.

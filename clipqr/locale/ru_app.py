@@ -288,10 +288,6 @@ TEXTS = {
         'Читать скопированные файлы',
     'Imágenes copiadas desde el Explorador de archivos.':
         'Изображения, скопированные из проводника.',
-    'Borrar las capturas con QR':
-        'Удалять снимки экрана с QR-кодами',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        'Перемещает в корзину снимок, который Windows сохраняет в папке Изображения › Снимки экрана. Если выключено, в уведомлении появляется кнопка для этого.',
     'Mostrar contraseñas al momento':
         'Сразу показывать пароли',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -410,4 +406,20 @@ TEXTS = {
         'ClipQR работает',
     'Selecciona una parte con el ratón y pulsa Ctrl+C':
         'Выделите часть мышью и нажмите Ctrl+C',
+    'CAPTURAS':
+        'СКРИНШОТЫ',
+    'Borrar la captura al detectar un código':
+        'Удалять скриншот при обнаружении кода',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        'Если на скриншоте есть QR- или штрихкод, он перемещается в корзину (его можно восстановить), чтобы папка «Изображения › Снимки экрана» не переполнялась. Каждое уведомление показывает, что функция включена.',
+    'Borrado automático desactivado':
+        'Автоудаление отключено',
+    'Desactivar':
+        'Отключить',
+    'Borrado automático activo · buscando la captura…':
+        'Автоудаление включено · поиск скриншота…',
+    'Captura enviada a la Papelera (borrado automático)':
+        'Скриншот перемещён в корзину (автоудаление)',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        'Автоудаление включено · это изображение не сохранённый скриншот',
 }
