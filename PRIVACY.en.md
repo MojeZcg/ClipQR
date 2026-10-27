@@ -2,9 +2,9 @@
 
 # ClipQR privacy policy
 
-*Last updated: October 21, 2026*
+*Last updated: October 27, 2026*
 
-ClipQR is a Windows app that detects QR codes and barcodes in the images you copy or capture. This policy explains what data it uses and what it does with it.
+ClipQR is an app for Windows, macOS and Linux that detects QR codes and barcodes in the images you copy or capture. This policy explains what data it uses and what it does with it.
 
 ## Summary
 
@@ -14,6 +14,7 @@ ClipQR is a Windows app that detects QR codes and barcodes in the images you cop
 
 - **Clipboard images.** When you copy an image or take a screenshot, ClipQR analyzes it on your computer to look for codes. The image is not saved to disk or sent anywhere.
 - **Content of detected codes.** It is shown on screen and kept in a history **in memory only**, which is cleared when you close ClipQR or press *Clear history*.
+- **Saved screenshots.** If the screenshot containing the code was also saved as a file (for example, in *Pictures › Screenshots*), ClipQR moves it to the Recycle Bin/Trash so that folder doesn't fill up. It only moves the file identical to the screenshot, never any other, and you can restore it from the Recycle Bin/Trash. It's on by default and can be turned off in *Settings › Screenshots*.
 - **Settings.** Your preferences (display time, position, theme…) are stored in a local file (`settings.json`) in the app's data folder.
 - **Error log.** If something goes wrong, the technical details are saved to a local file (`error.log`) so the problem can be diagnosed. It contains no images and is never sent.
 
