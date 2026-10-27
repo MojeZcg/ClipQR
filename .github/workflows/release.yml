@@ -71,11 +71,21 @@ jobs:
             dist/SHA256SUMS.txt
             dist/winget/**
       - name: Publicar release
+        id: publish
         if: ${{ github.ref_type == 'tag' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
+          # Si la release ya existe (p. ej. GitHub entregó tarde el evento de la etiqueta y otra ejecución ya
+          # la publicó) no se toca: cambiar los archivos publicados rompería las sumas que ya bajó la gente.
+          gh release view "${{ github.ref_name }}" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "::notice::La release ${{ github.ref_name }} ya existe: no se vuelve a publicar"
+            "published=false" >> $env:GITHUB_OUTPUT
+            exit 0
+          }
+          "published=true" >> $env:GITHUB_OUTPUT
           $notes = "docs/release-notes/${{ github.ref_name }}.md"
           $assets = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in ".exe", ".msix", ".txt" } | ForEach-Object { $_.FullName })
           if (Test-Path $notes) {
@@ -86,7 +96,7 @@ jobs:
       # Envío a winget (docs/DISTRIBUCION.md §4): abre un PR en microsoft/winget-pkgs con los manifiestos.
       # Se activa al crear el secret WINGET_TOKEN (token clásico de GitHub con permiso public_repo).
       - name: Enviar a winget
-        if: ${{ github.ref_type == 'tag' }}
+        if: ${{ github.ref_type == 'tag' && steps.publish.outputs.published == 'true' }}
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         shell: pwsh
