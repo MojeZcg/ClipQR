@@ -422,4 +422,40 @@ TEXTS = {
         'Screenshot spostato nel Cestino (eliminazione automatica)',
     'Borrado automático activo · esta imagen no es una captura guardada':
         'Eliminazione automatica attiva · questa immagine non è uno screenshot salvato',
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        'Impossibile mostrare l’icona di ClipQR nell’area di notifica.\nClipQR è ancora attivo: usa la finestra della cronologia.',
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        'Per leggere gli appunti, installa xclip (X11) o wl-clipboard (Wayland).',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        'Per connettersi al Wi‑Fi serve NetworkManager (nmcli).',
+    'No se encontró la interfaz Wi‑Fi.':
+        'Interfaccia Wi‑Fi non trovata.',
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        'Impossibile acquisire lo schermo.\nSu Wayland le app non possono acquisirlo: fai uno screenshot con lo strumento di sistema e copialo.',
+    'No se pudo capturar la pantalla.\n{error}':
+        'Impossibile acquisire lo schermo.\n{error}',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        'Quando uno screenshot contiene un codice QR o un codice a barre, viene spostato nel Cestino (si può recuperare) per non riempire la cartella degli screenshot. Ogni avviso indica che è attivo.',
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        'La rete a cui sei connesso e la sua password verranno lette dal sistema e mostrate qui. Continuare?',
+    'Iniciar al iniciar sesión':
+        'Avvia all’accesso',
+    'Como el sistema':
+        'Come il sistema',
+    'Imágenes copiadas desde el gestor de archivos.':
+        'Immagini copiate dal gestore di file.',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        'Nessun codice rilevato finora.\nFai uno screenshot di un codice QR con ⌃⇧⌘4 (viene copiato negli appunti).',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        'Nessun codice rilevato finora.\nFai uno screenshot di un codice QR (Stamp) e copialo.',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR è attivo nella barra dei menu.\nFai uno screenshot di un codice QR e comparirà qui.\nSi avvierà automaticamente all’accesso.',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR è attivo nell’area di notifica.\nFai uno screenshot di un codice QR e comparirà qui.\nSi avvierà automaticamente all’accesso.',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        'Su Wayland le app non possono usare scorciatoie da tastiera globali.\nUsa il menu di ClipQR nell’area di notifica.',
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        'Per usare le scorciatoie da tastiera, consenti ClipQR in\nImpostazioni di Sistema › Privacy e sicurezza › Accessibilità.',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        'Le scorciatoie da tastiera globali non sono disponibili: manca il modulo pynput.',
 }

@@ -422,4 +422,40 @@ TEXTS = {
         'Скриншот перемещён в корзину (автоудаление)',
     'Borrado automático activo · esta imagen no es una captura guardada':
         'Автоудаление включено · это изображение не сохранённый скриншот',
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        'Не удалось показать значок ClipQR в области уведомлений.\nClipQR продолжает работать: используйте окно истории.',
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        'Чтобы читать буфер обмена, установите xclip (X11) или wl-clipboard (Wayland).',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        'Для подключения к Wi‑Fi требуется NetworkManager (nmcli).',
+    'No se encontró la interfaz Wi‑Fi.':
+        'Интерфейс Wi‑Fi не найден.',
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        'Не удалось сделать снимок экрана.\nВ Wayland приложения не могут снимать экран: сделайте снимок системным средством и скопируйте его.',
+    'No se pudo capturar la pantalla.\n{error}':
+        'Не удалось сделать снимок экрана.\n{error}',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        'Если на снимке экрана есть QR-код или штрихкод, он перемещается в Корзину (его можно восстановить), чтобы не засорять папку со снимками. Каждое уведомление показывает, что функция включена.',
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        'Сеть, к которой вы подключены, и её пароль будут считаны из системы и показаны здесь. Продолжить?',
+    'Iniciar al iniciar sesión':
+        'Запускать при входе в систему',
+    'Como el sistema':
+        'Как в системе',
+    'Imágenes copiadas desde el gestor de archivos.':
+        'Изображения, скопированные из файлового менеджера.',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        'Коды пока не обнаружены.\nСделайте снимок QR-кода с помощью ⌃⇧⌘4 (он копируется в буфер обмена).',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        'Коды пока не обнаружены.\nСделайте снимок QR-кода (PrtSc) и скопируйте его.',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR работает в строке меню.\nСделайте снимок QR-кода, и он появится здесь.\nПриложение запустится автоматически при входе в систему.',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR работает в области уведомлений.\nСделайте снимок QR-кода, и он появится здесь.\nПриложение запустится автоматически при входе в систему.',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        'В Wayland приложения не могут использовать глобальные сочетания клавиш.\nИспользуйте меню ClipQR в области уведомлений.',
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        'Чтобы использовать сочетания клавиш, разрешите ClipQR в разделе\nСистемные настройки › Конфиденциальность и безопасность › Универсальный доступ.',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        'Глобальные сочетания клавиш недоступны: отсутствует модуль pynput.',
 }

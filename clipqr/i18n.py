@@ -7,7 +7,6 @@ traducir, así el traductor ve la frase entera. Los textos que se definen al imp
 constantes) se marcan con N_("…"), que no traduce, y se traducen con _() al mostrarlos. Los catálogos se
 importan uno a uno (nada de imports por nombre: PyInstaller no los vería).
 """
-import ctypes
 import locale
 import os
 
@@ -55,11 +54,18 @@ def language_for_locale(name):
 
 
 def system_language():
-    """Idioma del sistema: el de la interfaz de Windows; en macOS/Linux, el de la configuración regional.
-    Si no está entre los disponibles, inglés (se entiende en más sitios)."""
+    """Idioma del sistema: el de la interfaz de Windows; en macOS, el idioma preferido del usuario; en Linux
+    (o si no se pudo saber), el de la configuración regional. Si no está entre los disponibles, inglés (se
+    entiende en más sitios)."""
+    from clipqr.platform import ui_langid, ui_locale_name  # aquí: clipqr.platform importa este módulo
     try:
-        return language_for_langid(ctypes.windll.kernel32.GetUserDefaultUILanguage())
-    except (AttributeError, OSError):
+        lang_id = ui_langid()
+        if lang_id is not None:
+            return language_for_langid(lang_id)
+        name = ui_locale_name()
+        if name:
+            return language_for_locale(name)
+    except OSError:
         pass
     for var in ("LC_ALL", "LC_MESSAGES", "LANG"):
         if os.environ.get(var):

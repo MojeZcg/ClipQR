@@ -4,6 +4,7 @@ import sys
 
 import pytest
 
+pytest.importorskip("winreg", reason="el instalador ClipQR-Setup.exe es solo para Windows")
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "installer"))
 import setup  # noqa: E402
 

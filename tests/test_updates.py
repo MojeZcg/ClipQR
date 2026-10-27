@@ -54,3 +54,13 @@ def test_tampered_download_is_rejected(monkeypatch, tmp_path):
 def test_release_without_sums_is_not_installed():
     with pytest.raises(ValueError, match="sumas"):
         updates.download_verified({"assets": {"ClipQR-Setup.exe": "https://x/setup"}})
+
+
+def test_release_workflow_publishes_every_system_with_its_sum():
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parent.parent
+    workflow = (root / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8")
+    for name in (updates.SETUP_NAME, updates.MAC_NAME, updates.LINUX_NAME, updates.SUMS_NAME):
+        assert name in workflow, name
+    assert updates.MAC_NAME in (root / "build_macos.sh").read_text(encoding="utf-8")
+    assert updates.LINUX_NAME in (root / "build_linux.sh").read_text(encoding="utf-8")

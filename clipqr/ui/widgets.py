@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 
 from clipqr.i18n import _
 from clipqr.icons import make_icon
+from clipqr.platform import FONT_SCALE, SYSTEM
 from clipqr.ui.theme import KINDS, _shade
 
 
@@ -13,7 +14,23 @@ class WidgetsMixin:
         return int(n * self.dpi)
 
     def font(self, size, weight="normal"):
-        return (self.ui_font, size, weight)
+        return (self.ui_font, size if FONT_SCALE == 1 else round(size * FONT_SCALE), weight)
+
+    def mono(self, size):
+        """Fuente monoespaciada (Consolas en Windows)."""
+        return (self.mono_font, size if FONT_SCALE == 1 else round(size * FONT_SCALE))
+
+    def _bind_wheel(self, win, canvas):
+        """Rueda del ratón sobre una ventana con scroll: Windows da múltiplos de 120, macOS pasos sueltos y
+        Linux (X11) botones 4 y 5."""
+        if SYSTEM == "windows":
+            win.bind("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
+        elif SYSTEM == "macos":
+            win.bind("<MouseWheel>", lambda e: canvas.yview_scroll(-e.delta, "units"))
+        else:
+            win.bind("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
+            win.bind("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
+            win.bind("<MouseWheel>", lambda e: canvas.yview_scroll(-1 if e.delta > 0 else 1, "units"))
 
     def glyph(self, kind_or_char):
         """(texto, fuente) para un icono: glifo de Segoe Fluent Icons o emoji de reserva."""
@@ -62,7 +79,7 @@ class WidgetsMixin:
         if label.lower().startswith(_("Contraseña").lower()) or label == _("Secreto"):
             hidden = "•" * min(len(value), 14)
             var = tk.StringVar(value=shown if self.settings.get("show_passwords") else hidden)
-            lbl = tk.Label(row, textvariable=var, bg=c["card"], fg=c["fg"], font=("Consolas", 10),
+            lbl = tk.Label(row, textvariable=var, bg=c["card"], fg=c["fg"], font=self.mono(10),
                            anchor="w", cursor="hand2")
             toggle = self._button(row, self.glyph("")[0] if self.icon_font else "👁")
             toggle.config(font=self.glyph("")[1], padx=self.px(6),
