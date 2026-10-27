@@ -28,4 +28,8 @@ TEXTS = {
         'Wiederholen',
     'Installation failed':
         'Installation fehlgeschlagen',
+    'Install {app}': '{app} installieren',
+    '{app} is installed ✓': '{app} ist installiert ✓',
+    'Version {version} · clipboard QR reader': 'Version {version} · QR-Leser für die Zwischenablage',
+    'In {carpeta}': 'In {carpeta}',
 }

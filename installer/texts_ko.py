@@ -28,8 +28,8 @@ TEXTS = {
         '다시 시도',
     'Installation failed':
         '설치하지 못했습니다',
-    'Install ClipQR':
-        'ClipQR 설치',
-    'ClipQR is installed ✓':
-        'ClipQR이 설치되었습니다 ✓',
+    'Install {app}': '{app} 설치',
+    '{app} is installed ✓': '{app}이(가) 설치되었습니다 ✓',
+    'Version {version} · clipboard QR reader': '버전 {version} · 클립보드 QR 리더',
+    'In {carpeta}': '설치 위치: {carpeta}',
 }

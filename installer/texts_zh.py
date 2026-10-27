@@ -28,4 +28,8 @@ TEXTS = {
         '未知选项',
     "You'll find it in the Start menu. While it's running, it lives in the system tray next to the clock: take a screenshot of a QR code and the notification pops up.\n\nTo uninstall it: Windows Settings › Apps › ClipQR.":
         '你可以在“开始”菜单中找到它。运行时它位于任务栏通知区域（时钟旁）：截取二维码的屏幕截图，就会弹出通知。\n\n卸载方法：Windows 设置 › 应用 › ClipQR。',
+    'Install {app}': '安装 {app}',
+    '{app} is installed ✓': '{app} 已安装 ✓',
+    'Version {version} · clipboard QR reader': '版本 {version} · 剪贴板二维码识别器',
+    'In {carpeta}': '位于 {carpeta}',
 }

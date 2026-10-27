@@ -28,4 +28,8 @@ TEXTS = {
         '不明なオプション',
     "You'll find it in the Start menu. While it's running, it lives in the system tray next to the clock: take a screenshot of a QR code and the notification pops up.\n\nTo uninstall it: Windows Settings › Apps › ClipQR.":
         'スタート メニューから起動できます。実行中は時計の横の通知領域に常駐します。QR コードのスクリーンショットを撮ると通知が表示されます。\n\nアンインストールするには：Windows の［設定 › アプリ › ClipQR］。',
+    'Install {app}': '{app} をインストール',
+    '{app} is installed ✓': '{app} はインストールされました ✓',
+    'Version {version} · clipboard QR reader': 'バージョン {version} · クリップボードの QR コードリーダー',
+    'In {carpeta}': 'インストール先: {carpeta}',
 }

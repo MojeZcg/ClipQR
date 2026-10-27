@@ -56,7 +56,7 @@ class WidgetsMixin:
         c = self.c
         row = tk.Frame(parent, bg=c["card"])
         row.pack(fill="x", pady=1)
-        tk.Label(row, text=label, bg=c["card"], fg=c["muted"], font=self.font(8), width=14,
+        tk.Label(row, text=label, bg=c["card"], fg=c["muted"], font=self.font(8), width=16,
                  anchor="w").pack(side="left")
         shown = value if len(value) <= 60 else value[:60] + "…"
         if label.lower().startswith(_("Contraseña").lower()) or label == _("Secreto"):

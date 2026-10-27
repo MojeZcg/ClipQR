@@ -28,4 +28,8 @@ TEXTS = {
         'Réessayer',
     'Installation failed':
         "Échec de l'installation",
+    'Install {app}': 'Installer {app}',
+    '{app} is installed ✓': '{app} est installé ✓',
+    'Version {version} · clipboard QR reader': 'Version {version} · lecteur de QR code du presse-papiers',
+    'In {carpeta}': 'Dans {carpeta}',
 }

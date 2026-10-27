@@ -60,12 +60,11 @@ def windows_language():
 LANG = windows_language()
 
 
-def T(es, en):
+def T(es, en, **values):
     """Texto visible en el idioma de Windows (el asistente no puede importar clipqr): español, inglés o la
-    traducción del texto inglés, si la hay."""
-    if LANG == "es":
-        return es
-    return TRANSLATIONS.get(LANG, {}).get(en, en)
+    traducción del texto inglés, si la hay. Las {llaves} se rellenan después de traducir."""
+    text = es if LANG == "es" else TRANSLATIONS.get(LANG, {}).get(en, en)
+    return text.format(**values) if values else text
 
 
 def resource(name):
@@ -194,7 +193,7 @@ class Wizard:
         self.c = THEMES[windows_theme()]
         c = self.c
         r = self.root
-        r.title(T(f"Instalar {APP}", f"Install {APP}"))
+        r.title(T("Instalar {app}", "Install {app}", app=APP))
         r.configure(bg=c["bg"])
         r.resizable(False, False)
         try:
@@ -272,9 +271,9 @@ class Wizard:
     def page_options(self):
         c = self.c
         self.clear()
-        self.header(T(f"Instalar {APP}", f"Install {APP}"),
-                    T(f"Versión {VERSION} · lector de QR para el portapapeles",
-                      f"Version {VERSION} · clipboard QR reader"))
+        self.header(T("Instalar {app}", "Install {app}", app=APP),
+                    T("Versión {version} · lector de QR para el portapapeles",
+                      "Version {version} · clipboard QR reader", version=VERSION))
         self.text(self.body, T("Detecta códigos QR y de barras en tus capturas e imágenes copiadas. "
                                "Se instala solo para tu usuario, sin permisos de administrador.",
                                "Detects QR codes and barcodes in your screenshots and copied images. "
@@ -324,7 +323,7 @@ class Wizard:
     def page_done(self):
         c = self.c
         self.clear()
-        self.header(T(f"{APP} está instalado ✓", f"{APP} is installed ✓"), T(f"En {INSTALL_DIR}", f"In {INSTALL_DIR}"))
+        self.header(T("{app} está instalado ✓", "{app} is installed ✓", app=APP), T("En {carpeta}", "In {carpeta}", carpeta=INSTALL_DIR))
         self.text(self.body, T("Lo encontrarás en el menú Inicio. Cuando está abierto vive en la bandeja, junto al "
                                "reloj: haz una captura de un QR y aparecerá el aviso.\n\n"
                                "Para desinstalarlo: Configuración de Windows › Aplicaciones › ClipQR.",

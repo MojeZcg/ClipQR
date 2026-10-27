@@ -28,8 +28,8 @@ TEXTS = {
         'Повторить',
     'Installation failed':
         'Не удалось установить',
-    'Install ClipQR':
-        'Установить ClipQR',
-    'ClipQR is installed ✓':
-        'ClipQR установлен ✓',
+    'Install {app}': 'Установить {app}',
+    '{app} is installed ✓': '{app} установлен ✓',
+    'Version {version} · clipboard QR reader': 'Версия {version} · распознавание QR-кодов из буфера обмена',
+    'In {carpeta}': 'В папке {carpeta}',
 }

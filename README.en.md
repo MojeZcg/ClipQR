@@ -75,7 +75,7 @@ It also reads DataMatrix, Aztec, PDF417, Code 128, Code 39 and other formats, th
 
 That's it: it installs for your user in `%LOCALAPPDATA%\Programs\ClipQR`, with no administrator rights, and adds a Start menu shortcut. ClipQR sits in the system tray, next to the clock. To uninstall it: **Windows Settings › Apps › ClipQR**.
 
-ClipQR's interface is available in English and Spanish: it follows the Windows language and can be changed in **Settings › Language**.
+ClipQR's interface is available in English, Spanish, Portuguese, French, German, Italian, Simplified Chinese, Japanese, Russian and Korean. It follows the Windows language (English if yours isn't one of these) and can be changed in **Settings › Idioma · Language**.
 
 Rather not install anything? Download **`ClipQR.exe`** (portable version) and run it directly.
 
