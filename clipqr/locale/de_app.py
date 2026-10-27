@@ -288,10 +288,6 @@ TEXTS = {
         'Kopierte Dateien lesen',
     'Imágenes copiadas desde el Explorador de archivos.':
         'Aus dem Datei-Explorer kopierte Bilder.',
-    'Borrar las capturas con QR':
-        'Screenshots mit QR-Code löschen',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        'Verschiebt den Screenshot, den Windows unter Bilder › Screenshots speichert, in den Papierkorb. Wenn deaktiviert, zeigt die Benachrichtigung eine Schaltfläche dafür.',
     'Mostrar contraseñas al momento':
         'Kennwörter sofort anzeigen',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -410,4 +406,20 @@ TEXTS = {
         'ClipQR läuft',
     'Selecciona una parte con el ratón y pulsa Ctrl+C':
         'Einen Teil mit der Maus markieren und Strg+C drücken',
+    'CAPTURAS':
+        'BILDSCHIRMFOTOS',
+    'Borrar la captura al detectar un código':
+        'Bildschirmfoto bei erkanntem Code löschen',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        'Enthält ein Bildschirmfoto einen QR- oder Barcode, wird es in den Papierkorb verschoben (wiederherstellbar), damit Bilder › Screenshots nicht vollläuft. Jede Benachrichtigung zeigt, dass es aktiv ist.',
+    'Borrado automático desactivado':
+        'Automatisches Löschen deaktiviert',
+    'Desactivar':
+        'Deaktivieren',
+    'Borrado automático activo · buscando la captura…':
+        'Automatisches Löschen aktiv · Bildschirmfoto wird gesucht…',
+    'Captura enviada a la Papelera (borrado automático)':
+        'Bildschirmfoto in den Papierkorb verschoben (automatisch)',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        'Automatisches Löschen aktiv · dieses Bild ist kein gespeichertes Bildschirmfoto',
 }

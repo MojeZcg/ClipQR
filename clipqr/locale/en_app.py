@@ -288,10 +288,6 @@ TEXTS = {
         'Read copied files',
     'Imágenes copiadas desde el Explorador de archivos.':
         'Images copied from File Explorer.',
-    'Borrar las capturas con QR':
-        'Delete screenshots with QR codes',
-    'Envía a la Papelera la captura que Windows guarda en Imágenes › Capturas de pantalla. Si está desactivado, el aviso muestra un botón para hacerlo.':
-        'Moves the screenshot Windows saves in Pictures › Screenshots to the Recycle Bin. When off, the notification shows a button to do it.',
     'Mostrar contraseñas al momento':
         'Show passwords right away',
     'Contraseñas Wi‑Fi y secretos 2FA visibles sin pulsar el ojo. Desactivado es más seguro si alguien mira tu pantalla.':
@@ -398,13 +394,32 @@ TEXTS = {
         "Couldn't reach GitHub.\n{error}",
     'Tienes la última versión ({version}).':
         'You have the latest version ({version}).',
-    # aviso al iniciar
-    "Avisar al iniciar": "Show a notice at startup",
-    "Un aviso breve confirma que ClipQR está activo cuando se abre.":
-        "A short notice confirms ClipQR is running when it starts.",
-    "Captura un QR o pulsa {atajo} para escanear una zona.":
-        "Screenshot a QR code or press {atajo} to scan an area.",
-    "Captura o copia un QR y aparecerá aquí.": "Screenshot or copy a QR code and it will show up here.",
-    "ClipQR está activo": "ClipQR is running",
-    "Selecciona una parte con el ratón y pulsa Ctrl+C": "Select part of it with the mouse and press Ctrl+C",
+    'Avisar al iniciar':
+        'Show a notice at startup',
+    'Un aviso breve confirma que ClipQR está activo cuando se abre.':
+        'A short notice confirms ClipQR is running when it starts.',
+    'Captura un QR o pulsa {atajo} para escanear una zona.':
+        'Screenshot a QR code or press {atajo} to scan an area.',
+    'Captura o copia un QR y aparecerá aquí.':
+        'Screenshot or copy a QR code and it will show up here.',
+    'ClipQR está activo':
+        'ClipQR is running',
+    'Selecciona una parte con el ratón y pulsa Ctrl+C':
+        'Select part of it with the mouse and press Ctrl+C',
+    'CAPTURAS':
+        'SCREENSHOTS',
+    'Borrar la captura al detectar un código':
+        'Delete the screenshot when a code is detected',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar Imágenes › Capturas de pantalla. Cada aviso indica que está activo.':
+        "When a screenshot contains a QR code or barcode, it's sent to the Recycle Bin (you can restore it) so Pictures › Screenshots doesn't fill up. Every notification shows that it's on.",
+    'Borrado automático desactivado':
+        'Auto-delete turned off',
+    'Desactivar':
+        'Turn off',
+    'Borrado automático activo · buscando la captura…':
+        'Auto-delete on · looking for the screenshot…',
+    'Captura enviada a la Papelera (borrado automático)':
+        'Screenshot sent to the Recycle Bin (auto-delete)',
+    'Borrado automático activo · esta imagen no es una captura guardada':
+        "Auto-delete on · this image isn't a saved screenshot",
 }

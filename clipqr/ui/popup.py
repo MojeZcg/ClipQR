@@ -506,7 +506,10 @@ class PopupMixin:
         for w in slot.winfo_children():
             w.destroy()
         win._delete_capture = None
-        if not path and not pending:
+        auto = self.settings["delete_capture"]
+        scanned = "capture_pending" in codes[0]  # recién escaneado (no reabierto desde el historial)
+        deleted = codes[0].get("capture_deleted")
+        if not path and not pending and not (auto and scanned and not deleted):
             if slot.winfo_ismapped():
                 slot.pack_forget()
                 self._refit_popup()
@@ -516,13 +519,33 @@ class PopupMixin:
         gf = (self.icon_font, 10) if self.icon_font else self.font(10)
         icon = tk.Label(slot, text=g, font=gf, bg=c["bg"], fg=c["muted"])
         icon.pack(side="left", padx=(0, self.px(6)))
-        msg = tk.Label(slot, bg=c["bg"], fg=c["muted"], font=self.font(9), anchor="w", justify="left")
+        msg = tk.Label(slot, bg=c["bg"], fg=c["muted"], font=self.font(9), anchor="w", justify="left",
+                       wraplength=self.px(250))
         msg.pack(side="left", fill="x", expand=True)
+
+        def turn_off(b):
+            self.set_setting(delete_capture=False)
+            self._flash(b, _("Borrado automático desactivado"))
+            slot.after(1200, lambda: self._paint_capture_slot(codes))
+
+        def off_button():
+            b = self._button(slot, _("Desactivar"))
+            b.config(command=lambda: turn_off(b))
+            b.pack(side="right")
+
         if pending:
-            msg.config(text=_("Buscando la captura guardada…"))
-        elif codes[0].get("capture_deleted"):
-            msg.config(text=_("Captura enviada a la Papelera"), fg=c["fg"])
+            msg.config(text=_("Borrado automático activo · buscando la captura…") if auto
+                       else _("Buscando la captura guardada…"))
+        elif deleted:
+            if auto:
+                msg.config(text=_("Captura enviada a la Papelera (borrado automático)"), fg=c["fg"])
+                off_button()
+            else:
+                msg.config(text=_("Captura enviada a la Papelera"), fg=c["fg"])
             icon.config(fg=c["ok"])
+        elif not path:  # borrado automático activo, pero esta imagen no tiene un archivo de captura
+            msg.config(text=_("Borrado automático activo · esta imagen no es una captura guardada"))
+            off_button()
         elif os.path.exists(path):
             msg.config(text=_("Captura: {archivo}", archivo=shorten(os.path.basename(path), 22, middle=True)))
 
