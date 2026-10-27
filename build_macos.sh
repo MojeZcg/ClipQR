@@ -25,10 +25,13 @@ pb() { /usr/libexec/PlistBuddy -c "$1" "$PLIST"; }
 # LSUIElement: vive en la barra de menús, sin icono en el Dock ni en Cmd+Tab
 pb "Delete :LSUIElement" 2>/dev/null || true
 pb "Add :LSUIElement bool true"
-pb "Set :CFBundleShortVersionString $VERSION"
-pb "Set :CFBundleVersion $VERSION"
+# Delete + Add: «Set» falla si la clave no existe (PyInstaller no siempre escribe CFBundleVersion)
+pb "Delete :CFBundleShortVersionString" 2>/dev/null || true
+pb "Add :CFBundleShortVersionString string $VERSION"
+pb "Delete :CFBundleVersion" 2>/dev/null || true
+pb "Add :CFBundleVersion string $VERSION"
 pb "Delete :NSAppleEventsUsageDescription" 2>/dev/null || true
-pb "Add :NSAppleEventsUsageDescription string ClipQR usa AppleScript para leer imágenes del portapapeles y enviar capturas a la Papelera."
+pb "Add :NSAppleEventsUsageDescription string ClipQR uses AppleScript to read images from the clipboard and move screenshots to the Trash."
 pb "Delete :LSMinimumSystemVersion" 2>/dev/null || true
 pb "Add :LSMinimumSystemVersion string 11.0"
 # cambiar Info.plist invalida la firma ad hoc de PyInstaller: se vuelve a firmar
