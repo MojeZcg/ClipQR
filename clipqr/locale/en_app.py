@@ -1,5 +1,5 @@
 """Catálogo inglés de la interfaz: texto en español -> texto en inglés."""
-EN = {
+TEXTS = {
     'Windows no confirmó la conexión a «{red}».\nComprueba que la red está al alcance y que la contraseña es correcta.':
         "Windows didn't confirm the connection to “{red}”.\nCheck that the network is in range and the password is correct.",
     'Ya estás conectado a «{red}».':
@@ -356,8 +356,8 @@ EN = {
         '✓ Cleared',
     'Invitar un cafecito ↗':
         'Buy me a coffee ↗',
-    'Automático (Windows)':
-        'Automatic (Windows)',
+    'Automático (idioma del sistema)':
+        'Automatic (system language)',
     'Los cambios se guardan al momento.':
         'Changes are saved instantly.',
     'Arriba dcha.':

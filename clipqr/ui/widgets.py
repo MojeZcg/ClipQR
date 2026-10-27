@@ -56,7 +56,7 @@ class WidgetsMixin:
         c = self.c
         row = tk.Frame(parent, bg=c["card"])
         row.pack(fill="x", pady=1)
-        tk.Label(row, text=label, bg=c["card"], fg=c["muted"], font=self.font(8), width=14,
+        tk.Label(row, text=label, bg=c["card"], fg=c["muted"], font=self.font(8), width=16,
                  anchor="w").pack(side="left")
         shown = value if len(value) <= 60 else value[:60] + "…"
         if label.lower().startswith(_("Contraseña").lower()) or label == _("Secreto"):
@@ -154,6 +154,27 @@ class WidgetsMixin:
             buttons[key] = b
         paint()
         return box
+
+    def _dropdown(self, parent, options, value, on_change):
+        """Botón con menú desplegable para listas largas: [(clave, texto)]."""
+        c = self.c
+        names = dict(options)
+        var = tk.StringVar(value=names.get(value, options[0][1]))
+        mb = tk.Menubutton(parent, textvariable=var, indicatoron=False, relief="flat", bd=0, cursor="hand2",
+                           bg=c["btn"], fg=c["fg"], activebackground=KINDS["link"][2], activeforeground="white",
+                           font=self.font(9), padx=self.px(12), pady=self.px(5), highlightthickness=0)
+        menu = tk.Menu(mb, tearoff=False, bg=c["card"], fg=c["fg"], activebackground=KINDS["link"][2],
+                       activeforeground="white", font=self.font(10), bd=0)
+
+        def pick(key):
+            var.set(names[key] + "  ▾")
+            on_change(key)
+
+        for key, label in options:
+            menu.add_command(label=label, command=lambda k=key: pick(k))
+        mb.config(menu=menu)
+        var.set(var.get() + "  ▾")
+        return mb
 
     def _stepper(self, parent, choices, value, fmt, on_change):
         """[−] valor [+] sobre una lista de valores permitidos."""

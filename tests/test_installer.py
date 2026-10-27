@@ -27,7 +27,8 @@ def test_language_from_windows_langid():
     assert setup.language_for(0x2C0A) == "es"  # es-AR
     assert setup.language_for(0x080A) == "es"  # es-MX
     assert setup.language_for(0x0409) == "en"  # en-US
-    assert setup.language_for(0x0416) == "en"  # pt-BR: sin traducción, en inglés
+    assert setup.language_for(0x0416) == "pt"  # pt-BR
+    assert setup.language_for(0x0413) == "en"  # nl-NL: sin traducción, en inglés
 
 
 def test_texts_follow_the_language(monkeypatch):
@@ -43,3 +44,14 @@ def test_unknown_option_message_is_translated(monkeypatch):
     monkeypatch.setattr(setup, "LANG", "en")
     with pytest.raises(ValueError, match="Unknown option: quiet"):
         setup.parse_args(["/quiet"])
+
+
+def test_traducciones_del_instalador_completas():
+    """Cada idioma con traducciones tiene todos los textos ingleses de T(es, en)."""
+    import ast
+    src = open(setup.__file__, encoding="utf-8").read()
+    english = {n.args[1].value for n in ast.walk(ast.parse(src)) if isinstance(n, ast.Call)
+               and getattr(n.func, "id", None) == "T" and len(n.args) == 2 and isinstance(n.args[1], ast.Constant)}
+    for code, texts in setup.TRANSLATIONS.items():
+        if texts:
+            assert english <= set(texts), (code, sorted(english - set(texts)))
