@@ -22,7 +22,7 @@
   <a href="https://cafecito.app/mojezcg"><img src="https://img.shields.io/badge/Cafecito-invitame%20un%20caf%C3%A9-6f4e37?logo=buymeacoffee&logoColor=white" alt="Invitame un café en cafecito.app"></a>
 </p>
 
-![ClipQR](docs/screenshots/hero.png)
+![Demostración: captura un QR y ClipQR lo lee al momento](docs/screenshots/demo-es.gif)
 
 ## Cómo funciona
 
@@ -147,6 +147,10 @@ Genera `dist\ClipQR-<versión>.msix`. Al instalarse desde la Store, el inicio co
 
 - [Hoja de ruta](docs/ROADMAP.md): qué viene hasta la 1.4, PR por PR.
 - [Distribución](docs/DISTRIBUCION.md): releases automáticas, firma de código, winget y Microsoft Store.
+
+## Contribuir
+
+¿Quieres añadir un idioma, la factura de tu país o arreglar algo? Lee la [guía para contribuir](CONTRIBUTING.md) y mira las [incidencias para empezar](https://github.com/MojeZcg/ClipQR/labels/good%20first%20issue). Toda ayuda suma, también avisar de un QR que no se lee bien.
 
 ## Apoyar el proyecto
 
