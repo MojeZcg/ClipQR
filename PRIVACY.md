@@ -2,9 +2,9 @@
 
 # Política de privacidad de ClipQR
 
-*Última actualización: 21 de octubre de 2026*
+*Última actualización: 27 de octubre de 2026*
 
-ClipQR es una aplicación para Windows que detecta códigos QR y códigos de barras en las imágenes que copias o capturas. Esta política explica qué datos usa y qué hace con ellos.
+ClipQR es una aplicación para Windows, macOS y Linux que detecta códigos QR y códigos de barras en las imágenes que copias o capturas. Esta política explica qué datos usa y qué hace con ellos.
 
 ## Resumen
 
@@ -14,6 +14,7 @@ ClipQR es una aplicación para Windows que detecta códigos QR y códigos de bar
 
 - **Imágenes del portapapeles.** Cuando copias una imagen o haces una captura, ClipQR la analiza en tu equipo para buscar códigos. La imagen no se guarda en disco ni se envía a ningún sitio.
 - **Contenido de los códigos detectados.** Se muestra en pantalla y se guarda en un historial **solo en memoria**, que se borra al cerrar ClipQR o al pulsar *Borrar historial*.
+- **Capturas de pantalla guardadas.** Si la captura que contiene el código también se guardó como archivo (por ejemplo, en *Imágenes › Capturas de pantalla*), ClipQR la envía a la Papelera para no llenar esa carpeta. Solo mueve el archivo idéntico a la captura, nunca otros, y se puede recuperar desde la Papelera. Está activado por defecto y se desactiva en *Configuración › Capturas*.
 - **Configuración.** Tus preferencias (tiempo visible, posición, tema…) se guardan en un archivo local (`settings.json`) dentro de la carpeta de datos de la aplicación.
 - **Registro de errores.** Si algo falla, el detalle técnico se guarda en un archivo local (`error.log`) para poder diagnosticarlo. No contiene imágenes y nunca se envía.
 
