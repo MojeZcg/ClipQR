@@ -422,4 +422,40 @@ TEXTS = {
         'Capture envoyée à la Corbeille (suppression automatique)',
     'Borrado automático activo · esta imagen no es una captura guardada':
         "Suppression automatique active · cette image n'est pas une capture enregistrée",
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        'Impossible d’afficher l’icône de ClipQR dans la zone de notification.\nClipQR reste actif : utilisez la fenêtre de l’historique.',
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        'Pour lire le presse-papiers, installez xclip (X11) ou wl-clipboard (Wayland).',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        'NetworkManager (nmcli) est nécessaire pour se connecter au Wi‑Fi.',
+    'No se encontró la interfaz Wi‑Fi.':
+        'Interface Wi‑Fi introuvable.',
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        'Impossible de capturer l’écran.\nSous Wayland, les applications ne peuvent pas le capturer : faites une capture avec l’outil du système et copiez-la.',
+    'No se pudo capturar la pantalla.\n{error}':
+        'Impossible de capturer l’écran.\n{error}',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        'Lorsqu’une capture d’écran contient un QR code ou un code-barres, elle est placée dans la Corbeille (récupérable) pour ne pas encombrer le dossier des captures. Chaque notification indique que cette option est activée.',
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        'Le réseau auquel vous êtes connecté et son mot de passe seront lus depuis le système et affichés ici. Continuer ?',
+    'Iniciar al iniciar sesión':
+        'Lancer à l’ouverture de session',
+    'Como el sistema':
+        'Comme le système',
+    'Imágenes copiadas desde el gestor de archivos.':
+        'Images copiées depuis le gestionnaire de fichiers.',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        'Aucun code détecté pour le moment.\nFaites une capture d’un QR code avec ⌃⇧⌘4 (elle est copiée dans le presse-papiers).',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        'Aucun code détecté pour le moment.\nFaites une capture d’un QR code (Impr. écran) et copiez-la.',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR est actif dans la barre des menus.\nFaites une capture d’un QR code et il apparaîtra ici.\nIl démarrera automatiquement à l’ouverture de session.',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR est actif dans la zone de notification.\nFaites une capture d’un QR code et il apparaîtra ici.\nIl démarrera automatiquement à l’ouverture de session.',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        'Sous Wayland, les applications ne peuvent pas utiliser de raccourcis clavier globaux.\nUtilisez le menu de ClipQR dans la zone de notification.',
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        'Pour utiliser les raccourcis clavier, autorisez ClipQR dans\nRéglages Système › Confidentialité et sécurité › Accessibilité.',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        'Les raccourcis clavier globaux ne sont pas disponibles : le module pynput est manquant.',
 }

@@ -422,4 +422,40 @@ TEXTS = {
         '스크린샷을 휴지통으로 옮겼습니다(자동 삭제)',
     'Borrado automático activo · esta imagen no es una captura guardada':
         '자동 삭제 켜짐 · 이 이미지는 저장된 스크린샷이 아닙니다',
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        '시스템 트레이에 ClipQR 아이콘을 표시할 수 없습니다.\nClipQR는 계속 실행 중입니다. 기록 창을 사용하세요.',
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        '클립보드를 읽으려면 xclip (X11) 또는 wl-clipboard (Wayland)를 설치하세요.',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        'Wi‑Fi에 연결하려면 NetworkManager (nmcli)가 필요합니다.',
+    'No se encontró la interfaz Wi‑Fi.':
+        'Wi‑Fi 인터페이스를 찾을 수 없습니다.',
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        '화면을 캡처할 수 없습니다.\nWayland에서는 앱이 화면을 캡처할 수 없습니다. 시스템 도구로 스크린샷을 찍은 다음 복사하세요.',
+    'No se pudo capturar la pantalla.\n{error}':
+        '화면을 캡처할 수 없습니다.\n{error}',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        '스크린샷에 QR 코드나 바코드가 있으면 스크린샷 폴더가 가득 차지 않도록 휴지통으로 이동합니다(복원할 수 있음). 알림마다 이 기능이 켜져 있음을 표시합니다.',
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        '현재 연결된 네트워크와 비밀번호를 시스템에서 읽어 여기에 표시합니다. 계속할까요?',
+    'Iniciar al iniciar sesión':
+        '로그인 시 시작',
+    'Como el sistema':
+        '시스템 설정에 따름',
+    'Imágenes copiadas desde el gestor de archivos.':
+        '파일 관리자에서 복사한 이미지입니다.',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        '아직 감지된 코드가 없습니다.\n⌃⇧⌘4로 QR 코드를 스크린샷으로 찍으세요(클립보드에 복사됩니다).',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        '아직 감지된 코드가 없습니다.\nQR 코드를 스크린샷(PrtSc)으로 찍어 복사하세요.',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR가 메뉴 막대에서 실행 중입니다.\nQR 코드를 스크린샷으로 찍으면 여기에 표시됩니다.\n로그인 시 자동으로 시작됩니다.',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR가 시스템 트레이에서 실행 중입니다.\nQR 코드를 스크린샷으로 찍으면 여기에 표시됩니다.\n로그인 시 자동으로 시작됩니다.',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        'Wayland에서는 앱이 전역 키보드 단축키를 사용할 수 없습니다.\n시스템 트레이의 ClipQR 메뉴를 사용하세요.',
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        '키보드 단축키를 사용하려면\n시스템 설정 › 개인정보 보호 및 보안 › 손쉬운 사용에서 ClipQR를 허용하세요.',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        '전역 키보드 단축키를 사용할 수 없습니다. pynput 모듈이 없습니다.',
 }

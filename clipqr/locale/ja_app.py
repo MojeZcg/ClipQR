@@ -422,4 +422,40 @@ TEXTS = {
         'スクリーンショットをごみ箱に移動しました（自動削除）',
     'Borrado automático activo · esta imagen no es una captura guardada':
         '自動削除オン · この画像は保存されたスクリーンショットではありません',
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        'ClipQR のアイコンをシステムトレイに表示できませんでした。\nClipQR は引き続き動作しています。履歴ウィンドウを使用してください。',
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        'クリップボードを読み取るには、xclip (X11) または wl-clipboard (Wayland) をインストールしてください。',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        'Wi‑Fi に接続するには NetworkManager (nmcli) が必要です。',
+    'No se encontró la interfaz Wi‑Fi.':
+        'Wi‑Fi インターフェースが見つかりません。',
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        '画面をキャプチャできませんでした。\nWayland ではアプリが画面をキャプチャできません。システムのツールでスクリーンショットを撮り、コピーしてください。',
+    'No se pudo capturar la pantalla.\n{error}':
+        '画面をキャプチャできませんでした。\n{error}',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        'スクリーンショットに QR コードまたはバーコードが含まれている場合、スクリーンショットのフォルダがいっぱいにならないよう、ゴミ箱に移動します（元に戻せます）。通知ごとに、有効であることが表示されます。',
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        '接続中のネットワークとそのパスワードをシステムから読み取り、ここに表示します。続けますか？',
+    'Iniciar al iniciar sesión':
+        'ログイン時に起動',
+    'Como el sistema':
+        'システムに合わせる',
+    'Imágenes copiadas desde el gestor de archivos.':
+        'ファイルマネージャからコピーした画像。',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        'コードはまだ検出されていません。\n⌃⇧⌘4 で QR コードのスクリーンショットを撮ってください（クリップボードにコピーされます）。',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        'コードはまだ検出されていません。\nQR コードのスクリーンショット (PrtSc) を撮ってコピーしてください。',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR はメニューバーで動作しています。\nQR コードのスクリーンショットを撮ると、ここに表示されます。\nログイン時に自動的に起動します。',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR はシステムトレイで動作しています。\nQR コードのスクリーンショットを撮ると、ここに表示されます。\nログイン時に自動的に起動します。',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        'Wayland ではアプリがグローバルキーボードショートカットを使用できません。\nシステムトレイの ClipQR メニューを使用してください。',
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        'キーボードショートカットを使用するには、\nシステム設定 › プライバシーとセキュリティ › アクセシビリティ で ClipQR を許可してください。',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        'グローバルキーボードショートカットは利用できません。pynput モジュールがありません。',
 }

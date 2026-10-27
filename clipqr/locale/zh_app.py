@@ -422,4 +422,40 @@ TEXTS = {
         '截图已移到回收站（自动删除）',
     'Borrado automático activo · esta imagen no es una captura guardada':
         '自动删除已开启 · 此图片不是已保存的截图',
+    'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
+        '无法在系统托盘中显示 ClipQR 图标。\nClipQR 仍在运行：请使用历史记录窗口。',
+    'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
+        '要读取剪贴板，请安装 xclip (X11) 或 wl-clipboard (Wayland)。',
+    'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
+        '连接 Wi‑Fi 需要 NetworkManager (nmcli)。',
+    'No se encontró la interfaz Wi‑Fi.':
+        '未找到 Wi‑Fi 接口。',
+    'No se pudo capturar la pantalla.\nEn Wayland las aplicaciones no pueden capturarla: haz una captura con la herramienta del sistema y cópiala.':
+        '无法截取屏幕。\n在 Wayland 下，应用无法截屏：请使用系统工具截图并复制。',
+    'No se pudo capturar la pantalla.\n{error}':
+        '无法截取屏幕。\n{error}',
+    'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
+        '当截图中包含二维码或条形码时，会将其移到废纸篓（可恢复），以免截图文件夹被塞满。每条通知都会提示此功能已启用。',
+    'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
+        '将从系统读取你当前连接的网络及其密码，并在此处显示。是否继续？',
+    'Iniciar al iniciar sesión':
+        '登录时启动',
+    'Como el sistema':
+        '跟随系统',
+    'Imágenes copiadas desde el gestor de archivos.':
+        '从文件管理器复制的图片。',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
+        '尚未检测到任何码。\n使用 ⌃⇧⌘4 截取二维码（会复制到剪贴板）。',
+    'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
+        '尚未检测到任何码。\n截取二维码 (PrtSc) 并复制。',
+    'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR 正在菜单栏中运行。\n截取二维码后，它会显示在这里。\n登录时将自动启动。',
+    'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
+        'ClipQR 正在系统托盘中运行。\n截取二维码后，它会显示在这里。\n登录时将自动启动。',
+    'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
+        '在 Wayland 下，应用无法使用全局键盘快捷键。\n请使用系统托盘中的 ClipQR 菜单。',
+    'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
+        '要使用键盘快捷键，请在\n系统设置 › 隐私与安全性 › 辅助功能 中允许 ClipQR。',
+    'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
+        '全局键盘快捷键不可用：缺少 pynput 模块。',
 }
