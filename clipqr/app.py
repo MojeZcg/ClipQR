@@ -323,10 +323,11 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         self.quit()
 
     def _off_tk(self, work, done):
-        """Ejecuta work() y luego done(resultado) en el hilo de Tk. En Linux work va en otro hilo: leer el
-        portapapeles cuando lo último copiado es nuestro le pide los datos a esta misma app, y si Tk estuviera
-        esperando no podría responder (se bloquearía). En Windows y macOS, directamente."""
-        if SYSTEM != "linux":
+        """Ejecuta work() en otro hilo y luego done(resultado) en el hilo de Tk, para que la ventana nunca se
+        congele. Leer el portapapeles puede tardar segundos: en Windows, si la app que copió genera la imagen al
+        pedírsela (Recortes, navegadores, Office) o el archivo copiado está en OneDrive sin descargar; en Linux,
+        si lo último copiado es nuestro, se le piden los datos a esta misma app. En macOS, directamente."""
+        if SYSTEM == "macos":
             done(work())
             return
 
@@ -340,7 +341,10 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
         threading.Thread(target=thread, daemon=True).start()
 
     def _poll(self):
-        self._off_tk(clipboard_token, self._on_clipboard_token)
+        if SYSTEM == "linux":  # en Linux leer el portapapeles puede esperar a esta misma app
+            self._off_tk(clipboard_token, self._on_clipboard_token)
+        else:  # contador de cambios del sistema: instantáneo
+            self._on_clipboard_token(clipboard_token())
 
     def _on_clipboard_token(self, seq):
         delay = POLL_MS
@@ -363,14 +367,18 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
 
     def scan(self, force=False, polling=False):
         include_files = self.settings["explorer_files"]
-        self._off_tk(lambda: grab_clipboard_images(include_files), lambda imgs: self._scan_images(imgs, force, polling))
 
-    def _scan_images(self, imgs, force=False, polling=False):
+        def read():  # fuera del hilo de la ventana: leer y comparar una captura 4K lleva su tiempo
+            imgs = grab_clipboard_images(include_files)
+            return imgs, image_hash(imgs) if imgs else None
+
+        self._off_tk(read, lambda result: self._scan_images(*result, force=force, polling=polling))
+
+    def _scan_images(self, imgs, h, force=False, polling=False):
         if not imgs:
             if force:
                 self.toast(_("No hay ninguna imagen en el portapapeles."))
             return
-        h = hashlib.md5(b"".join(i.convert("RGB").tobytes()[:2_000_000] for i in imgs)).hexdigest()
         if h == self.last_hash and not force:
             return
         if polling:
@@ -415,10 +423,25 @@ class ClipQR(PopupMixin, RegionMixin, UpdateMixin, CreateQRMixin, HistoryMixin, 
             self._paint_capture_slot(codes)  # no se guardó archivo: quitar «Buscando…»
             return
         if self.settings["delete_capture"]:
-            deleted = send_to_trash(path)
-            for c in codes:
-                c["capture_deleted"] = deleted
-        self._paint_capture_slot(codes)
+            self.trash_in_background(path, codes)
+        else:
+            self._paint_capture_slot(codes)
+
+    def trash_in_background(self, path, codes, on_done=None):
+        """Envía la captura a la Papelera en otro hilo: en una carpeta de OneDrive puede tardar segundos, y en el
+        hilo de la ventana dejaba el aviso congelado a medio aparecer. Al terminar, se actualiza el aviso."""
+        def work():
+            ok = send_to_trash(path)
+
+            def done():
+                for c in codes:
+                    c["capture_deleted"] = ok
+                self._paint_capture_slot(codes)
+                if on_done is not None:
+                    on_done(ok)
+            self.root.after(0, done)
+
+        threading.Thread(target=work, daemon=True).start()
 
     def _on_result(self, codes, force):
         if not codes:
@@ -491,6 +514,11 @@ def uninstall(silent=False):
         messagebox.showinfo("ClipQR", _("ClipQR se ha desinstalado."))
         root.destroy()
     uninstall_program()
+
+def image_hash(imgs):
+    """Huella de las imágenes del portapapeles, para no volver a escanear la misma."""
+    return hashlib.md5(b"".join(i.convert("RGB").tobytes()[:2_000_000] for i in imgs)).hexdigest()
+
 
 def parse_cli(argv):
     """Qué hacer según la línea de órdenes:
