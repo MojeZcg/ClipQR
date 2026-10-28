@@ -7,7 +7,7 @@ from clipqr.i18n import N_, _
 from clipqr.icons import make_icon
 from clipqr.payloads import analyze, format_name, headline, parse_payload, shorten
 from clipqr.ui.theme import KINDS, THEMES
-from clipqr.platform import (SYSTEM, area_containing, bring_to_front, clamp_to_area, send_to_trash,
+from clipqr.platform import (SYSTEM, area_containing, bring_to_front, clamp_to_area,
                              style_window, work_area, work_areas)
 
 MAX_CARDS = 4
@@ -276,6 +276,8 @@ class PopupMixin:
             win.attributes("-alpha", 0.98 * t)
             if i < steps:
                 win.after(15, frame, i + 1)
+            else:
+                win._shown = True
 
         frame()
 
@@ -286,6 +288,8 @@ class PopupMixin:
         def tick():
             if not win.winfo_exists():
                 return
+            if getattr(win, "_shown", False) and float(win.attributes("-alpha")) < 0.97:
+                win.attributes("-alpha", 0.98)  # nunca a medio aparecer, aunque algo cortara la animación
             px_, py_ = win.winfo_pointerxy()
             inside = win.winfo_rootx() <= px_ < win.winfo_rootx() + w and win.winfo_rooty() <= py_ < win.winfo_rooty() + h
             if win._pinned:  # fijado: no se cierra solo
@@ -555,13 +559,14 @@ class PopupMixin:
             def delete(always=False):
                 if always:  # a partir de ahora, solas
                     self.set_setting(delete_capture=True)
-                ok = send_to_trash(path)
-                for code in codes:
-                    code["capture_deleted"] = ok
-                if ok:
-                    self._paint_capture_slot(codes)
-                else:
-                    self._flash(b, _("No se pudo borrar"), ok=False)
+                b.config(state="disabled")
+
+                def done(ok):
+                    if not ok and b.winfo_exists():
+                        b.config(state="normal")
+                        self._flash(b, _("No se pudo borrar"), ok=False)
+
+                self.trash_in_background(path, codes, done)
 
             always = self._button(slot, _("Borrar siempre"), cmd=lambda: delete(always=True))
             always.pack(side="right", padx=(self.px(6), 0))
