@@ -76,8 +76,9 @@ class HistoryMixin:
         q = self.search_var.get().strip().lower()
         entries = [code for scan in self.history for code in scan if not q or q in code["text"].lower()]
         if not entries:
+            # wraplength: el texto de macOS es más largo que la lista y se cortaba por los dos lados
             tk.Label(self.hist_list, text=_("Sin resultados.") if q else empty_history_text(), bg=c["bg"], fg=c["muted"],
-                     font=self.font(10), justify="center").pack(pady=self.px(40))
+                     font=self.font(10), justify="center", wraplength=self.px(340)).pack(pady=self.px(40))
             return
         for code in entries:
             r = analyze(code["text"])
