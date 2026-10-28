@@ -79,7 +79,7 @@ También lee DataMatrix, Aztec, PDF417, Code 128, Code 39 y otros formatos, grac
 
 Eso es todo: se instala para tu usuario en `%LOCALAPPDATA%\Programs\ClipQR`, sin permisos de administrador, con acceso directo en el menú Inicio. ClipQR queda en la bandeja del sistema, junto al reloj. Para desinstalarlo: **Configuración de Windows › Aplicaciones › ClipQR**.
 
-La interfaz de ClipQR está en 10 idiomas: español, inglés, portugués, francés, alemán, italiano, chino simplificado, japonés, ruso y coreano. Sigue el idioma de Windows (si no es ninguno de estos, inglés) y se puede cambiar en **Configuración › Idioma · Language**.
+La interfaz de ClipQR está en 11 idiomas: español, inglés, portugués, francés, alemán, italiano, chino simplificado, japonés, ruso, coreano y turco. Sigue el idioma de Windows (si no es ninguno de estos, inglés) y se puede cambiar en **Configuración › Idioma · Language**.
 
 ¿Prefieres no instalar nada? Descarga **`ClipQR.exe`** (versión portátil) y ábrelo directamente.
 
@@ -109,7 +109,7 @@ Desde el icono ⚙ del aviso o desde **Configuración…** en el menú de la ban
 
 - **Aviso:** tiempo visible (de 5 s a 5 min), cerrar solo o no, pausa con el ratón encima, animación y posición. El aviso también se puede arrastrar y fijar con 📌.
 - **Apariencia:** tema claro, oscuro o el mismo que Windows.
-- **Idioma:** español, inglés, portugués, francés, alemán, italiano, chino simplificado, japonés, ruso o coreano. Por defecto, el de Windows (si no está entre estos, inglés).
+- **Idioma:** español, inglés, portugués, francés, alemán, italiano, chino simplificado, japonés, ruso, coreano o turco. Por defecto, el de Windows (si no está entre estos, inglés).
 - **Detección:** solo QR o también códigos de barras, leer archivos copiados desde el Explorador, sonido al detectar y pausar la detección.
 - **Borrar la captura al detectar un código** (lo primero de la Configuración, activado por defecto): Windows guarda cada captura en *Imágenes › Capturas de pantalla*. Cuando una contiene un QR o un código de barras, ClipQR la envía a la Papelera (se puede recuperar) y cada aviso lo indica, con un botón **Desactivar**. Solo se borra el archivo idéntico a la captura. Si lo desactivas, el aviso ofrece **Borrar captura**.
 - **Historial:** cuántos escaneos se guardan y borrar el historial.

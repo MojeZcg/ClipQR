@@ -29,6 +29,7 @@ def test_language_from_windows_langid():
     assert setup.language_for(0x080A) == "es"  # es-MX
     assert setup.language_for(0x0409) == "en"  # en-US
     assert setup.language_for(0x0416) == "pt"  # pt-BR
+    assert setup.language_for(0x041F) == "tr"  # tr-TR
     assert setup.language_for(0x0413) == "en"  # nl-NL: sin traducción, en inglés
 
 
