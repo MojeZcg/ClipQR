@@ -14,7 +14,7 @@ import time
 import tkinter as tk
 import winreg
 
-import texts_de, texts_fr, texts_it, texts_ja, texts_ko, texts_pt, texts_ru, texts_zh
+import texts_de, texts_fr, texts_it, texts_ja, texts_ko, texts_pt, texts_ru, texts_tr, texts_zh
 
 try:
     from _version import VERSION  # lo genera build_setup.bat
@@ -39,10 +39,11 @@ ACCENT, ACCENT_HOVER = "#4f8cff", "#3f74d8"
 
 # LANGID primario de Windows -> idioma del asistente (los mismos que la app)
 LANGIDS = {0x0A: "es", 0x09: "en", 0x16: "pt", 0x0C: "fr", 0x07: "de", 0x10: "it", 0x04: "zh", 0x11: "ja",
-           0x19: "ru", 0x12: "ko"}
+           0x19: "ru", 0x12: "ko", 0x1F: "tr"}
 # texto en inglés -> traducción; importados uno a uno para que PyInstaller los incluya
 TRANSLATIONS = {"pt": texts_pt.TEXTS, "fr": texts_fr.TEXTS, "de": texts_de.TEXTS, "it": texts_it.TEXTS,
-                "zh": texts_zh.TEXTS, "ja": texts_ja.TEXTS, "ru": texts_ru.TEXTS, "ko": texts_ko.TEXTS}
+                "zh": texts_zh.TEXTS, "ja": texts_ja.TEXTS, "ru": texts_ru.TEXTS, "ko": texts_ko.TEXTS,
+                "tr": texts_tr.TEXTS}
 
 
 def language_for(langid):

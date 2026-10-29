@@ -53,14 +53,15 @@ def test_todos_los_idiomas_tienen_catalogo():
 
 
 @pytest.mark.parametrize("name, code", [("pt_BR.UTF-8", "pt"), ("fr-FR", "fr"), ("zh_CN", "zh"), ("ja_JP", "ja"),
-                                        ("es_AR.UTF-8", "es"), ("nl_NL", "en"), ("", "en"), (None, "en")])
+                                        ("tr_TR.UTF-8", "tr"), ("es_AR.UTF-8", "es"), ("nl_NL", "en"), ("", "en"),
+                                        (None, "en")])
 def test_idioma_por_configuracion_regional(name, code):
     assert i18n.language_for_locale(name) == code
 
 
 @pytest.mark.parametrize("langid, code", [(0x2C0A, "es"), (0x0409, "en"), (0x0416, "pt"), (0x040C, "fr"),
                                           (0x0407, "de"), (0x0804, "zh"), (0x0411, "ja"), (0x0419, "ru"),
-                                          (0x0412, "ko"), (0x0413, "en")])
+                                          (0x0412, "ko"), (0x041F, "tr"), (0x0413, "en")])
 def test_idioma_por_langid_de_windows(langid, code):
     assert i18n.language_for_langid(langid) == code
 
@@ -76,4 +77,4 @@ def test_cambio_de_idioma():
 @pytest.mark.parametrize("code, expected", [("es", "es"), ("en", "en"), ("ja", "ja"), ("xx", "es")])
 def test_set_language(code, expected):
     assert i18n.set_language(code) == expected
-    assert i18n.set_language("auto") in ("es", "en")
+    assert i18n.set_language("auto") in i18n.LANGUAGES  # depende del idioma del sistema

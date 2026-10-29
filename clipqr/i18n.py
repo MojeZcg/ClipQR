@@ -1,5 +1,5 @@
 """Idiomas de la interfaz: español (el del código), inglés, portugués, francés, alemán, italiano, chino
-simplificado, japonés, ruso y coreano.
+simplificado, japonés, ruso, coreano y turco.
 
 Los textos se escriben en español dentro de _("…") y ese mismo texto es la clave de cada catálogo
 (clipqr/locale/<idioma>_*.py). Con variables: _("Vence en {n} días", n=3) — las llaves se rellenan después de
@@ -20,11 +20,13 @@ from clipqr.locale import (
     ja_app, ja_fiscal, ja_formats,
     ru_app, ru_fiscal, ru_formats,
     ko_app, ko_fiscal, ko_formats,
+    tr_app, tr_fiscal, tr_formats,
 )
 
 # código -> nombre en su propio idioma (así lo reconoce quien lo habla)
 LANGUAGES = {"es": "Español", "en": "English", "pt": "Português", "fr": "Français", "de": "Deutsch",
-             "it": "Italiano", "zh": "中文（简体）", "ja": "日本語", "ru": "Русский", "ko": "한국어"}
+             "it": "Italiano", "zh": "中文（简体）", "ja": "日本語", "ru": "Русский", "ko": "한국어",
+             "tr": "Türkçe"}
 CATALOGS = {
     "en": {**en_app.TEXTS, **en_formats.TEXTS, **en_fiscal.TEXTS},
     "pt": {**pt_app.TEXTS, **pt_formats.TEXTS, **pt_fiscal.TEXTS},
@@ -35,10 +37,11 @@ CATALOGS = {
     "ja": {**ja_app.TEXTS, **ja_formats.TEXTS, **ja_fiscal.TEXTS},
     "ru": {**ru_app.TEXTS, **ru_formats.TEXTS, **ru_fiscal.TEXTS},
     "ko": {**ko_app.TEXTS, **ko_formats.TEXTS, **ko_fiscal.TEXTS},
+    "tr": {**tr_app.TEXTS, **tr_formats.TEXTS, **tr_fiscal.TEXTS},
 }
 # LANGID primario de Windows -> código
 WINDOWS_LANGIDS = {0x0A: "es", 0x09: "en", 0x16: "pt", 0x0C: "fr", 0x07: "de", 0x10: "it", 0x04: "zh",
-                   0x11: "ja", 0x19: "ru", 0x12: "ko"}
+                   0x11: "ja", 0x19: "ru", 0x12: "ko", 0x1F: "tr"}
 
 _lang = "es"
 
