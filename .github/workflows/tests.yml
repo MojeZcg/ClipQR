@@ -19,13 +19,13 @@ jobs:
           python-version: "3.13"
           cache: pip
       # Tk y xclip para la app; las cabeceras del kernel para compilar evdev (dependencia de pynput en Linux).
-      # El mirror de Azure de los runners (azure.archive.ubuntu.com) a veces no resuelve: se usa el de Ubuntu.
+      # Los tests no los necesitan: el Python de setup-python trae Tk y el runner ya tiene las cabeceras. Si los
+      # servidores de Ubuntu no responden (a veces *.ubuntu.com no resuelve desde los runners), se sigue sin ellos.
       - name: Paquetes del sistema (Linux)
         if: runner.os == 'Linux'
-        run: |
-          sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://archive.ubuntu.com/ubuntu/#' /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
-          sudo apt-get -o Acquire::Retries=5 update
-          sudo apt-get -o Acquire::Retries=5 install -y python3-tk xclip linux-libc-dev
+        continue-on-error: true
+        timeout-minutes: 3
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xclip linux-libc-dev
       - name: Dependencias
         run: python -m pip install -r requirements-dev.txt
       - name: Pyflakes
