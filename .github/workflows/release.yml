@@ -96,8 +96,12 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
+      # el mirror de Azure de los runners (azure.archive.ubuntu.com) a veces no resuelve: se usa el de Ubuntu
       - name: Paquetes del sistema
-        run: sudo apt-get update && sudo apt-get install -y python3-tk xclip linux-libc-dev
+        run: |
+          sudo sed -i 's#mirror+file:/etc/apt/apt-mirrors.txt#http://archive.ubuntu.com/ubuntu/#' /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list 2>/dev/null || true
+          sudo apt-get -o Acquire::Retries=5 update
+          sudo apt-get -o Acquire::Retries=5 install -y python3-tk xclip linux-libc-dev
       - name: Dependencias
         run: python -m pip install -r requirements-dev.txt
       - name: Tests
