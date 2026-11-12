@@ -15,7 +15,7 @@ TEXTS = {
     '{app} - en pausa':
         '{app} - in pausa',
     '{app} - vigilando portapapeles':
-        '{app} - controllo degli appunti',
+        '{app} - monitoraggio degli appunti',
     'ClipQR se ha desinstalado.':
         'ClipQR è stato disinstallato.',
     'El atajo {atajo} ya lo usa otra aplicación.\nPuedes elegir otro en Configuración › Atajos.':
@@ -25,7 +25,7 @@ TEXTS = {
     'Abrir historial':
         'Apri cronologia',
     'Escanear portapapeles ahora':
-        'Analizza gli appunti ora',
+        'Scansiona gli appunti ora',
     'Configuración…':
         'Impostazioni…',
     'Invitar un cafecito ☕':
@@ -37,7 +37,7 @@ TEXTS = {
     'Salir':
         'Esci',
     'ClipQR está activo en la bandeja (junto al reloj).\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo con Windows.':
-        "ClipQR è attivo nell'area di notifica (accanto all'orologio).\nCattura uno screenshot di un QR e comparirà qui.\nSi avvierà automaticamente con Windows.",
+        "ClipQR è attivo nell'area di notifica (accanto all'orologio).\nFai uno screenshot di un QR e comparirà qui.\nSi avvierà automaticamente con Windows.",
     '✓ Copiado':
         '✓ Copiato',
     'Desinstalar ClipQR':
@@ -45,9 +45,9 @@ TEXTS = {
     '¿Quieres desinstalar ClipQR de este equipo?':
         'Vuoi disinstallare ClipQR da questo PC?',
     'ClipQR está activo en la bandeja (junto al reloj).\nHaz una captura de un QR y aparecerá aquí.\nPuedes hacer que se inicie con Windows en Configuración (⚙).':
-        "ClipQR è attivo nell'area di notifica (accanto all'orologio).\nCattura uno screenshot di un QR e comparirà qui.\nPuoi farlo avviare con Windows in Impostazioni (⚙).",
+        "ClipQR è attivo nell'area di notifica (accanto all'orologio).\nFai uno screenshot di un QR e comparirà qui.\nPuoi farlo avviare con Windows in Impostazioni (⚙).",
     'ClipQR está activo en la bandeja (junto al reloj).\nHaz una captura de un QR y aparecerá aquí.':
-        "ClipQR è attivo nell'area di notifica (accanto all'orologio).\nCattura uno screenshot di un QR e comparirà qui.",
+        "ClipQR è attivo nell'area di notifica (accanto all'orologio).\nFai uno screenshot di un QR e comparirà qui.",
     'No se pudo reiniciar ClipQR.\n{error}':
         'Impossibile riavviare ClipQR.\n{error}',
     'No hay ninguna imagen en el portapapeles.':
@@ -63,7 +63,7 @@ TEXTS = {
     'Actualizar a ClipQR {version}…':
         'Aggiorna a ClipQR {version}…',
     'Conectando…':
-        'Connessione…',
+        'Connessione in corso…',
     'La conexión no está cifrada (http).':
         'La connessione non è crittografata (http).',
     'El enlace no lleva a donde parece: el destino real es {host}.':
@@ -89,7 +89,7 @@ TEXTS = {
     'En el centro':
         'Al centro',
     'Donde lo dejé al arrastrarlo':
-        "Dove l'ho lasciato trascinandolo",
+        "Dove l'ho trascinata",
     'Espacio':
         'Spazio',
     'La versión publicada no incluye el instalador o sus sumas de comprobación.':
@@ -207,13 +207,13 @@ TEXTS = {
     'Sin resultados.':
         'Nessun risultato.',
     'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Win+Shift+S o Impr Pant).':
-        'Nessun codice rilevato finora.\nCattura uno screenshot di un QR (Win+Shift+S o Stamp).',
+        'Nessun codice rilevato finora.\nFai uno screenshot di un QR (Win+Shift+S o Stamp).',
     'Secreto':
         'Segreto',
     'Dominio':
         'Dominio',
     'Arrástralo desde arriba · 📌 para fijarlo · Esc para cerrar':
-        "Trascinalo dall'alto · 📌 per fissarlo · Esc per chiudere",
+        "Trascinala dall'alto · 📌 per fissarla · Esc per chiudere",
     'Enter: acción · 1–9: copiar · Supr: borrar captura · Esc: cerrar':
         'Invio: azione · 1–9: copia · Canc: elimina screenshot · Esc: chiudi',
     'Copiar todo':
@@ -235,7 +235,7 @@ TEXTS = {
     '{n} códigos detectados':
         '{n} codici rilevati',
     '+{n} más en el historial':
-        '+{n} nella cronologia',
+        '+{n} altri nella cronologia',
     'Copiar  {n}':
         'Copia  {n}',
     'Captura: {archivo}':
@@ -255,7 +255,7 @@ TEXTS = {
     'Tiempo visible':
         'Durata di visualizzazione',
     'Cuánto tarda en cerrarse solo.':
-        'Quanto tempo prima che si chiuda da sola.',
+        'Dopo quanto tempo si chiude da sola.',
     'Cerrar solo':
         'Chiudi automaticamente',
     'Si lo desactivas, el aviso queda abierto hasta que lo cierres.':
@@ -263,9 +263,9 @@ TEXTS = {
     'Pausar con el ratón encima':
         'Pausa al passaggio del mouse',
     'La cuenta atrás se detiene mientras lo señalas.':
-        'Il conto alla rovescia si ferma mentre la indichi.',
+        'Il conto alla rovescia si ferma mentre il puntatore è sopra la notifica.',
     'Animación de entrada':
-        'Animazione di entrata',
+        'Animazione di apertura',
     'Posición':
         'Posizione',
     'También puedes arrastrarlo desde su cabecera.':
@@ -303,7 +303,7 @@ TEXTS = {
     'Guardar hasta':
         'Conserva fino a',
     'Escaneos que se recuerdan mientras ClipQR está abierto.':
-        'Scansioni ricordate finché ClipQR è aperto.',
+        'Scansioni memorizzate finché ClipQR resta aperto.',
     'Borrar todo el historial':
         'Cancella tutta la cronologia',
     'ATAJOS DE TECLADO':
@@ -311,7 +311,7 @@ TEXTS = {
     'Escanear una zona de la pantalla':
         "Scansiona un'area dello schermo",
     'Congela la pantalla y lees el código que rodees, sin capturas ni portapapeles.':
-        'Blocca lo schermo e legge il codice che circondi, senza screenshot né appunti.',
+        'Congela lo schermo e legge il codice che selezioni, senza screenshot né appunti.',
     'Crear un QR':
         'Crea un QR',
     'Abre «Crear QR» con lo que tengas copiado.':
@@ -325,9 +325,9 @@ TEXTS = {
     'El idioma nuevo se aplica al reiniciar ClipQR.':
         'La nuova lingua si applica al riavvio di ClipQR.',
     'Informe de errores':
-        'Segnalazione errori',
+        'Rapporto errori',
     'Copia la versión y los últimos errores para pegarlos en una incidencia de GitHub. No incluye imágenes ni el contenido de tus códigos; no se envía nada.':
-        'Copia la versione e gli ultimi errori da incollare in una segnalazione su GitHub. Non include immagini né il contenuto dei tuoi codici; non viene inviato nulla.',
+        'Copia la versione e gli ultimi errori da incollare in una issue su GitHub. Non include immagini né il contenuto dei tuoi codici; non viene inviato nulla.',
     'APOYAR CLIPQR':
         'SOSTIENI CLIPQR',
     'ClipQR es gratis y de código abierto. Si te sirve, puedes apoyarlo con un cafecito en cafecito.app.':
@@ -337,7 +337,7 @@ TEXTS = {
     'Reiniciar ahora':
         'Riavvia ora',
     'Copiar informe':
-        'Copia segnalazione',
+        'Copia rapporto',
     'Buscar actualizaciones':
         'Cerca aggiornamenti',
     'Una vez al día consulta las versiones publicadas en GitHub. Solo se instalan si las aceptas, y antes se comprueba que el instalador no está alterado.':
@@ -363,7 +363,7 @@ TEXTS = {
     'Centro':
         'Centro',
     'Donde lo dejé':
-        "Dove l'ho lasciato",
+        "Dove l'ho lasciata",
     'Como Windows':
         'Come Windows',
     'Claro':
@@ -381,7 +381,7 @@ TEXTS = {
     'Instalar':
         'Installa',
     'Ver novedades ↗':
-        'Novità ↗',
+        'Vedi le novità ↗',
     'Ahora no':
         'Non ora',
     'Descargar ↗':
@@ -395,9 +395,9 @@ TEXTS = {
     'Tienes la última versión ({version}).':
         'Hai la versione più recente ({version}).',
     'Avisar al iniciar':
-        "Avviso all'avvio",
+        "Notifica all'avvio",
     'Un aviso breve confirma que ClipQR está activo cuando se abre.':
-        'Un breve avviso conferma che ClipQR è attivo quando si apre.',
+        'Una breve notifica conferma che ClipQR è attivo quando si apre.',
     'Captura un QR o pulsa {atajo} para escanear una zona.':
         "Cattura un QR o premi {atajo} per scansionare un'area.",
     'Captura o copia un QR y aparecerá aquí.':
@@ -423,7 +423,7 @@ TEXTS = {
     'Borrado automático activo · esta imagen no es una captura guardada':
         'Eliminazione automatica attiva · questa immagine non è uno screenshot salvato',
     'No se pudo mostrar el icono de ClipQR en la bandeja del sistema.\nClipQR sigue activo: usa la ventana del historial.':
-        'Impossibile mostrare l’icona di ClipQR nell’area di notifica.\nClipQR è ancora attivo: usa la finestra della cronologia.',
+        "Impossibile mostrare l'icona di ClipQR nell'area di notifica.\nClipQR è ancora attivo: usa la finestra della cronologia.",
     'Para leer el portapapeles, instala xclip (X11) o wl-clipboard (Wayland).':
         'Per leggere gli appunti, installa xclip (X11) o wl-clipboard (Wayland).',
     'Hace falta NetworkManager (nmcli) para conectarse a la Wi‑Fi.':
@@ -435,25 +435,25 @@ TEXTS = {
     'No se pudo capturar la pantalla.\n{error}':
         'Impossibile acquisire lo schermo.\n{error}',
     'Cuando una captura de pantalla tiene un QR o un código de barras, la envía a la Papelera (se puede recuperar) para no llenar la carpeta de capturas. Cada aviso indica que está activo.':
-        'Quando uno screenshot contiene un codice QR o un codice a barre, viene spostato nel Cestino (si può recuperare) per non riempire la cartella degli screenshot. Ogni avviso indica che è attivo.',
+        'Quando uno screenshot contiene un QR o un codice a barre, viene spostato nel Cestino (recuperabile) per non riempire la cartella degli screenshot. Ogni notifica indica che è attivo.',
     'Se leerá del sistema la red a la que estás conectado y su contraseña, y se mostrarán aquí. ¿Continuar?':
         'La rete a cui sei connesso e la sua password verranno lette dal sistema e mostrate qui. Continuare?',
     'Iniciar al iniciar sesión':
-        'Avvia all’accesso',
+        "Avvia all'accesso",
     'Como el sistema':
         'Come il sistema',
     'Imágenes copiadas desde el gestor de archivos.':
         'Immagini copiate dal gestore di file.',
     'Aún no se ha detectado ningún código.\nHaz una captura de un QR con ⌃⇧⌘4 (la copia al portapapeles).':
-        'Nessun codice rilevato finora.\nFai uno screenshot di un codice QR con ⌃⇧⌘4 (viene copiato negli appunti).',
+        'Nessun codice rilevato finora.\nFai uno screenshot di un QR con ⌃⇧⌘4 (viene copiato negli appunti).',
     'Aún no se ha detectado ningún código.\nHaz una captura de un QR (Impr Pant) y cópiala.':
-        'Nessun codice rilevato finora.\nFai uno screenshot di un codice QR (Stamp) e copialo.',
+        'Nessun codice rilevato finora.\nFai uno screenshot di un QR (Stamp) e copialo.',
     'ClipQR está activo en la barra de menús.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
-        'ClipQR è attivo nella barra dei menu.\nFai uno screenshot di un codice QR e comparirà qui.\nSi avvierà automaticamente all’accesso.',
+        "ClipQR è attivo nella barra dei menu.\nFai uno screenshot di un QR e comparirà qui.\nSi avvierà automaticamente all'accesso.",
     'ClipQR está activo en la bandeja del sistema.\nHaz una captura de un QR y aparecerá aquí.\nSe iniciará solo al iniciar sesión.':
-        'ClipQR è attivo nell’area di notifica.\nFai uno screenshot di un codice QR e comparirà qui.\nSi avvierà automaticamente all’accesso.',
+        "ClipQR è attivo nell'area di notifica.\nFai uno screenshot di un QR e comparirà qui.\nSi avvierà automaticamente all'accesso.",
     'En Wayland las aplicaciones no pueden usar atajos de teclado globales.\nUsa el menú de ClipQR en la bandeja del sistema.':
-        'Su Wayland le app non possono usare scorciatoie da tastiera globali.\nUsa il menu di ClipQR nell’area di notifica.',
+        "Su Wayland le app non possono usare scorciatoie da tastiera globali.\nUsa il menu di ClipQR nell'area di notifica.",
     'Para usar los atajos de teclado, permite ClipQR en\nAjustes del Sistema › Privacidad y seguridad › Accesibilidad.':
         'Per usare le scorciatoie da tastiera, consenti ClipQR in\nImpostazioni di Sistema › Privacy e sicurezza › Accessibilità.',
     'Los atajos de teclado globales no están disponibles: falta el módulo pynput.':
