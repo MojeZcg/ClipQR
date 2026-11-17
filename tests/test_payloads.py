@@ -100,6 +100,25 @@ def test_long_text_has_no_search_button():
     assert actions_of("x" * 300) == []
 
 
+@pytest.mark.parametrize("text", [
+    "http://[foo]",
+    "https://example.com[@x",
+    "mailto://[x]",
+    "otpauth://a@[x]",
+])
+def test_malformed_url_does_not_break_the_scan(text):
+    # urlparse lanzaba ValueError con corchetes mal formados y el aviso no llegaba a mostrarse.
+    kind, _title, items, actions = parse_payload(text)
+    assert kind == "text"
+    assert items or actions
+
+
+def test_valid_ipv6_url_is_still_a_link():
+    kind, _title, items, _actions = parse_payload("http://[::1]/")
+    assert kind == "link"
+    assert ("Dominio", "::1") in items
+
+
 @pytest.mark.parametrize("text, expected", [
     ("WIFI:S:MiCasa;T:WPA;P:clave;;", "MiCasa"),
     ("https://docs.example.com/guia", "example.com"),

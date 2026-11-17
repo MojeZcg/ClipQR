@@ -6,6 +6,19 @@ from clipqr.i18n import N_, _
 from clipqr.linksafety import link_warnings, registrable_domain
 from clipqr.structured import Result, detect
 
+
+def _urlparse(text):
+    """urlparse, pero un texto dañado devuelve None en vez de lanzar ValueError.
+
+    Un QR puede traer una URL con corchetes mal formados; la app debe enseñar el texto y no
+    quedarse sin aviso. Ver tests/test_payloads.py.
+    """
+    try:
+        return urllib.parse.urlparse(text)
+    except ValueError:
+        return None
+
+
 def _unescape(s):
     return re.sub(r"\\([\\;,:\"])", r"\1", s)
 
@@ -150,24 +163,26 @@ def _basic_payload(text):
         return "event", _("Evento"), items, [(_("Añadir al calendario"), "file", (ics, ".ics"))]
 
     if low.startswith("otpauth://"):
-        u = urllib.parse.urlparse(t)
-        q = dict(urllib.parse.parse_qsl(u.query))
-        items = [(_("Cuenta"), urllib.parse.unquote(u.path.lstrip("/")))]
-        if q.get("secret"):
-            items.append((_("Secreto"), q["secret"]))
-        if q.get("issuer"):
-            items.append((_("Emisor"), q["issuer"]))
-        return "otp", "2FA (OTP)", items, []
+        u = _urlparse(t)
+        if u is not None:
+            q = dict(urllib.parse.parse_qsl(u.query))
+            items = [(_("Cuenta"), urllib.parse.unquote(u.path.lstrip("/")))]
+            if q.get("secret"):
+                items.append((_("Secreto"), q["secret"]))
+            if q.get("issuer"):
+                items.append((_("Emisor"), q["issuer"]))
+            return "otp", "2FA (OTP)", items, []
 
     if low.startswith("mailto:"):
-        u = urllib.parse.urlparse(t)
-        q = dict(urllib.parse.parse_qsl(u.query))
-        items = [("Email", urllib.parse.unquote(u.path))]
-        if q.get("subject"):
-            items.append((_("Asunto"), q["subject"]))
-        if q.get("body"):
-            items.append((_("Mensaje"), q["body"]))
-        return "email", "Email", items, [(_("Escribir email"), "open", t)]
+        u = _urlparse(t)
+        if u is not None:
+            q = dict(urllib.parse.parse_qsl(u.query))
+            items = [("Email", urllib.parse.unquote(u.path))]
+            if q.get("subject"):
+                items.append((_("Asunto"), q["subject"]))
+            if q.get("body"):
+                items.append((_("Mensaje"), q["body"]))
+            return "email", "Email", items, [(_("Escribir email"), "open", t)]
 
     if low.startswith("matmsg:"):
         f = dict(_split_fields(t[7:]))
@@ -200,12 +215,13 @@ def _basic_payload(text):
         return "geo", _("Ubicación"), [(_("Coordenadas"), ",".join(lat_lon))], actions
 
     if re.match(r"^https?://", t, re.I):
-        u = urllib.parse.urlparse(t)
-        host = (u.hostname or u.netloc).lower()
-        items = [(_("Dominio"), registrable_domain(host))]  # el dominio real, no los subdominios de delante
-        if host not in (items[0][1], "www." + items[0][1]):
-            items.append((_("Servidor"), host))
-        return "link", _("Enlace"), items, [(_("Abrir enlace ↗"), "open", t)]
+        u = _urlparse(t)
+        if u is not None:
+            host = (u.hostname or u.netloc).lower()
+            items = [(_("Dominio"), registrable_domain(host))]  # el dominio real, no los subdominios de delante
+            if host not in (items[0][1], "www." + items[0][1]):
+                items.append((_("Servidor"), host))
+            return "link", _("Enlace"), items, [(_("Abrir enlace ↗"), "open", t)]
 
     if re.match(r"^(\d{8}|\d{12,14})$", t):  # EAN / UPC / GTIN de un producto
         return "product", _("Producto"), [(_("Código"), t)], [
