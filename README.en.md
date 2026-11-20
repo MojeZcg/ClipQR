@@ -109,7 +109,7 @@ From the ⚙ icon on the notification or from **Settings…** in the tray menu:
 
 - **Notification:** how long it stays visible (5 s to 5 min), whether it closes by itself, pause on mouse hover, animation and position. You can also drag the notification around and pin it with 📌.
 - **Appearance:** light theme, dark theme or the same as Windows.
-- **Language:** English or Spanish; defaults to the Windows language.
+- **Language:** Spanish, English, Portuguese, French, German, Italian, Simplified Chinese, Japanese, Russian, Korean, or Turkish. Defaults to the Windows language if supported, or English otherwise.
 - **Detection:** QR codes only or barcodes too, read files copied in File Explorer, play a sound on detection, and pause detection.
 - **Delete the screenshot when a code is detected** (first in Settings, on by default): Windows saves every screenshot in *Pictures › Screenshots*. When one contains a QR code or barcode, ClipQR sends it to the Recycle Bin (so it can be restored), and every notification says so, with a **Turn off** button. Only the file identical to the screenshot is deleted. If you turn it off, the notification offers **Delete screenshot**.
 - **History:** how many scans are kept, and clear the history.
